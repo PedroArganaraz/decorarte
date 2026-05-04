@@ -1,0 +1,90 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Usuario {
+  id            String     @id
+  email         String     @unique
+  nombre        String
+  rol           RolUsuario @default(VENDEDOR)
+  creadoEn      DateTime   @default(now()) @map("creado_en")
+  actualizadoEn DateTime   @updatedAt @map("actualizado_en")
+  productos     Producto[]
+  @@map("usuarios")
+}
+
+enum RolUsuario {
+  ADMIN
+  VENDEDOR
+}
+
+model Categoria {
+  id          String     @id @default(cuid())
+  nombre      String     @unique
+  slug        String     @unique
+  descripcion String?
+  orden       Int        @default(0)
+  activa      Boolean    @default(true)
+  creadoEn    DateTime   @default(now()) @map("creado_en")
+  productos   Producto[]
+  @@map("categorias")
+}
+
+model Producto {
+  id             String           @id @default(cuid())
+  nombre         String
+  slug           String           @unique
+  descripcion    String?
+  precio         Decimal          @db.Decimal(10, 2)
+  precioAnterior Decimal?         @db.Decimal(10, 2) @map("precio_anterior")
+  stock          Int              @default(0)
+  activo         Boolean          @default(true)
+  destacado      Boolean          @default(false)
+  categoriaId    String           @map("categoria_id")
+  vendedorId     String           @map("vendedor_id")
+  creadoEn       DateTime         @default(now()) @map("creado_en")
+  actualizadoEn  DateTime         @updatedAt @map("actualizado_en")
+  categoria      Categoria        @relation(fields: [categoriaId], references: [id])
+  vendedor       Usuario          @relation(fields: [vendedorId], references: [id])
+  imagenes       ImagenProducto[]
+  itemsCarrito   ItemCarrito[]
+  @@map("productos")
+}
+
+model ImagenProducto {
+  id          String   @id @default(cuid())
+  productoId  String   @map("producto_id")
+  urlPublica  String   @map("url_publica")
+  pathInterno String   @map("path_interno")
+  altText     String?  @map("alt_text")
+  esPrincipal Boolean  @default(false) @map("es_principal")
+  orden       Int      @default(0)
+  creadoEn    DateTime @default(now()) @map("creado_en")
+  producto    Producto @relation(fields: [productoId], references: [id], onDelete: Cascade)
+  @@map("imagenes_productos")
+}
+
+model Carrito {
+  id            String        @id @default(cuid())
+  sessionId     String        @unique @map("session_id")
+  creadoEn      DateTime      @default(now()) @map("creado_en")
+  actualizadoEn DateTime      @updatedAt @map("actualizado_en")
+  items         ItemCarrito[]
+  @@map("carritos")
+}
+
+model ItemCarrito {
+  id         String   @id @default(cuid())
+  carritoId  String   @map("carrito_id")
+  productoId String   @map("producto_id")
+  cantidad   Int      @default(1)
+  creadoEn   DateTime @default(now()) @map("creado_en")
+  carrito    Carrito  @relation(fields: [carritoId], references: [id], onDelete: Cascade)
+  producto   Producto @relation(fields: [productoId], references: [id])
+  @@unique([carritoId, productoId])
+  @@map("items_carrito")
+}

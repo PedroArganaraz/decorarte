@@ -1,7 +1,21 @@
 {
   "permissions": {
     "allow": [
-      "Bash(npx create-next-app@latest . --typescript --tailwind --eslint --app --src-dir --import-alias \"@/*\" --yes)"
+      "Bash(npx create-next-app@latest . --typescript --tailwind --eslint --app --src-dir --import-alias \"@/*\" --yes)",
+      "Bash(npm install *)",
+      "Bash(npx shadcn@latest init --defaults)",
+      "Bash(npx shadcn@latest add input label textarea select card table badge dialog form toast sonner separator skeleton --overwrite)",
+      "Bash(npx shadcn@latest add input label textarea select card table badge dialog form sonner separator skeleton --overwrite)",
+      "Bash(npx shadcn@latest add form --overwrite)",
+      "Bash(npx shadcn@latest add form)",
+      "Bash(npx shadcn@latest add --list)",
+      "Bash(npx shadcn@latest --help)",
+      "Bash(npx shadcn@latest search ui.shadcn.com)",
+      "Bash(npx shadcn@latest view form)",
+      "Bash(git check-ignore *)",
+      "Bash(npx prisma *)",
+      "Bash(npx tsc *)",
+      "Bash(node -e \"const m = require\\('c:/Users/Diego/Desktop/proyectos-pedro/decorarte/node_modules/prisma/config.js'\\); console.log\\(Object.keys\\(m\\)\\)\")"
     ]
   }
 }
