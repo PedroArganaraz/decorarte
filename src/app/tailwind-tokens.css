@@ -1,0 +1,6 @@
+@layer base {
+  :root {
+    --font-display: 'Cormorant Garamond', serif;
+    --font-ui: 'Jost', sans-serif;
+  }
+}
