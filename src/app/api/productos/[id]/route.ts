@@ -54,7 +54,7 @@ export async function PUT(
 
     const { id } = await params
     const cuerpo = await solicitud.json()
-    const { nombre, descripcion, precio, precioAnterior, stock, activo, destacado, categoriaId } = cuerpo
+    const { nombre, descripcion, precio, precioAnterior, stock, activo, destacado, categoriaId, material } = cuerpo
 
     let slug: string | undefined
     if (nombre) {
@@ -80,6 +80,7 @@ export async function PUT(
         ...(activo !== undefined && { activo }),
         ...(destacado !== undefined && { destacado }),
         ...(categoriaId && { categoriaId }),
+        ...(material !== undefined && { material: material || null }),
       },
       include: {
         imagenes: { orderBy: { orden: "asc" } },
