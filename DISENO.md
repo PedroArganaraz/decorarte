@@ -1,8 +1,9 @@
 # DISEÑO — Decorarte
 
 ## Identidad
-E-commerce de accesorios artesanales (anillos, collares, pulseras, aros, sets).
+E-commerce de accesorios artesanales (aros, collares, pulseras, anillos).
 Estética: elegante, minimalista, editorial. Inspirado en joyería boutique argentina.
+Tono del copy: aspiracional y femenino — "piezas que invitan a imaginar y resaltar tu esencia".
 
 ---
 
@@ -13,14 +14,10 @@ Estética: elegante, minimalista, editorial. Inspirado en joyería boutique arge
 | Títulos, nombres de producto, precios | Cormorant Garamond | 300–400 | letter-spacing: 0.05em |
 | UI, navegación, botones, labels | Jost | 300–400–500 | letter-spacing: 0.08–0.15em |
 
-Importar en globals.css o layout.tsx:
+Importar en globals.css:
 ```
 @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Jost:wght@300;400;500&display=swap');
 ```
-
-Clases Tailwind a definir como custom:
-- font-display → Cormorant Garamond
-- font-ui → Jost
 
 ---
 
@@ -35,6 +32,7 @@ Clases Tailwind a definir como custom:
 | --color-texto | #2C2C2A | Texto principal, botones primarios |
 | --color-texto-muted | #888780 | Categorías, labels secundarios |
 | --color-texto-sutil | #B4B2A9 | Placeholders, precios tachados |
+| --color-acento | #B07060 | Detalles decorativos, material del producto |
 
 Definir en globals.css:
 ```css
@@ -46,6 +44,7 @@ Definir en globals.css:
   --color-texto: #2C2C2A;
   --color-texto-muted: #888780;
   --color-texto-sutil: #B4B2A9;
+  --color-acento: #B07060;
 }
 ```
 
@@ -65,6 +64,7 @@ Definir en globals.css:
 - Imagen: proporción 1:1 o 4:5, fondo #F1EFE8
 - Badge (Nuevo / Destacado / Oferta): bg #2C2C2A, texto #EAEAEA, 9px uppercase, esquinas rectas, posición absolute top-left
 - Categoría: 9px, uppercase, letter-spacing 0.12em, color #888780
+- Material (Acero dorado / Acero plateado): 9px, color --color-acento, debajo de la categoría
 - Nombre: Cormorant Garamond 15px, color #2C2C2A
 - Precio: Jost 13px, color #2C2C2A
 - Precio anterior tachado: 11px, color #B4B2A9
@@ -97,11 +97,28 @@ Definir en globals.css:
 ## Categorías del catálogo
 
 - Todos
-- Anillos
+- Aros
 - Collares
 - Pulseras
-- Aros
+- Anillos
 - Sets
+
+## Materiales (campo del producto)
+
+- Acero dorado
+- Acero plateado
+- Acero inoxidable
+- Plata 925
+- Otro
+
+---
+
+## Productos de referencia (del catálogo actual)
+
+### Aros — Acero dorado
+- Aros Tetra — $8.000
+- Aros Lava — $10.000
+- Aros Luma — $10.000
 
 ---
 
@@ -109,26 +126,26 @@ Definir en globals.css:
 
 ### Home (/)
 1. Header con logo + navegación categorías
-2. Hero: imagen full-width o texto editorial grande centrado
+2. Hero: imagen full-width con texto editorial superpuesto o centrado
 3. Sección "Destacados": grilla 3 o 4 columnas
-4. Sección por categoría (opcional)
-5. Footer: info de contacto + redes
+4. Sección por categoría con link a ver todos
+5. Footer: info de contacto + Instagram + WhatsApp
 
 ### Catálogo (/catalogo)
 1. Header
-2. Filtros por categoría (tabs o pills horizontales)
+2. Filtros por categoría (tabs horizontales) + filtro por material (pills)
 3. Grilla de productos: 3 columnas desktop, 2 tablet, 1 mobile
 4. Footer
 
 ### Detalle de producto (/producto/[slug])
 1. Header
 2. Layout 2 columnas: galería izquierda | info derecha
-3. Info: categoría, nombre, precio, descripción, botón agregar al carrito
+3. Info: categoría, material, nombre, precio, descripción, botón agregar al carrito
 4. Productos relacionados abajo
 
 ### Panel vendedor (/panel)
 - Fondo #F1EFE8
-- Sidebar izquierdo: logo + nav (Productos, Categorías, más adelante Órdenes)
+- Sidebar izquierdo: logo + nav (Productos, Categorías)
 - Contenido principal: fondo #FFFFFF, borde 0.5px #D3D1C7
 - Tipografía más funcional, mantiene Cormorant para títulos de sección
 
@@ -137,6 +154,8 @@ Definir en globals.css:
 ## Reglas generales
 - Nunca usar border-radius mayor a 4px en elementos de UI (excepción: avatares circulares)
 - Nunca usar sombras (box-shadow) decorativas — solo outline en focus
-- Nunca usar colores saturados — toda la paleta es neutra
+- Nunca usar colores saturados — toda la paleta es neutra excepto --color-acento en detalles puntuales
+- El color acento (#B07060) solo se usa en: material del producto, badges especiales, detalles decorativos — nunca en botones principales
 - Espaciado generoso: padding mínimo 16px en cards, 24px en secciones
 - Íconos: SVG simples, stroke 1–1.5px, color heredado del texto
+- Fotos de producto: siempre incluir foto del producto solo + foto lifestyle (modelo usando la joya)

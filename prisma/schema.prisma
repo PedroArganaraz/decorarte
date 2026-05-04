@@ -44,6 +44,7 @@ model Producto {
   stock          Int              @default(0)
   activo         Boolean          @default(true)
   destacado      Boolean          @default(false)
+  material       String?
   categoriaId    String           @map("categoria_id")
   vendedorId     String           @map("vendedor_id")
   creadoEn       DateTime         @default(now()) @map("creado_en")
