@@ -1,0 +1,102 @@
+import { NextRequest, NextResponse } from "next/server"
+import { prisma } from "@/lib/prisma"
+import { crearClienteServidor } from "@/lib/supabase/servidor"
+import slugify from "slugify"
+import type { RespuestaAPI, ProductoResumen } from "@/tipos"
+
+export async function GET(solicitud: NextRequest) {
+  try {
+    const { searchParams } = new URL(solicitud.url)
+    const categoriaSlug = searchParams.get("categoria")
+    const soloDestacados = searchParams.get("destacados") === "true"
+    const busqueda = searchParams.get("busqueda")
+
+    const productos = await prisma.producto.findMany({
+      where: {
+        activo: true,
+        ...(categoriaSlug && { categoria: { slug: categoriaSlug } }),
+        ...(soloDestacados && { destacado: true }),
+        ...(busqueda && { nombre: { contains: busqueda, mode: "insensitive" } }),
+      },
+      select: {
+        id: true,
+        nombre: true,
+        slug: true,
+        precio: true,
+        precioAnterior: true,
+        stock: true,
+        activo: true,
+        destacado: true,
+        imagenes: {
+          select: { urlPublica: true, altText: true, esPrincipal: true },
+          orderBy: { orden: "asc" },
+        },
+        categoria: { select: { nombre: true, slug: true } },
+      },
+      orderBy: { creadoEn: "desc" },
+    })
+
+    return NextResponse.json<RespuestaAPI<ProductoResumen[]>>({ datos: productos })
+  } catch (error) {
+    console.error("Error al obtener productos:", error)
+    return NextResponse.json<RespuestaAPI<null>>(
+      { error: "Error al obtener los productos" },
+      { status: 500 }
+    )
+  }
+}
+
+export async function POST(solicitud: NextRequest) {
+  try {
+    const supabase = await crearClienteServidor()
+    const { data: { user } } = await supabase.auth.getUser()
+
+    if (!user) {
+      return NextResponse.json<RespuestaAPI<null>>(
+        { error: "No autorizado" },
+        { status: 401 }
+      )
+    }
+
+    const cuerpo = await solicitud.json()
+    const { nombre, descripcion, precio, precioAnterior, stock, activo, destacado, categoriaId } = cuerpo
+
+    if (!nombre || !precio || !categoriaId) {
+      return NextResponse.json<RespuestaAPI<null>>(
+        { error: "Faltan campos obligatorios: nombre, precio, categoría" },
+        { status: 400 }
+      )
+    }
+
+    const slugBase = slugify(nombre, { lower: true, strict: true, locale: "es" })
+    const productoExistente = await prisma.producto.findUnique({ where: { slug: slugBase } })
+    const slug = productoExistente ? `${slugBase}-${Date.now()}` : slugBase
+
+    const producto = await prisma.producto.create({
+      data: {
+        nombre,
+        slug,
+        descripcion,
+        precio,
+        precioAnterior: precioAnterior || null,
+        stock: stock ?? 0,
+        activo: activo ?? true,
+        destacado: destacado ?? false,
+        categoriaId,
+        vendedorId: user.id,
+      },
+      include: { categoria: true, imagenes: true },
+    })
+
+    return NextResponse.json<RespuestaAPI<typeof producto>>(
+      { datos: producto, mensaje: "Producto creado correctamente" },
+      { status: 201 }
+    )
+  } catch (error) {
+    console.error("Error al crear producto:", error)
+    return NextResponse.json<RespuestaAPI<null>>(
+      { error: "Error al crear el producto" },
+      { status: 500 }
+    )
+  }
+}

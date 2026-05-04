@@ -2,6 +2,9 @@
   "permissions": {
     "allow": [
       "Bash(node -e ' *)"
+    ],
+    "additionalDirectories": [
+      "c:\\Users\\Diego\\Desktop\\proyectos-pedro\\decorarte\\src\\app\\api\\categorias"
     ]
   }
 }
