@@ -10,6 +10,7 @@ export function formatearPrecio(precio: number): string {
     style: "currency",
     currency: "ARS",
     minimumFractionDigits: 0,
+    useGrouping: false,
   }).format(precio)
 }
 
