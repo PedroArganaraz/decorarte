@@ -58,6 +58,18 @@ export async function POST(solicitud: NextRequest) {
       )
     }
 
+    // Asegurar que el usuario existe en nuestra tabla
+    await prisma.usuario.upsert({
+      where: { id: user.id },
+      create: {
+        id: user.id,
+        email: user.email ?? "",
+        nombre: user.email?.split("@")[0] ?? "Vendedor",
+        rol: "VENDEDOR",
+      },
+      update: {},
+    })
+
     const cuerpo = await solicitud.json()
     const { nombre, descripcion, precio, precioAnterior, stock, activo, destacado, categoriaId } = cuerpo
 
