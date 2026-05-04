@@ -25,9 +25,9 @@ export default function Encabezado({ categorias }: Props) {
         display: "flex",
         justifyContent: "space-between",
         alignItems: "center",
-        padding: "8px 24px",
+        padding: "5px 24px",
         borderBottom: "0.5px solid var(--color-borde)",
-        fontSize: "11px",
+        fontSize: "10px",
         color: "var(--color-texto-muted)",
         letterSpacing: "0.05em",
       }}>
@@ -39,14 +39,14 @@ export default function Encabezado({ categorias }: Props) {
         display: "grid",
         gridTemplateColumns: "1fr auto 1fr",
         alignItems: "center",
-        padding: "20px 24px 16px",
+        padding: "12px 24px 8px",
       }}>
         <div />
 
         <Link href="/" style={{ textDecoration: "none" }}>
           <h1 style={{
             fontFamily: "'Cormorant Garamond', serif",
-            fontSize: "28px",
+            fontSize: "22px",
             fontWeight: 400,
             letterSpacing: "0.2em",
             color: "var(--color-texto)",
@@ -96,8 +96,8 @@ export default function Encabezado({ categorias }: Props) {
       <nav style={{
         display: "flex",
         justifyContent: "center",
-        gap: "32px",
-        padding: "0 24px 16px",
+        gap: "24px",
+        padding: "0 24px 10px",
       }}>
         <Link
           href="/catalogo"
