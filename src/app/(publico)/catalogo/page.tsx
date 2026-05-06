@@ -44,7 +44,7 @@ export default async function PaginaCatalogo({ searchParams }: Props) {
     },
   })
 
-  const productosSerializados = productos.map((p) => ({
+  const productosSerializados = productos.map((p: typeof productos[number]) => ({
     ...p,
     precio: Number(p.precio),
     precioAnterior: p.precioAnterior ? Number(p.precioAnterior) : null,
