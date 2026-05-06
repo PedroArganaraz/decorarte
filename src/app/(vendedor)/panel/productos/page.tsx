@@ -1,20 +1,40 @@
 import { prisma } from "@/lib/prisma"
 import Link from "next/link"
+import FiltrosProductos from "@/components/productos/FiltrosProductos"
 
-export default async function PaginaProductos() {
-  const productos = await prisma.producto.findMany({
-    orderBy: { creadoEn: "desc" },
-    include: {
-      categoria: true,
-      imagenes: {
-        where: { esPrincipal: true },
-        take: 1,
+interface Props {
+  searchParams: Promise<{
+    nombre?: string
+    categoriaId?: string
+  }>
+}
+
+export default async function PaginaProductos({ searchParams }: Props) {
+  const { nombre, categoriaId } = await searchParams
+
+  const [productos, categorias] = await Promise.all([
+    prisma.producto.findMany({
+      where: {
+        ...(nombre && { nombre: { contains: nombre, mode: "insensitive" } }),
+        ...(categoriaId && { categoriaId }),
       },
-      materialRel: {
-        select: { nombre: true },
+      orderBy: { stock: "asc" },
+      include: {
+        categoria: true,
+        imagenes: {
+          where: { esPrincipal: true },
+          take: 1,
+        },
+        materialRel: {
+          select: { nombre: true },
+        },
       },
-    },
-  })
+    }),
+    prisma.categoria.findMany({
+      where: { activa: true },
+      orderBy: { orden: "asc" },
+    }),
+  ])
 
   return (
     <div>
@@ -51,6 +71,8 @@ export default async function PaginaProductos() {
           + Nuevo producto
         </Link>
       </div>
+
+      <FiltrosProductos categorias={categorias} />
 
       <div style={{
         backgroundColor: "var(--color-card)",
