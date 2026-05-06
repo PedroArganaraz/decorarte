@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma"
 import Encabezado from "@/components/layout/Encabezado"
 import PiePagina from "@/components/layout/PiePagina"
+import BotonWhatsapp from "@/components/layout/BotonWhatsapp"
 
 export default async function LayoutPublico({
   children,
@@ -19,6 +20,7 @@ export default async function LayoutPublico({
         {children}
       </main>
       <PiePagina />
+      <BotonWhatsapp />
     </>
   )
 }

@@ -46,19 +46,34 @@ export default function PiePagina() {
             marginBottom: "16px",
             color: "var(--color-texto-muted)",
           }}>
-            Contacto
+            Seguinos
           </h3>
           <div style={{
             display: "flex",
             flexDirection: "column",
-            gap: "8px",
-            fontSize: "12px",
-            fontWeight: 300,
-            letterSpacing: "0.05em",
-            lineHeight: 1.8,
+            gap: "10px",
           }}>
-            <span>@decorarte.cba</span>
-            <span>Córdoba, Argentina</span>
+            {[
+              { label: "Instagram", href: "https://www.instagram.com/decorarte.cba/" },
+              { label: "TikTok", href: "https://www.tiktok.com/@decorarte.cba" },
+              { label: "WhatsApp", href: "https://api.whatsapp.com/send/?phone=%2B5493512540654" },
+            ].map((red) => (
+              <a
+                key={red.label}
+                href={red.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  fontSize: "12px",
+                  fontWeight: 300,
+                  letterSpacing: "0.05em",
+                  color: "var(--color-texto-muted)",
+                  textDecoration: "none",
+                }}
+              >
+                {red.label}
+              </a>
+            ))}
           </div>
         </div>
 

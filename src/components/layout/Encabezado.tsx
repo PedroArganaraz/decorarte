@@ -1,8 +1,10 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import IconoCarrito from "@/components/carrito/IconoCarrito"
+import { crearClienteNavegador } from "@/lib/supabase/cliente"
 import type { Categoria } from "@prisma/client"
 
 interface Props {
@@ -11,6 +13,14 @@ interface Props {
 
 export default function Encabezado({ categorias }: Props) {
   const pathname = usePathname()
+  const [tieneSesion, setTieneSesion] = useState(false)
+
+  useEffect(() => {
+    const supabase = crearClienteNavegador()
+    supabase.auth.getSession().then(({ data }) => {
+      setTieneSesion(!!data.session)
+    })
+  }, [])
 
   return (
     <header style={{
@@ -20,20 +30,6 @@ export default function Encabezado({ categorias }: Props) {
       top: 0,
       zIndex: 50,
     }}>
-      <div style={{
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "center",
-        padding: "5px 24px",
-        borderBottom: "0.5px solid var(--color-borde)",
-        fontSize: "10px",
-        color: "var(--color-texto-muted)",
-        letterSpacing: "0.05em",
-      }}>
-        <span>Envíos a todo el país</span>
-        <span>@decorarte.cba</span>
-      </div>
-
       <div style={{
         display: "grid",
         gridTemplateColumns: "1fr auto 1fr",
@@ -59,7 +55,31 @@ export default function Encabezado({ categorias }: Props) {
           display: "flex",
           justifyContent: "flex-end",
           alignItems: "center",
+          gap: "16px",
         }}>
+          <Link
+            href={tieneSesion ? "/panel" : "/auth/login"}
+            style={{
+              color: "var(--color-texto)",
+              display: "flex",
+              alignItems: "center",
+            }}
+            aria-label="Acceso vendedoras"
+          >
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+              <circle cx="12" cy="7" r="4"/>
+            </svg>
+          </Link>
           <IconoCarrito />
         </div>
       </div>

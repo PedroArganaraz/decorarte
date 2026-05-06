@@ -31,6 +31,7 @@ model Categoria {
   activa      Boolean    @default(true)
   creadoEn    DateTime   @default(now()) @map("creado_en")
   productos   Producto[]
+  materiales  Material[]
   @@map("categorias")
 }
 
@@ -45,15 +46,28 @@ model Producto {
   activo         Boolean          @default(true)
   destacado      Boolean          @default(false)
   material       String?
+  materialId     String?          @map("material_id")
   categoriaId    String           @map("categoria_id")
   vendedorId     String           @map("vendedor_id")
   creadoEn       DateTime         @default(now()) @map("creado_en")
   actualizadoEn  DateTime         @updatedAt @map("actualizado_en")
   categoria      Categoria        @relation(fields: [categoriaId], references: [id])
   vendedor       Usuario          @relation(fields: [vendedorId], references: [id])
+  materialRel    Material?        @relation(fields: [materialId], references: [id])
   imagenes       ImagenProducto[]
   itemsCarrito   ItemCarrito[]
   @@map("productos")
+}
+
+model Material {
+  id          String     @id @default(cuid())
+  nombre      String
+  categoriaId String     @map("categoria_id")
+  creadoEn    DateTime   @default(now()) @map("creado_en")
+  categoria   Categoria  @relation(fields: [categoriaId], references: [id], onDelete: Cascade)
+  productos   Producto[]
+  @@unique([nombre, categoriaId])
+  @@map("materiales")
 }
 
 model ImagenProducto {

@@ -84,90 +84,108 @@ export default function FormularioCategoria() {
   }
 
   return (
-    <div style={{
-      backgroundColor: "var(--color-card)",
-      border: "0.5px solid var(--color-borde)",
-      padding: "24px",
-      width: "320px",
-    }}>
-      <h2 style={{
-        fontFamily: "'Cormorant Garamond', serif",
-        fontSize: "18px",
-        fontWeight: 400,
-        letterSpacing: "0.05em",
-        color: "var(--color-texto)",
-        marginBottom: "20px",
+    <>
+      <button
+        onClick={() => setAbierto(false)}
+        style={{
+          position: "fixed",
+          inset: 0,
+          backgroundColor: "rgba(44, 44, 42, 0.3)",
+          zIndex: 100,
+          border: "none",
+          cursor: "pointer",
+        }}
+      />
+      <div style={{
+        position: "fixed",
+        top: "50%",
+        left: "50%",
+        transform: "translate(-50%, -50%)",
+        zIndex: 101,
+        backgroundColor: "var(--color-card)",
+        border: "0.5px solid var(--color-borde)",
+        padding: "32px",
+        width: "360px",
       }}>
-        Nueva categoría
-      </h2>
+        <h2 style={{
+          fontFamily: "'Cormorant Garamond', serif",
+          fontSize: "22px",
+          fontWeight: 400,
+          letterSpacing: "0.05em",
+          color: "var(--color-texto)",
+          marginBottom: "24px",
+        }}>
+          Nueva categoría
+        </h2>
 
-      <form onSubmit={manejarEnvio} style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
-        <div>
-          <label style={estiloLabel}>Nombre *</label>
-          <input
-            type="text"
-            value={nombre}
-            onChange={(e) => setNombre(e.target.value)}
-            required
-            placeholder="Ej: Anillos"
-            style={estiloInput}
-          />
-        </div>
+        <form onSubmit={manejarEnvio} style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+          <div>
+            <label style={estiloLabel}>Nombre *</label>
+            <input
+              type="text"
+              value={nombre}
+              onChange={(e) => setNombre(e.target.value)}
+              required
+              placeholder="Ej: Anillos"
+              style={estiloInput}
+            />
+          </div>
 
-        <div>
-          <label style={estiloLabel}>Descripción</label>
-          <textarea
-            value={descripcion}
-            onChange={(e) => setDescripcion(e.target.value)}
-            rows={2}
-            placeholder="Opcional"
-            style={{ ...estiloInput, resize: "vertical" }}
-          />
-        </div>
+          <div>
+            <label style={estiloLabel}>Descripción</label>
+            <textarea
+              value={descripcion}
+              onChange={(e) => setDescripcion(e.target.value)}
+              rows={2}
+              placeholder="Opcional"
+              style={{ ...estiloInput, resize: "vertical" }}
+            />
+          </div>
 
-        <div style={{ display: "flex", gap: "8px", marginTop: "4px" }}>
-          <button
-            type="submit"
-            disabled={cargando}
-            style={{
-              flex: 1,
-              padding: "10px",
-              fontSize: "11px",
-              fontFamily: "'Jost', sans-serif",
-              fontWeight: 400,
-              letterSpacing: "0.12em",
-              textTransform: "uppercase",
-              backgroundColor: cargando ? "var(--color-texto-muted)" : "var(--color-texto)",
-              color: "var(--color-fondo)",
-              border: "none",
-              borderRadius: 0,
-              cursor: cargando ? "not-allowed" : "pointer",
-            }}
-          >
-            {cargando ? "Guardando..." : "Guardar"}
-          </button>
-          <button
-            type="button"
-            onClick={() => setAbierto(false)}
-            style={{
-              flex: 1,
-              padding: "10px",
-              fontSize: "11px",
-              fontFamily: "'Jost', sans-serif",
-              fontWeight: 400,
-              letterSpacing: "0.12em",
-              textTransform: "uppercase",
-              backgroundColor: "transparent",
-              color: "var(--color-texto-muted)",
-              border: "0.5px solid var(--color-borde)",
-              borderRadius: 0,
-              cursor: "pointer",
-            }}
-          >
-            Cancelar
-          </button>
-        </div>
-      </form>
-    </div>
+          <div style={{ display: "flex", gap: "8px", marginTop: "8px" }}>
+            <button
+              type="submit"
+              disabled={cargando}
+              style={{
+                flex: 1,
+                padding: "10px",
+                fontSize: "11px",
+                fontFamily: "'Jost', sans-serif",
+                fontWeight: 400,
+                letterSpacing: "0.12em",
+                textTransform: "uppercase",
+                backgroundColor: cargando ? "var(--color-texto-muted)" : "var(--color-texto)",
+                color: "var(--color-fondo)",
+                border: "none",
+                borderRadius: 0,
+                cursor: cargando ? "not-allowed" : "pointer",
+              }}
+            >
+              {cargando ? "Guardando..." : "Guardar"}
+            </button>
+            <button
+              type="button"
+              onClick={() => setAbierto(false)}
+              style={{
+                flex: 1,
+                padding: "10px",
+                fontSize: "11px",
+                fontFamily: "'Jost', sans-serif",
+                fontWeight: 400,
+                letterSpacing: "0.12em",
+                textTransform: "uppercase",
+                backgroundColor: "transparent",
+                color: "var(--color-texto)",
+                border: "0.5px solid var(--color-texto)",
+                borderRadius: 0,
+                cursor: "pointer",
+              }}
+            >
+              Cancelar
+            </button>
+          </div>
+        </form>
+      </div>
+    </>
   )
 }

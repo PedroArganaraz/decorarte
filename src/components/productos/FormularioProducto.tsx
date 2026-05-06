@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import type { Categoria } from "@prisma/client"
@@ -22,15 +22,6 @@ interface Props {
   }
 }
 
-const MATERIALES_POR_CATEGORIA: Record<string, string[]> = {
-  "Aros": ["Acero dorado", "Acero blanco"],
-  "Collares": ["Chokers", "Piedras", "Cadenas"],
-  "Pulseras": ["Acero dorado", "Acero blanco", "Eco-cuero"],
-  "Anillos": ["Piedras + Dorado", "Acero blanco", "Piedras + Plateado"],
-}
-
-const MATERIALES_DEFAULT = ["Acero dorado", "Acero blanco", "Otro"]
-
 export default function FormularioProducto({ categorias, accionesExtra, producto }: Props) {
   const router = useRouter()
   const esEdicion = !!producto
@@ -48,13 +39,17 @@ export default function FormularioProducto({ categorias, accionesExtra, producto
   })
 
   const [cargando, setCargando] = useState(false)
+  const [materialesDisponibles, setMaterialesDisponibles] = useState<string[]>([])
 
-  const categoriaNombre = categorias.find(
-    (c) => c.id === form.categoriaId
-  )?.nombre ?? ""
-
-  const materialesDisponibles =
-    MATERIALES_POR_CATEGORIA[categoriaNombre] ?? MATERIALES_DEFAULT
+  useEffect(() => {
+    if (!form.categoriaId) {
+      setMaterialesDisponibles([])
+      return
+    }
+    fetch(`/api/materiales?categoriaId=${form.categoriaId}`)
+      .then((res) => res.json())
+      .then((data) => setMaterialesDisponibles((data.datos ?? []).map((m: { nombre: string }) => m.nombre)))
+  }, [form.categoriaId])
 
   const actualizar = (campo: string, valor: string | boolean) => {
     setForm((prev) => ({ ...prev, [campo]: valor }))
@@ -174,16 +169,8 @@ export default function FormularioProducto({ categorias, accionesExtra, producto
             <select
               value={form.categoriaId}
               onChange={(e) => {
-                const nuevaCategoria = e.target.value
-                const nombreNuevaCategoria = categorias.find(
-                  (c) => c.id === nuevaCategoria
-                )?.nombre ?? ""
-                const nuevosMateriales =
-                  MATERIALES_POR_CATEGORIA[nombreNuevaCategoria] ?? MATERIALES_DEFAULT
-                actualizar("categoriaId", nuevaCategoria)
-                if (!nuevosMateriales.includes(form.material as string)) {
-                  actualizar("material", "")
-                }
+                actualizar("categoriaId", e.target.value)
+                actualizar("material", "")
               }}
               required
               style={estiloInput}
@@ -205,9 +192,13 @@ export default function FormularioProducto({ categorias, accionesExtra, producto
               style={estiloInput}
             >
               <option value="">Sin especificar</option>
-              {materialesDisponibles.map((m) => (
-                <option key={m} value={m}>{m}</option>
-              ))}
+              {materialesDisponibles.length === 0 ? (
+                <option disabled value="">Sin materiales cargados</option>
+              ) : (
+                materialesDisponibles.map((m) => (
+                  <option key={m} value={m}>{m}</option>
+                ))
+              )}
             </select>
           </div>
         </div>
@@ -237,6 +228,7 @@ export default function FormularioProducto({ categorias, accionesExtra, producto
                 type="number"
                 value={form.precio}
                 onChange={(e) => actualizar("precio", e.target.value)}
+                onWheel={(e) => (e.target as HTMLInputElement).blur()}
                 required
                 min="0"
                 step="0.01"
@@ -251,6 +243,7 @@ export default function FormularioProducto({ categorias, accionesExtra, producto
                 type="number"
                 value={form.precioAnterior}
                 onChange={(e) => actualizar("precioAnterior", e.target.value)}
+                onWheel={(e) => (e.target as HTMLInputElement).blur()}
                 min="0"
                 step="0.01"
                 placeholder="0"
@@ -264,6 +257,7 @@ export default function FormularioProducto({ categorias, accionesExtra, producto
                 type="number"
                 value={form.stock}
                 onChange={(e) => actualizar("stock", e.target.value)}
+                onWheel={(e) => (e.target as HTMLInputElement).blur()}
                 min="0"
                 step="1"
                 style={estiloInput}

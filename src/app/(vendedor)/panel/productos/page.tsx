@@ -10,6 +10,9 @@ export default async function PaginaProductos() {
         where: { esPrincipal: true },
         take: 1,
       },
+      materialRel: {
+        select: { nombre: true },
+      },
     },
   })
 
@@ -122,7 +125,7 @@ export default async function PaginaProductos() {
                     {producto.categoria.nombre}
                   </td>
                   <td style={{ padding: "12px 16px", fontSize: "12px", color: "var(--color-acento)" }}>
-                    {producto.material || "—"}
+                    {producto.materialRel?.nombre ?? producto.material ?? "—"}
                   </td>
                   <td style={{ padding: "12px 16px", fontSize: "13px", color: "var(--color-texto)" }}>
                     ${Number(producto.precio).toLocaleString("es-AR")}

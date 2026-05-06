@@ -39,8 +39,8 @@ export default async function PaginaNuevoProducto() {
             letterSpacing: "0.12em",
             textTransform: "uppercase",
             backgroundColor: "transparent",
-            color: "var(--color-texto-muted)",
-            border: "0.5px solid var(--color-borde)",
+            color: "var(--color-texto)",
+            border: "0.5px solid var(--color-texto)",
             textDecoration: "none",
             display: "inline-block",
           }}

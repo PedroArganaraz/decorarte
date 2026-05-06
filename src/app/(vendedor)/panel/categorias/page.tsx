@@ -1,11 +1,14 @@
 import { prisma } from "@/lib/prisma"
 import FormularioCategoria from "@/components/productos/FormularioCategoria"
-import EliminarCategoria from "@/components/productos/EliminarCategoria"
+import FilaCategoria from "@/components/productos/FilaCategoria"
 
 export default async function PaginaCategorias() {
   const categorias = await prisma.categoria.findMany({
     orderBy: { orden: "asc" },
-    include: { _count: { select: { productos: true } } },
+    include: {
+      _count: { select: { productos: true } },
+      materiales: { orderBy: { nombre: "asc" } },
+    },
   })
 
   return (
@@ -46,7 +49,7 @@ export default async function PaginaCategorias() {
           <table style={{ width: "100%", borderCollapse: "collapse" }}>
             <thead>
               <tr style={{ borderBottom: "0.5px solid var(--color-borde)" }}>
-                {["Nombre", "Slug", "Productos", "Estado", ""].map((col) => (
+                {["Nombre", "Slug", "Productos", "Materiales", "Estado", ""].map((col) => (
                   <th key={col} style={{
                     padding: "12px 16px",
                     textAlign: "left",
@@ -63,37 +66,7 @@ export default async function PaginaCategorias() {
             </thead>
             <tbody>
               {categorias.map((cat) => (
-                <tr key={cat.id} style={{ borderBottom: "0.5px solid var(--color-superficie)" }}>
-                  <td style={{ padding: "14px 16px", fontSize: "14px", color: "var(--color-texto)" }}>
-                    {cat.nombre}
-                  </td>
-                  <td style={{ padding: "14px 16px", fontSize: "12px", color: "var(--color-texto-muted)", fontFamily: "monospace" }}>
-                    {cat.slug}
-                  </td>
-                  <td style={{ padding: "14px 16px", fontSize: "13px", color: "var(--color-texto-muted)" }}>
-                    {cat._count.productos}
-                  </td>
-                  <td style={{ padding: "14px 16px" }}>
-                    <span style={{
-                      fontSize: "9px",
-                      fontWeight: 500,
-                      letterSpacing: "0.1em",
-                      textTransform: "uppercase",
-                      padding: "3px 8px",
-                      backgroundColor: cat.activa ? "#2C2C2A" : "var(--color-superficie)",
-                      color: cat.activa ? "var(--color-fondo)" : "var(--color-texto-muted)",
-                    }}>
-                      {cat.activa ? "Activa" : "Inactiva"}
-                    </span>
-                  </td>
-                  <td style={{ padding: "14px 16px", textAlign: "right" }}>
-                    <EliminarCategoria
-                      id={cat.id}
-                      nombre={cat.nombre}
-                      tieneProductos={cat._count.productos > 0}
-                    />
-                  </td>
-                </tr>
+                <FilaCategoria key={cat.id} categoria={cat} />
               ))}
             </tbody>
           </table>
