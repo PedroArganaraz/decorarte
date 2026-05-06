@@ -50,7 +50,7 @@ export default async function PaginaCatalogo({ searchParams }: Props) {
     precioAnterior: p.precioAnterior ? Number(p.precioAnterior) : null,
   }))
 
-  const categoriaActiva = categorias.find((c) => c.slug === categoria)
+  const categoriaActiva = categorias.find((c: typeof categorias[number]) => c.slug === categoria)
 
   return (
     <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "48px 24px" }}>

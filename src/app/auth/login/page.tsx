@@ -1,10 +1,10 @@
 "use client"
 
-import { useState } from "react"
+import { useState, Suspense } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { crearClienteNavegador } from "@/lib/supabase/cliente"
 
-export default function PaginaLogin() {
+function FormularioLogin() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [cargando, setCargando] = useState(false)
@@ -34,6 +34,104 @@ export default function PaginaLogin() {
     router.refresh()
   }
 
+  return (
+    <form onSubmit={manejarLogin} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+        <label style={{
+          fontSize: "10px",
+          fontWeight: 500,
+          letterSpacing: "0.12em",
+          textTransform: "uppercase",
+          color: "var(--color-texto-muted)",
+        }}>
+          Email
+        </label>
+        <input
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+          style={{
+            padding: "12px 14px",
+            fontSize: "14px",
+            fontFamily: "'Jost', sans-serif",
+            fontWeight: 300,
+            backgroundColor: "var(--color-card)",
+            border: "0.5px solid var(--color-borde)",
+            borderRadius: 0,
+            color: "var(--color-texto)",
+            outline: "none",
+            width: "100%",
+          }}
+        />
+      </div>
+
+      <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+        <label style={{
+          fontSize: "10px",
+          fontWeight: 500,
+          letterSpacing: "0.12em",
+          textTransform: "uppercase",
+          color: "var(--color-texto-muted)",
+        }}>
+          Contraseña
+        </label>
+        <input
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+          style={{
+            padding: "12px 14px",
+            fontSize: "14px",
+            fontFamily: "'Jost', sans-serif",
+            fontWeight: 300,
+            backgroundColor: "var(--color-card)",
+            border: "0.5px solid var(--color-borde)",
+            borderRadius: 0,
+            color: "var(--color-texto)",
+            outline: "none",
+            width: "100%",
+          }}
+        />
+      </div>
+
+      {error && (
+        <p style={{
+          fontSize: "12px",
+          color: "#A32D2D",
+          letterSpacing: "0.03em",
+        }}>
+          {error}
+        </p>
+      )}
+
+      <button
+        type="submit"
+        disabled={cargando}
+        style={{
+          marginTop: "8px",
+          padding: "14px",
+          fontSize: "11px",
+          fontFamily: "'Jost', sans-serif",
+          fontWeight: 400,
+          letterSpacing: "0.15em",
+          textTransform: "uppercase",
+          backgroundColor: cargando ? "var(--color-texto-muted)" : "var(--color-texto)",
+          color: "var(--color-fondo)",
+          border: "none",
+          borderRadius: 0,
+          cursor: cargando ? "not-allowed" : "pointer",
+          transition: "background-color 0.15s ease",
+        }}
+      >
+        {cargando ? "Ingresando..." : "Ingresar"}
+      </button>
+    </form>
+  )
+}
+
+export default function PaginaLogin() {
   return (
     <div style={{
       minHeight: "100vh",
@@ -69,99 +167,9 @@ export default function PaginaLogin() {
           </p>
         </div>
 
-        <form onSubmit={manejarLogin} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-          <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-            <label style={{
-              fontSize: "10px",
-              fontWeight: 500,
-              letterSpacing: "0.12em",
-              textTransform: "uppercase",
-              color: "var(--color-texto-muted)",
-            }}>
-              Email
-            </label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              style={{
-                padding: "12px 14px",
-                fontSize: "14px",
-                fontFamily: "'Jost', sans-serif",
-                fontWeight: 300,
-                backgroundColor: "var(--color-card)",
-                border: "0.5px solid var(--color-borde)",
-                borderRadius: 0,
-                color: "var(--color-texto)",
-                outline: "none",
-                width: "100%",
-              }}
-            />
-          </div>
-
-          <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-            <label style={{
-              fontSize: "10px",
-              fontWeight: 500,
-              letterSpacing: "0.12em",
-              textTransform: "uppercase",
-              color: "var(--color-texto-muted)",
-            }}>
-              Contraseña
-            </label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              style={{
-                padding: "12px 14px",
-                fontSize: "14px",
-                fontFamily: "'Jost', sans-serif",
-                fontWeight: 300,
-                backgroundColor: "var(--color-card)",
-                border: "0.5px solid var(--color-borde)",
-                borderRadius: 0,
-                color: "var(--color-texto)",
-                outline: "none",
-                width: "100%",
-              }}
-            />
-          </div>
-
-          {error && (
-            <p style={{
-              fontSize: "12px",
-              color: "#A32D2D",
-              letterSpacing: "0.03em",
-            }}>
-              {error}
-            </p>
-          )}
-
-          <button
-            type="submit"
-            disabled={cargando}
-            style={{
-              marginTop: "8px",
-              padding: "14px",
-              fontSize: "11px",
-              fontFamily: "'Jost', sans-serif",
-              fontWeight: 400,
-              letterSpacing: "0.15em",
-              textTransform: "uppercase",
-              backgroundColor: cargando ? "var(--color-texto-muted)" : "var(--color-texto)",
-              color: "var(--color-fondo)",
-              border: "none",
-              borderRadius: 0,
-              cursor: cargando ? "not-allowed" : "pointer",
-              transition: "background-color 0.15s ease",
-            }}
-          >
-            {cargando ? "Ingresando..." : "Ingresar"}
-          </button>
-        </form>
+        <Suspense fallback={null}>
+          <FormularioLogin />
+        </Suspense>
       </div>
     </div>
   )
