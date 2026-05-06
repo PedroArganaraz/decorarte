@@ -82,7 +82,7 @@ export default async function PaginaCatalogo({ searchParams }: Props) {
         gap: "0",
         marginBottom: "32px",
         borderBottom: "0.5px solid var(--color-borde)",
-        overflowX: "auto",
+        overflow: "visible",
       }}>
         <Link
           href="/catalogo"

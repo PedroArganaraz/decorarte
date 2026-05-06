@@ -18,6 +18,7 @@ interface Props {
     activo: boolean
     destacado: boolean
     material: string | null
+    talle: string | null
     categoriaId: string
   }
 }
@@ -35,11 +36,16 @@ export default function FormularioProducto({ categorias, accionesExtra, producto
     activo: producto?.activo ?? true,
     destacado: producto?.destacado ?? false,
     material: producto?.material ?? "",
+    talle: producto?.talle ?? "",
     categoriaId: producto?.categoriaId ?? "",
   })
 
   const [cargando, setCargando] = useState(false)
   const [materialesDisponibles, setMaterialesDisponibles] = useState<string[]>([])
+
+  const esAnillos = categorias.find(
+    (c) => c.id === form.categoriaId
+  )?.nombre === "Anillos"
 
   useEffect(() => {
     if (!form.categoriaId) {
@@ -68,6 +74,7 @@ export default function FormularioProducto({ categorias, accionesExtra, producto
       activo: form.activo,
       destacado: form.destacado,
       material: form.material || null,
+      talle: form.talle || null,
       categoriaId: form.categoriaId,
     }
 
@@ -201,6 +208,19 @@ export default function FormularioProducto({ categorias, accionesExtra, producto
               )}
             </select>
           </div>
+
+          {esAnillos && (
+            <div>
+              <label style={estiloLabel}>Talle (opcional)</label>
+              <input
+                type="text"
+                value={form.talle}
+                onChange={(e) => actualizar("talle", e.target.value)}
+                placeholder="Ej: 18, 19, Regulable"
+                style={estiloInput}
+              />
+            </div>
+          )}
         </div>
 
         <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>

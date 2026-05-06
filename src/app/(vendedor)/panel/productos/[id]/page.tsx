@@ -37,6 +37,7 @@ export default async function PaginaEditarProducto({
     activo: producto.activo,
     destacado: producto.destacado,
     material: producto.material,
+    talle: producto.talle,
     categoriaId: producto.categoriaId,
   }
 

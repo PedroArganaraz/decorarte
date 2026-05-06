@@ -159,6 +159,29 @@ export default async function PaginaProducto({ params }: Props) {
               )}
             </div>
 
+            {producto.talle && (
+              <div style={{ marginBottom: "24px" }}>
+                <span style={{
+                  fontSize: "13px",
+                  fontWeight: 300,
+                  letterSpacing: "0.08em",
+                  textTransform: "uppercase",
+                  color: "var(--color-texto-muted)",
+                  marginRight: "8px",
+                }}>
+                  Talle
+                </span>
+                <span style={{
+                  fontSize: "18px",
+                  fontFamily: "'Cormorant Garamond', serif",
+                  fontWeight: 300,
+                  color: "var(--color-texto)",
+                }}>
+                  {producto.talle}
+                </span>
+              </div>
+            )}
+
             {producto.descripcion && (
               <p style={{
                 fontSize: "14px",

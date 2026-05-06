@@ -46,6 +46,7 @@ model Producto {
   activo         Boolean          @default(true)
   destacado      Boolean          @default(false)
   material       String?
+  talle          String?          @map("talle")
   materialId     String?          @map("material_id")
   categoriaId    String           @map("categoria_id")
   vendedorId     String           @map("vendedor_id")
