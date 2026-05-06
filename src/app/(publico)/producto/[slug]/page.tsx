@@ -87,15 +87,15 @@ export default async function PaginaProducto({ params }: Props) {
         {/* LAYOUT PRINCIPAL */}
         <div style={{
           display: "grid",
-          gridTemplateColumns: "1fr 1fr",
-          gap: "64px",
+          gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 460px), 1fr))",
+          gap: "40px",
           alignItems: "start",
         }}>
           {/* GALERÍA */}
           <GaleriaProducto imagenes={producto.imagenes} />
 
           {/* INFO */}
-          <div style={{ position: "sticky", top: "120px" }}>
+          <div>
             <div style={{ marginBottom: "8px" }}>
               <span style={{
                 fontSize: "10px",
@@ -237,7 +237,7 @@ export default async function PaginaProducto({ params }: Props) {
             </h2>
             <div style={{
               display: "grid",
-              gridTemplateColumns: "repeat(4, 1fr)",
+              gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
               gap: "16px",
             }}>
               {relacionadosSerializados.map((p) => (

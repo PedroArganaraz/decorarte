@@ -53,7 +53,7 @@ export default function DrawerCarrito({ abierto, onCerrar }: Props) {
         top: 0,
         right: 0,
         height: "100vh",
-        width: "380px",
+        width: "min(380px, 100vw)",
         backgroundColor: "var(--color-card)",
         borderLeft: "0.5px solid var(--color-borde)",
         zIndex: 101,

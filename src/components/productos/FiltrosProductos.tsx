@@ -3,6 +3,7 @@
 import { useRouter, useSearchParams } from "next/navigation"
 import { useState } from "react"
 import type { Categoria } from "@prisma/client"
+import { useTamanioPantalla } from "@/hooks/useTamanioPantalla"
 
 interface Props {
   categorias: Categoria[]
@@ -13,6 +14,7 @@ export default function FiltrosProductos({ categorias }: Props) {
   const searchParams = useSearchParams()
   const [nombre, setNombre] = useState(searchParams.get("nombre") ?? "")
   const [categoriaId, setCategoriaId] = useState(searchParams.get("categoriaId") ?? "")
+  const { esMobile } = useTamanioPantalla()
 
   const aplicar = () => {
     const params = new URLSearchParams()
@@ -43,8 +45,9 @@ export default function FiltrosProductos({ categorias }: Props) {
     <div style={{
       display: "flex",
       gap: "10px",
-      alignItems: "center",
+      alignItems: esMobile ? "stretch" : "center",
       marginBottom: "20px",
+      flexDirection: esMobile ? "column" : "row",
       flexWrap: "wrap",
     }}>
       <input
@@ -53,13 +56,13 @@ export default function FiltrosProductos({ categorias }: Props) {
         onChange={(e) => setNombre(e.target.value)}
         onKeyDown={(e) => e.key === "Enter" && aplicar()}
         placeholder="Buscar por nombre..."
-        style={{ ...estiloInput, minWidth: "200px" }}
+        style={{ ...estiloInput, minWidth: "200px", width: esMobile ? "100%" : "auto" }}
       />
 
       <select
         value={categoriaId}
         onChange={(e) => setCategoriaId(e.target.value)}
-        style={{ ...estiloInput, minWidth: "160px" }}
+        style={{ ...estiloInput, minWidth: "160px", width: esMobile ? "100%" : "auto" }}
       >
         <option value="">Todas las categorías</option>
         {categorias.map((cat) => (

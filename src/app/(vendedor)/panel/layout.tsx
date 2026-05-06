@@ -1,8 +1,8 @@
 import { redirect } from "next/navigation"
 import { crearClienteServidor } from "@/lib/supabase/servidor"
-import SidebarPanel from "@/components/layout/SidebarPanel"
+import LayoutPanel from "@/components/layout/LayoutPanel"
 
-export default async function LayoutPanel({
+export default async function LayoutPanelPage({
   children,
 }: {
   children: React.ReactNode
@@ -14,20 +14,5 @@ export default async function LayoutPanel({
     redirect("/auth/login")
   }
 
-  return (
-    <div style={{
-      display: "flex",
-      minHeight: "100vh",
-      backgroundColor: "var(--color-superficie)",
-    }}>
-      <SidebarPanel />
-      <main style={{
-        flex: 1,
-        padding: "32px",
-        backgroundColor: "var(--color-superficie)",
-      }}>
-        {children}
-      </main>
-    </div>
-  )
+  return <LayoutPanel>{children}</LayoutPanel>
 }

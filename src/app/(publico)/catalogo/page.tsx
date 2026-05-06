@@ -82,7 +82,10 @@ export default async function PaginaCatalogo({ searchParams }: Props) {
         gap: "0",
         marginBottom: "32px",
         borderBottom: "0.5px solid var(--color-borde)",
-        overflow: "visible",
+        overflowX: "auto",
+        scrollbarWidth: "none" as any,
+        msOverflowStyle: "none" as any,
+        WebkitOverflowScrolling: "touch" as any,
       }}>
         <Link
           href="/catalogo"
@@ -162,8 +165,8 @@ export default async function PaginaCatalogo({ searchParams }: Props) {
       ) : (
         <div style={{
           display: "grid",
-          gridTemplateColumns: "repeat(3, 1fr)",
-          gap: "20px",
+          gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
+          gap: "16px",
         }}>
           {productosSerializados.map((producto) => (
             <TarjetaProducto key={producto.id} producto={producto} />

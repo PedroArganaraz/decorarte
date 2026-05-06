@@ -12,8 +12,8 @@ export default function PiePagina() {
         maxWidth: "1200px",
         margin: "0 auto",
         display: "grid",
-        gridTemplateColumns: "repeat(3, 1fr)",
-        gap: "32px",
+        gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+        gap: "40px",
       }}>
         <div>
           <h2 style={{

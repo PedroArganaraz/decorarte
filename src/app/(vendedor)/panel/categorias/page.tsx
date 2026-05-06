@@ -34,6 +34,7 @@ export default async function PaginaCategorias() {
       <div style={{
         backgroundColor: "var(--color-card)",
         border: "0.5px solid var(--color-borde)",
+        overflowX: "auto",
       }}>
         {categorias.length === 0 ? (
           <div style={{

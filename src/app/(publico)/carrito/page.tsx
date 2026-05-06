@@ -77,7 +77,7 @@ export default function PaginaCarrito() {
 
       <div style={{
         display: "grid",
-        gridTemplateColumns: "1fr 340px",
+        gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 340px), 1fr))",
         gap: "40px",
         alignItems: "start",
       }}>
@@ -237,8 +237,6 @@ export default function PaginaCarrito() {
           backgroundColor: "var(--color-card)",
           border: "0.5px solid var(--color-borde)",
           padding: "24px",
-          position: "sticky",
-          top: "100px",
         }}>
           <h2 style={{
             fontFamily: "'Cormorant Garamond', serif",

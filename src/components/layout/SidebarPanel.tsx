@@ -10,7 +10,11 @@ const navegacion = [
   { label: "Categorías", href: "/panel/categorias" },
 ]
 
-export default function SidebarPanel() {
+interface Props {
+  onCerrar?: () => void
+}
+
+export default function SidebarPanel({ onCerrar }: Props) {
   const pathname = usePathname()
   const router = useRouter()
 
@@ -69,6 +73,7 @@ export default function SidebarPanel() {
             <Link
               key={href}
               href={href}
+              onClick={onCerrar}
               style={{
                 display: "block",
                 padding: "10px 20px",

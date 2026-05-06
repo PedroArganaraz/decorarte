@@ -78,7 +78,7 @@ export default async function PaginaInicio() {
         </p>
         <h2 style={{
           fontFamily: "'Cormorant Garamond', serif",
-          fontSize: "52px",
+          fontSize: "clamp(32px, 5vw, 52px)",
           fontWeight: 300,
           letterSpacing: "0.05em",
           color: "var(--color-texto)",
@@ -158,7 +158,7 @@ export default async function PaginaInicio() {
           </div>
           <div style={{
             display: "grid",
-            gridTemplateColumns: "repeat(4, 1fr)",
+            gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))",
             gap: "16px",
           }}>
             {destacadosSerializados.map((producto) => (
@@ -206,7 +206,7 @@ export default async function PaginaInicio() {
         </div>
         <div style={{
           display: "grid",
-          gridTemplateColumns: "repeat(4, 1fr)",
+          gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))",
           gap: "16px",
         }}>
           {recientesSerializados.map((producto) => (

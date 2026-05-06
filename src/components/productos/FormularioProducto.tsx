@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useTamanioPantalla } from "@/hooks/useTamanioPantalla"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import type { Categoria } from "@prisma/client"
@@ -42,6 +43,8 @@ export default function FormularioProducto({ categorias, accionesExtra, producto
 
   const [cargando, setCargando] = useState(false)
   const [materialesDisponibles, setMaterialesDisponibles] = useState<string[]>([])
+
+  const { esMobile } = useTamanioPantalla()
 
   const esAnillos = categorias.find(
     (c) => c.id === form.categoriaId
@@ -127,8 +130,8 @@ export default function FormularioProducto({ categorias, accionesExtra, producto
     <form id="formulario-producto" onSubmit={manejarEnvio}>
       <div style={{
         display: "grid",
-        gridTemplateColumns: "1fr 1fr",
-        gap: "24px",
+        gridTemplateColumns: esMobile ? "1fr" : "1fr 1fr",
+        gap: esMobile ? "16px" : "24px",
       }}>
         <div style={{
           backgroundColor: "var(--color-card)",

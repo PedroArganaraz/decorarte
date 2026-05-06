@@ -77,6 +77,7 @@ export default async function PaginaProductos({ searchParams }: Props) {
       <div style={{
         backgroundColor: "var(--color-card)",
         border: "0.5px solid var(--color-borde)",
+        overflowX: "auto",
       }}>
         {productos.length === 0 ? (
           <div style={{
