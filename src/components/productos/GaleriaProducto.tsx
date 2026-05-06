@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import Image from "next/image"
 import type { ImagenProducto } from "@prisma/client"
 
 interface Props {
@@ -31,21 +32,22 @@ export default function GaleriaProducto({ imagenes }: Props) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
       <div style={{
+        position: "relative",
         aspectRatio: "1",
         backgroundColor: "var(--color-superficie)",
         overflow: "hidden",
         border: "0.5px solid var(--color-borde)",
       }}>
-        <img
-          src={seleccionada?.urlPublica}
+        <Image
+          src={seleccionada?.urlPublica ?? ""}
           alt={seleccionada?.altText || ""}
+          fill
+          sizes="(max-width: 768px) 100vw, 50vw"
           style={{
-            width: "100%",
-            height: "100%",
             objectFit: "cover",
-            display: "block",
             transition: "opacity 0.2s ease",
           }}
+          priority
         />
       </div>
 
@@ -68,16 +70,16 @@ export default function GaleriaProducto({ imagenes }: Props) {
                 backgroundColor: "transparent",
                 aspectRatio: "1",
                 overflow: "hidden",
+                position: "relative",
               }}
             >
-              <img
+              <Image
                 src={img.urlPublica}
                 alt={img.altText || ""}
+                fill
+                sizes="25vw"
                 style={{
-                  width: "100%",
-                  height: "100%",
                   objectFit: "cover",
-                  display: "block",
                   opacity: seleccionada?.id === img.id ? 1 : 0.6,
                   transition: "opacity 0.2s ease",
                 }}
