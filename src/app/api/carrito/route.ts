@@ -80,13 +80,6 @@ export async function POST(solicitud: NextRequest) {
       )
     }
 
-    if (producto.stock < cantidad) {
-      return NextResponse.json<RespuestaAPI<null>>(
-        { error: `Stock insuficiente. Disponible: ${producto.stock}` },
-        { status: 409 }
-      )
-    }
-
     const carrito = await prisma.carrito.upsert({
       where: { sessionId },
       create: { sessionId },
@@ -100,12 +93,6 @@ export async function POST(solicitud: NextRequest) {
     let item
     if (itemExistente) {
       const nuevaCantidad = itemExistente.cantidad + cantidad
-      if (producto.stock < nuevaCantidad) {
-        return NextResponse.json<RespuestaAPI<null>>(
-          { error: `Stock insuficiente. Disponible: ${producto.stock}` },
-          { status: 409 }
-        )
-      }
       item = await prisma.itemCarrito.update({
         where: { id: itemExistente.id },
         data: { cantidad: nuevaCantidad },

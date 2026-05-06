@@ -202,21 +202,7 @@ export default async function PaginaProducto({ params }: Props) {
               flexDirection: "column",
               gap: "12px",
             }}>
-              {producto.stock > 0 ? (
-                <BotonAgregarCarrito producto={productoSerializado} />
-              ) : (
-                <div style={{
-                  padding: "14px",
-                  textAlign: "center",
-                  fontSize: "11px",
-                  letterSpacing: "0.12em",
-                  textTransform: "uppercase",
-                  color: "var(--color-texto-muted)",
-                  border: "0.5px solid var(--color-borde)",
-                }}>
-                  Sin stock
-                </div>
-              )}
+              <BotonAgregarCarrito producto={productoSerializado} />
             </div>
 
           </div>
