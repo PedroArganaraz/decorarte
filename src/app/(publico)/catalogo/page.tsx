@@ -106,7 +106,7 @@ export default async function PaginaCatalogo({ searchParams }: Props) {
         >
           Todos
         </Link>
-        {categorias.map((cat) => (
+        {categorias.map((cat: typeof categorias[number]) => (
           <Link
             key={cat.id}
             href={`/catalogo?categoria=${cat.slug}`}
@@ -168,7 +168,7 @@ export default async function PaginaCatalogo({ searchParams }: Props) {
           gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
           gap: "16px",
         }}>
-          {productosSerializados.map((producto) => (
+          {productosSerializados.map((producto: typeof productosSerializados[number]) => (
             <TarjetaProducto key={producto.id} producto={producto} />
           ))}
         </div>
