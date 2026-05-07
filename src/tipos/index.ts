@@ -1,4 +1,8 @@
-import type { Producto, Categoria, ImagenProducto } from "@prisma/client"
+import type { Prisma } from "@prisma/client"
+
+type Producto = Prisma.ProductoGetPayload<{}>
+type Categoria = Prisma.CategoriaGetPayload<{}>
+type ImagenProducto = Prisma.ImagenProductoGetPayload<{}>
 
 export type ProductoConImagenes = Producto & {
   imagenes: ImagenProducto[]

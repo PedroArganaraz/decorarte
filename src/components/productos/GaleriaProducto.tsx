@@ -2,7 +2,8 @@
 
 import { useState } from "react"
 import Image from "next/image"
-import type { ImagenProducto } from "@prisma/client"
+import type { Prisma } from "@prisma/client"
+type ImagenProducto = Prisma.ImagenProductoGetPayload<{}>
 
 interface Props {
   imagenes: ImagenProducto[]

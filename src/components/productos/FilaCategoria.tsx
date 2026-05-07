@@ -3,7 +3,8 @@
 import { useState } from "react"
 import EliminarCategoria from "./EliminarCategoria"
 import GestionMateriales from "./GestionMateriales"
-import type { Material } from "@prisma/client"
+import type { Prisma } from "@prisma/client"
+type Material = Prisma.MaterialGetPayload<{}>
 
 interface Props {
   categoria: {

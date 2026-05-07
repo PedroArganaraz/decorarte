@@ -2,7 +2,8 @@
 
 import { useRouter, useSearchParams } from "next/navigation"
 import { useState } from "react"
-import type { Categoria } from "@prisma/client"
+import type { Prisma } from "@prisma/client"
+type Categoria = Prisma.CategoriaGetPayload<{}>
 import { useTamanioPantalla } from "@/hooks/useTamanioPantalla"
 
 interface Props {

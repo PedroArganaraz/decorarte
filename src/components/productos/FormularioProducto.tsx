@@ -4,7 +4,8 @@ import { useState, useEffect } from "react"
 import { useTamanioPantalla } from "@/hooks/useTamanioPantalla"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
-import type { Categoria } from "@prisma/client"
+import type { Prisma } from "@prisma/client"
+type Categoria = Prisma.CategoriaGetPayload<{}>
 
 interface Props {
   categorias: Categoria[]
