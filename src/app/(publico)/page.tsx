@@ -24,7 +24,7 @@ export default async function PaginaInicio() {
     },
   })
 
-  const destacadosSerializados = destacados.map((p) => ({
+  const destacadosSerializados = destacados.map((p: typeof destacados[number]) => ({
     ...p,
     precio: Number(p.precio),
     precioAnterior: p.precioAnterior ? Number(p.precioAnterior) : null,
@@ -51,7 +51,7 @@ export default async function PaginaInicio() {
     },
   })
 
-  const recientesSerializados = recientes.map((p) => ({
+  const recientesSerializados = recientes.map((p: typeof recientes[number]) => ({
     ...p,
     precio: Number(p.precio),
     precioAnterior: p.precioAnterior ? Number(p.precioAnterior) : null,
@@ -161,7 +161,7 @@ export default async function PaginaInicio() {
             gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))",
             gap: "16px",
           }}>
-            {destacadosSerializados.map((producto) => (
+            {destacadosSerializados.map((producto: typeof destacadosSerializados[number]) => (
               <TarjetaProducto key={producto.id} producto={producto} />
             ))}
           </div>
@@ -209,7 +209,7 @@ export default async function PaginaInicio() {
           gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))",
           gap: "16px",
         }}>
-          {recientesSerializados.map((producto) => (
+          {recientesSerializados.map((producto: typeof recientesSerializados[number]) => (
             <TarjetaProducto key={producto.id} producto={producto} />
           ))}
         </div>

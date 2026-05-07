@@ -57,7 +57,7 @@ export default function PiePagina() {
               { label: "Instagram", href: "https://www.instagram.com/decorarte.cba/" },
               { label: "TikTok", href: "https://www.tiktok.com/@decorarte.cba" },
               { label: "WhatsApp", href: "https://api.whatsapp.com/send/?phone=%2B5493512540654" },
-            ].map((red) => (
+            ].map((red: { label: string; href: string }) => (
               <a
                 key={red.label}
                 href={red.href}
@@ -93,7 +93,7 @@ export default function PiePagina() {
             flexDirection: "column",
             gap: "8px",
           }}>
-            {["Todos", "Aros", "Collares", "Pulseras", "Anillos"].map((item) => (
+            {["Todos", "Aros", "Collares", "Pulseras", "Anillos"].map((item: string) => (
               <Link
                 key={item}
                 href={item === "Todos" ? "/catalogo" : `/catalogo?categoria=${item.toLowerCase()}`}

@@ -59,7 +59,7 @@ export default function GestionMateriales({ categoriaId, categoriaNombre, onCamb
       return
     }
 
-    setMateriales((prev) => prev.filter((m) => m.id !== id))
+    setMateriales((prev) => prev.filter((m: Material) => m.id !== id))
     onCambio?.(materiales.length - 1)
     toast.success("Material eliminado")
     setEliminando(null)
@@ -112,7 +112,7 @@ export default function GestionMateriales({ categoriaId, categoriaNombre, onCamb
           gap: "8px",
           marginBottom: "12px",
         }}>
-          {materiales.map((m) => (
+          {materiales.map((m: Material) => (
             <div
               key={m.id}
               style={{

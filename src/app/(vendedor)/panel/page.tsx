@@ -41,7 +41,7 @@ export default async function PaginaPanel() {
           { label: "Total productos", valor: totalProductos },
           { label: "Productos activos", valor: productosActivos },
           { label: "Categorías", valor: totalCategorias },
-        ].map((stat) => (
+        ].map((stat: { label: string; valor: number }) => (
           <div
             key={stat.label}
             style={{

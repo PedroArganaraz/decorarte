@@ -50,7 +50,7 @@ export default async function PaginaCategorias() {
           <table style={{ width: "100%", borderCollapse: "collapse" }}>
             <thead>
               <tr style={{ borderBottom: "0.5px solid var(--color-borde)" }}>
-                {["Nombre", "Slug", "Productos", "Materiales", "Estado", ""].map((col) => (
+                {["Nombre", "Slug", "Productos", "Materiales", "Estado", ""].map((col: string) => (
                   <th key={col} style={{
                     padding: "12px 16px",
                     textAlign: "left",
@@ -66,7 +66,7 @@ export default async function PaginaCategorias() {
               </tr>
             </thead>
             <tbody>
-              {categorias.map((cat) => (
+              {categorias.map((cat: typeof categorias[number]) => (
                 <FilaCategoria key={cat.id} categoria={cat} />
               ))}
             </tbody>

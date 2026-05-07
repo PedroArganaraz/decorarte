@@ -46,7 +46,7 @@ export default async function PaginaProducto({ params }: Props) {
     },
   })
 
-  const relacionadosSerializados = relacionados.map((p) => ({
+  const relacionadosSerializados = relacionados.map((p: typeof relacionados[number]) => ({
     ...p,
     precio: Number(p.precio),
     precioAnterior: p.precioAnterior ? Number(p.precioAnterior) : null,
@@ -226,7 +226,7 @@ export default async function PaginaProducto({ params }: Props) {
               gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
               gap: "16px",
             }}>
-              {relacionadosSerializados.map((p) => (
+              {relacionadosSerializados.map((p: typeof relacionadosSerializados[number]) => (
                 <TarjetaProducto key={p.id} producto={p} />
               ))}
             </div>

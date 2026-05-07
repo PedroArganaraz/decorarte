@@ -96,7 +96,7 @@ export default async function PaginaProductos({ searchParams }: Props) {
           <table style={{ width: "100%", borderCollapse: "collapse" }}>
             <thead>
               <tr style={{ borderBottom: "0.5px solid var(--color-borde)" }}>
-                {["Imagen", "Nombre", "Categoría", "Material", "Precio", "Stock", "Estado", ""].map((col) => (
+                {["Imagen", "Nombre", "Categoría", "Material", "Precio", "Stock", "Estado", ""].map((col: string) => (
                   <th key={col} style={{
                     padding: "12px 16px",
                     textAlign: "left",
@@ -112,7 +112,7 @@ export default async function PaginaProductos({ searchParams }: Props) {
               </tr>
             </thead>
             <tbody>
-              {productos.map((producto) => (
+              {productos.map((producto: typeof productos[number]) => (
                 <tr key={producto.id} style={{ borderBottom: "0.5px solid var(--color-superficie)" }}>
                   <td style={{ padding: "12px 16px" }}>
                     <div style={{
