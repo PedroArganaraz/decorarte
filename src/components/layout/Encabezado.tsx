@@ -6,8 +6,7 @@ import { useState, useEffect } from "react"
 import { useTamanioPantalla } from "@/hooks/useTamanioPantalla"
 import IconoCarrito from "@/components/carrito/IconoCarrito"
 import { crearClienteNavegador } from "@/lib/supabase/cliente"
-import type { Prisma } from "@prisma/client"
-type Categoria = Prisma.CategoriaGetPayload<{}>
+import type { Categoria } from "@prisma/client"
 
 interface Props {
   categorias: Categoria[]

@@ -3,8 +3,7 @@ import { prisma } from "@/lib/prisma"
 import { crearClienteServidor } from "@/lib/supabase/servidor"
 import slugify from "slugify"
 import type { RespuestaAPI } from "@/tipos"
-import type { Prisma } from "@prisma/client"
-type Categoria = Prisma.CategoriaGetPayload<{}>
+import type { Categoria } from "@prisma/client"
 
 export async function GET() {
   try {

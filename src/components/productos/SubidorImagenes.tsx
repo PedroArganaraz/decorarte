@@ -3,8 +3,7 @@
 import { useState, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
-import type { Prisma } from "@prisma/client"
-type ImagenProducto = Prisma.ImagenProductoGetPayload<{}>
+import type { ImagenProducto } from "@prisma/client"
 
 interface Props {
   productoId: string

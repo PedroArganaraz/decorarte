@@ -2,8 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { toast } from "sonner"
-import type { Prisma } from "@prisma/client"
-type Material = Prisma.MaterialGetPayload<{}>
+import type { Material } from "@prisma/client"
 
 interface Props {
   categoriaId: string

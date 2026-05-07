@@ -2,8 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { crearClienteServidor } from "@/lib/supabase/servidor"
 import type { RespuestaAPI } from "@/tipos"
-import type { Prisma } from "@prisma/client"
-type Material = Prisma.MaterialGetPayload<{}>
+import type { Material } from "@prisma/client"
 
 export async function GET(solicitud: NextRequest) {
   try {
