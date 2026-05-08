@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import EliminarCategoria from "./EliminarCategoria"
+import EditarCategoria from "./EditarCategoria"
 import GestionMateriales from "./GestionMateriales"
 import type { Material } from "@prisma/client"
 
@@ -10,6 +11,7 @@ interface Props {
     id: string
     nombre: string
     slug: string
+    descripcion: string | null
     activa: boolean
     materiales: Material[]
     _count: { productos: number }
@@ -65,11 +67,18 @@ export default function FilaCategoria({ categoria }: Props) {
           </span>
         </td>
         <td style={{ padding: "14px 16px", textAlign: "right" }}>
-          <EliminarCategoria
-            id={categoria.id}
-            nombre={categoria.nombre}
-            tieneProductos={categoria._count.productos > 0}
-          />
+          <div style={{ display: "flex", justifyContent: "flex-end", gap: "6px" }}>
+            <EditarCategoria
+              id={categoria.id}
+              nombreActual={categoria.nombre}
+              descripcionActual={categoria.descripcion ?? null}
+            />
+            <EliminarCategoria
+              id={categoria.id}
+              nombre={categoria.nombre}
+              tieneProductos={categoria._count.productos > 0}
+            />
+          </div>
         </td>
       </tr>
       {expandida && (
