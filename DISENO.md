@@ -26,9 +26,9 @@ Importar en globals.css:
 | Variable CSS | Hex | Uso |
 |-------------|-----|-----|
 | --color-fondo | #EAEAEA | Fondo general de la página |
-| --color-superficie | #F1EFE8 | Fondos de imágenes, secciones secundarias |
+| --color-superficie | #F0F0F0 | Fondos de imágenes, secciones secundarias |
 | --color-card | #FFFFFF | Cards de producto, paneles |
-| --color-borde | #D3D1C7 | Todos los bordes |
+| --color-borde | #DCDCDC | Todos los bordes |
 | --color-texto | #2C2C2A | Texto principal, botones primarios |
 | --color-texto-muted | #888780 | Categorías, labels secundarios |
 | --color-texto-sutil | #B4B2A9 | Placeholders, precios tachados |
@@ -38,9 +38,9 @@ Definir en globals.css:
 ```css
 :root {
   --color-fondo: #EAEAEA;
-  --color-superficie: #F1EFE8;
+  --color-superficie: #F0F0F0;
   --color-card: #FFFFFF;
-  --color-borde: #D3D1C7;
+  --color-borde: #DCDCDC;
   --color-texto: #2C2C2A;
   --color-texto-muted: #888780;
   --color-texto-sutil: #B4B2A9;
@@ -60,8 +60,8 @@ Definir en globals.css:
 - WhatsApp: igual al secundario + ícono SVG de WhatsApp a la izquierda, sin verde
 
 ### Cards de producto
-- Fondo blanco, borde 0.5px #D3D1C7, sin border-radius o radius mínimo (2–4px)
-- Imagen: proporción 1:1 o 4:5, fondo #F1EFE8
+- Fondo blanco, borde 0.5px #DCDCDC, sin border-radius o radius mínimo (2–4px)
+- Imagen: proporción 1:1 o 4:5, fondo #F0F0F0
 - Badge (Nuevo / Destacado / Oferta): bg #2C2C2A, texto #EAEAEA, 9px uppercase, esquinas rectas, posición absolute top-left
 - Categoría: 9px, uppercase, letter-spacing 0.12em, color #888780
 - Material (Acero dorado / Acero plateado): 9px, color --color-acento, debajo de la categoría
@@ -77,20 +77,20 @@ Definir en globals.css:
 - Íconos de búsqueda y carrito alineados a la derecha
 
 ### Panel del carrito (drawer lateral)
-- Fondo blanco, borde izquierdo 0.5px #D3D1C7
+- Fondo blanco, borde izquierdo 0.5px #DCDCDC
 - Título: Cormorant Garamond 18px
 - Items: imagen pequeña (44×56px) + nombre + precio + cantidad
-- Separadores: 0.5px #F1EFE8
+- Separadores: 0.5px #F0F0F0
 - Total: label uppercase 11px + precio Cormorant Garamond 17px
 - CTA: botón WhatsApp al 100% de ancho
 
 ### Inputs y formularios
 - Sin border-radius
-- Borde 0.5px #D3D1C7, fondo #FFFFFF
+- Borde 0.5px #DCDCDC, fondo #FFFFFF
 - Label: Jost 11px uppercase letter-spacing 0.1em
 - Texto: Jost 14px
 - Focus: borde #2C2C2A
-- El panel del vendedor puede tener fondo ligeramente más oscuro (#F1EFE8) para diferenciar del público
+- El panel del vendedor puede tener fondo ligeramente más oscuro (#F0F0F0) para diferenciar del público
 
 ---
 
@@ -144,9 +144,9 @@ Definir en globals.css:
 4. Productos relacionados abajo
 
 ### Panel vendedor (/panel)
-- Fondo #F1EFE8
+- Fondo #F0F0F0
 - Sidebar izquierdo: logo + nav (Productos, Categorías)
-- Contenido principal: fondo #FFFFFF, borde 0.5px #D3D1C7
+- Contenido principal: fondo #FFFFFF, borde 0.5px #DCDCDC
 - Tipografía más funcional, mantiene Cormorant para títulos de sección
 
 ---

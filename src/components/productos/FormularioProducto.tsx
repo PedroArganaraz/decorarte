@@ -20,6 +20,7 @@ interface Props {
     destacado: boolean
     material: string | null
     talle: string | null
+    color: string | null
     categoriaId: string
   }
 }
@@ -38,6 +39,7 @@ export default function FormularioProducto({ categorias, accionesExtra, producto
     destacado: producto?.destacado ?? false,
     material: producto?.material ?? "",
     talle: producto?.talle ?? "",
+    color: producto?.color ?? "",
     categoriaId: producto?.categoriaId ?? "",
   })
 
@@ -78,6 +80,7 @@ export default function FormularioProducto({ categorias, accionesExtra, producto
       destacado: form.destacado,
       material: form.material || null,
       talle: form.talle || null,
+      color: form.color || null,
       categoriaId: form.categoriaId,
     }
 
@@ -224,6 +227,17 @@ export default function FormularioProducto({ categorias, accionesExtra, producto
               />
             </div>
           )}
+
+          <div>
+            <label style={estiloLabel}>Color (opcional)</label>
+            <input
+              type="text"
+              value={form.color}
+              onChange={(e) => actualizar("color", e.target.value)}
+              placeholder="Ej: Dorado, Plateado, Negro"
+              style={estiloInput}
+            />
+          </div>
         </div>
 
         <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
@@ -261,7 +275,7 @@ export default function FormularioProducto({ categorias, accionesExtra, producto
             </div>
 
             <div>
-              <label style={estiloLabel}>Precio anterior (opcional)</label>
+              <label style={estiloLabel}>Precio nuevo (opcional)</label>
               <input
                 type="number"
                 value={form.precioAnterior}

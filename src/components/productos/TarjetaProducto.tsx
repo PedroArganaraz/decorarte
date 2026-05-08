@@ -132,21 +132,32 @@ export default function TarjetaProducto({ producto }: Props) {
           </h3>
 
           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-            <span style={{
-              fontSize: "14px",
-              fontWeight: 400,
-              color: "var(--color-texto)",
-              letterSpacing: "0.03em",
-            }}>
-              ${Number(producto.precio).toLocaleString("es-AR")}
-            </span>
-            {producto.precioAnterior && (
+            {producto.precioAnterior ? (
+              <>
+                <span style={{
+                  fontSize: "14px",
+                  fontWeight: 400,
+                  color: "var(--color-texto)",
+                  letterSpacing: "0.03em",
+                }}>
+                  ${Number(producto.precioAnterior).toLocaleString("es-AR")}
+                </span>
+                <span style={{
+                  fontSize: "12px",
+                  color: "var(--color-texto-sutil)",
+                  textDecoration: "line-through",
+                }}>
+                  ${Number(producto.precio).toLocaleString("es-AR")}
+                </span>
+              </>
+            ) : (
               <span style={{
-                fontSize: "12px",
-                color: "var(--color-texto-sutil)",
-                textDecoration: "line-through",
+                fontSize: "14px",
+                fontWeight: 400,
+                color: "var(--color-texto)",
+                letterSpacing: "0.03em",
               }}>
-                ${Number(producto.precioAnterior).toLocaleString("es-AR")}
+                ${Number(producto.precio).toLocaleString("es-AR")}
               </span>
             )}
           </div>

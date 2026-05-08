@@ -158,21 +158,32 @@ export default async function PaginaProducto({ params }: Props) {
               gap: "12px",
               marginBottom: "24px",
             }}>
-              <span style={{
-                fontFamily: "'Cormorant Garamond', serif",
-                fontSize: "28px",
-                fontWeight: 300,
-                color: "var(--color-texto)",
-              }}>
-                ${productoSerializado.precio.toLocaleString("es-AR")}
-              </span>
-              {productoSerializado.precioAnterior && (
+              {productoSerializado.precioAnterior ? (
+                <>
+                  <span style={{
+                    fontFamily: "'Cormorant Garamond', serif",
+                    fontSize: "28px",
+                    fontWeight: 300,
+                    color: "var(--color-texto)",
+                  }}>
+                    ${productoSerializado.precioAnterior.toLocaleString("es-AR")}
+                  </span>
+                  <span style={{
+                    fontSize: "16px",
+                    color: "var(--color-texto-sutil)",
+                    textDecoration: "line-through",
+                  }}>
+                    ${productoSerializado.precio.toLocaleString("es-AR")}
+                  </span>
+                </>
+              ) : (
                 <span style={{
-                  fontSize: "16px",
-                  color: "var(--color-texto-sutil)",
-                  textDecoration: "line-through",
+                  fontFamily: "'Cormorant Garamond', serif",
+                  fontSize: "28px",
+                  fontWeight: 300,
+                  color: "var(--color-texto)",
                 }}>
-                  ${productoSerializado.precioAnterior.toLocaleString("es-AR")}
+                  ${productoSerializado.precio.toLocaleString("es-AR")}
                 </span>
               )}
             </div>
@@ -196,6 +207,29 @@ export default async function PaginaProducto({ params }: Props) {
                   color: "var(--color-texto)",
                 }}>
                   {producto.talle}
+                </span>
+              </div>
+            )}
+
+            {producto.color && (
+              <div style={{ marginBottom: "16px" }}>
+                <span style={{
+                  fontSize: "13px",
+                  fontWeight: 300,
+                  letterSpacing: "0.08em",
+                  textTransform: "uppercase",
+                  color: "var(--color-texto-muted)",
+                  marginRight: "8px",
+                }}>
+                  Color
+                </span>
+                <span style={{
+                  fontSize: "18px",
+                  fontFamily: "'Cormorant Garamond', serif",
+                  fontWeight: 300,
+                  color: "var(--color-texto)",
+                }}>
+                  {producto.color}
                 </span>
               </div>
             )}

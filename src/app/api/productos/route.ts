@@ -72,7 +72,7 @@ export async function POST(solicitud: NextRequest) {
     })
 
     const cuerpo = await solicitud.json()
-    const { nombre, descripcion, precio, precioAnterior, stock, activo, destacado, categoriaId, material, talle } = cuerpo
+    const { nombre, descripcion, precio, precioAnterior, stock, activo, destacado, categoriaId, material, talle, color } = cuerpo
 
     if (!nombre || !precio || !categoriaId) {
       return NextResponse.json<RespuestaAPI<null>>(
@@ -105,6 +105,7 @@ export async function POST(solicitud: NextRequest) {
         destacado: destacado ?? false,
         talle: talle || null,
         material: material || null,
+        color: color || null,
         materialId,
         categoriaId,
         vendedorId: user.id,
