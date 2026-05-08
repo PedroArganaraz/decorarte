@@ -2,6 +2,8 @@ import { prisma } from "@/lib/prisma"
 import TarjetaProducto from "@/components/productos/TarjetaProducto"
 import Link from "next/link"
 
+export const revalidate = 1800
+
 interface Props {
   searchParams: Promise<{
     categoria?: string
@@ -54,6 +56,26 @@ export default async function PaginaCatalogo({ searchParams }: Props) {
 
   return (
     <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "48px 24px" }}>
+
+      <Link
+        href="/"
+        style={{
+          fontSize: "11px",
+          letterSpacing: "0.08em",
+          textTransform: "uppercase",
+          color: "var(--color-texto-muted)",
+          textDecoration: "none",
+          display: "inline-flex",
+          alignItems: "center",
+          gap: "6px",
+          marginBottom: "24px",
+        }}
+      >
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+          <path d="M19 12H5M12 5l-7 7 7 7"/>
+        </svg>
+        Inicio
+      </Link>
 
       {/* TÍTULO */}
       <div style={{ marginBottom: "40px" }}>

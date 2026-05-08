@@ -1,19 +1,12 @@
 "use client"
 
 import Link from "next/link"
-import { usePathname } from "next/navigation"
 import { useState, useEffect } from "react"
 import { useTamanioPantalla } from "@/hooks/useTamanioPantalla"
 import IconoCarrito from "@/components/carrito/IconoCarrito"
 import { crearClienteNavegador } from "@/lib/supabase/cliente"
-import type { Categoria } from "@prisma/client"
 
-interface Props {
-  categorias: Categoria[]
-}
-
-export default function Encabezado({ categorias }: Props) {
-  const pathname = usePathname()
+export default function Encabezado() {
   const { esMobile } = useTamanioPantalla()
   const [menuAbierto, setMenuAbierto] = useState(false)
   const [tieneSesion, setTieneSesion] = useState(false)
@@ -123,43 +116,6 @@ export default function Encabezado({ categorias }: Props) {
         </div>
       </div>
 
-      {/* NAVEGACIÓN DESKTOP */}
-      {!esMobile && (
-        <nav style={{
-          display: "flex",
-          justifyContent: "center",
-          gap: "24px",
-          padding: "0 24px 12px",
-        }}>
-          <Link href="/catalogo" style={{
-            fontSize: "11px",
-            fontWeight: pathname === "/catalogo" && !pathname.includes("categoria") ? 500 : 400,
-            letterSpacing: "0.12em",
-            textTransform: "uppercase",
-            textDecoration: "none",
-            color: "var(--color-texto-muted)",
-            borderBottom: pathname === "/catalogo" ? "0.5px solid var(--color-texto)" : "0.5px solid transparent",
-            paddingBottom: "2px",
-          }}>
-            Todos
-          </Link>
-          {categorias.map((cat) => (
-            <Link key={cat.id} href={`/catalogo?categoria=${cat.slug}`} style={{
-              fontSize: "11px",
-              fontWeight: 400,
-              letterSpacing: "0.12em",
-              textTransform: "uppercase",
-              textDecoration: "none",
-              color: "var(--color-texto-muted)",
-              borderBottom: pathname.includes(cat.slug) ? "0.5px solid var(--color-texto)" : "0.5px solid transparent",
-              paddingBottom: "2px",
-            }}>
-              {cat.nombre}
-            </Link>
-          ))}
-        </nav>
-      )}
-
       {/* MENÚ MOBILE DESPLEGABLE */}
       {esMobile && menuAbierto && (
         <nav style={{
@@ -170,32 +126,6 @@ export default function Encabezado({ categorias }: Props) {
           gap: "0",
           backgroundColor: "var(--color-fondo)",
         }}>
-          {[
-            { href: "/catalogo", label: "Todos" },
-            ...categorias.map((cat) => ({
-              href: `/catalogo?categoria=${cat.slug}`,
-              label: cat.nombre,
-            })),
-          ].map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              onClick={() => setMenuAbierto(false)}
-              style={{
-                fontSize: "13px",
-                fontWeight: 400,
-                letterSpacing: "0.1em",
-                textTransform: "uppercase",
-                textDecoration: "none",
-                color: "var(--color-texto)",
-                padding: "14px 8px",
-                borderBottom: "0.5px solid var(--color-superficie)",
-                display: "block",
-              }}
-            >
-              {item.label}
-            </Link>
-          ))}
           <Link
             href={tieneSesion ? "/panel" : "/auth/login"}
             onClick={() => setMenuAbierto(false)}

@@ -5,6 +5,8 @@ import BotonAgregarCarrito from "@/components/carrito/BotonAgregarCarrito"
 import TarjetaProducto from "@/components/productos/TarjetaProducto"
 import Link from "next/link"
 
+export const revalidate = 1800
+
 interface Props {
   params: Promise<{ slug: string }>
 }
@@ -67,21 +69,37 @@ export default async function PaginaProducto({ params }: Props) {
         {/* BREADCRUMB */}
         <div style={{
           display: "flex",
-          gap: "8px",
           alignItems: "center",
+          gap: "8px",
           marginBottom: "40px",
-          fontSize: "11px",
-          letterSpacing: "0.08em",
-          textTransform: "uppercase",
         }}>
-          <Link href="/catalogo" style={{
-            color: "var(--color-texto-muted)",
-            textDecoration: "none",
-          }}>
+          <Link
+            href={`/catalogo?categoria=${producto.categoria.slug}`}
+            style={{
+              fontSize: "11px",
+              letterSpacing: "0.08em",
+              textTransform: "uppercase",
+              color: "var(--color-texto-muted)",
+              textDecoration: "none",
+              display: "flex",
+              alignItems: "center",
+              gap: "6px",
+            }}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <path d="M19 12H5M12 5l-7 7 7 7"/>
+            </svg>
             {producto.categoria.nombre}
           </Link>
-          <span style={{ color: "var(--color-texto-sutil)" }}>›</span>
-          <span style={{ color: "var(--color-texto)" }}>{producto.nombre}</span>
+          <span style={{ color: "var(--color-texto-sutil)", fontSize: "11px" }}>›</span>
+          <span style={{
+            fontSize: "11px",
+            letterSpacing: "0.08em",
+            textTransform: "uppercase",
+            color: "var(--color-texto)",
+          }}>
+            {producto.nombre}
+          </span>
         </div>
 
         {/* LAYOUT PRINCIPAL */}

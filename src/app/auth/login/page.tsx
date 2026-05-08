@@ -3,6 +3,7 @@
 import { useState, Suspense } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { crearClienteNavegador } from "@/lib/supabase/cliente"
+import Link from "next/link"
 
 function FormularioLogin() {
   const [email, setEmail] = useState("")
@@ -145,6 +146,26 @@ export default function PaginaLogin() {
         width: "100%",
         maxWidth: "380px",
       }}>
+        <Link
+          href="/"
+          style={{
+            fontSize: "11px",
+            letterSpacing: "0.08em",
+            textTransform: "uppercase",
+            color: "var(--color-texto-muted)",
+            textDecoration: "none",
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "6px",
+            marginBottom: "32px",
+          }}
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+            <path d="M19 12H5M12 5l-7 7 7 7"/>
+          </svg>
+          Inicio
+        </Link>
+
         <div style={{ textAlign: "center", marginBottom: "40px" }}>
           <h1 style={{
             fontFamily: "'Cormorant Garamond', serif",

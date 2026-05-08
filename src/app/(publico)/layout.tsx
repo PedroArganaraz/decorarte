@@ -1,4 +1,3 @@
-import { prisma } from "@/lib/prisma"
 import Encabezado from "@/components/layout/Encabezado"
 import PiePagina from "@/components/layout/PiePagina"
 import BotonWhatsapp from "@/components/layout/BotonWhatsapp"
@@ -8,14 +7,9 @@ export default async function LayoutPublico({
 }: {
   children: React.ReactNode
 }) {
-  const categorias = await prisma.categoria.findMany({
-    where: { activa: true },
-    orderBy: { orden: "asc" },
-  })
-
   return (
     <>
-      <Encabezado categorias={categorias} />
+      <Encabezado />
       <main style={{ minHeight: "70vh" }}>
         {children}
       </main>

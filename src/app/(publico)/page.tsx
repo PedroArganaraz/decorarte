@@ -2,6 +2,8 @@ import { prisma } from "@/lib/prisma"
 import TarjetaProducto from "@/components/productos/TarjetaProducto"
 import Link from "next/link"
 
+export const revalidate = 1800
+
 export default async function PaginaInicio() {
   const destacados = await prisma.producto.findMany({
     where: { activo: true, destacado: true },
