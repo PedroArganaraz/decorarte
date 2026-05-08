@@ -88,7 +88,7 @@ export async function POST(solicitud: NextRequest) {
     let materialId: string | null = null
     if (material && categoriaId) {
       const materialEncontrado = await prisma.material.findFirst({
-        where: { nombre: material, categoriaId },
+        where: { nombre: material, categorias: { some: { id: categoriaId } } },
       })
       materialId = materialEncontrado?.id ?? null
     }

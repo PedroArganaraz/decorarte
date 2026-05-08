@@ -30,7 +30,7 @@ export default function GestionMateriales({ categoriaId, categoriaNombre, onCamb
     const res = await fetch("/api/materiales", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ nombre: nuevoMaterial.trim(), categoriaId }),
+      body: JSON.stringify({ nombre: nuevoMaterial.trim(), categoriaIds: [categoriaId] }),
     })
 
     const data = await res.json()

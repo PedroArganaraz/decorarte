@@ -10,11 +10,25 @@ export async function GET(solicitud: NextRequest) {
     const categoriaId = searchParams.get("categoriaId")
 
     const materiales = await prisma.material.findMany({
-      where: categoriaId ? { categoriaId } : undefined,
+      where: categoriaId ? { categorias: { some: { id: categoriaId } } } : undefined,
       orderBy: { nombre: "asc" },
     })
 
-    return NextResponse.json<RespuestaAPI<Material[]>>({ datos: materiales })
+    const materialesConConteo = await Promise.all(
+      materiales.map(async (mat) => {
+        const total = await prisma.producto.count({
+          where: {
+            OR: [
+              { materialId: mat.id },
+              { material: mat.nombre },
+            ],
+          },
+        })
+        return { ...mat, _count: { productos: total } }
+      })
+    )
+
+    return NextResponse.json<RespuestaAPI<typeof materialesConConteo>>({ datos: materialesConConteo })
   } catch (error) {
     console.error("Error al obtener materiales:", error)
     return NextResponse.json<RespuestaAPI<null>>(
@@ -36,17 +50,20 @@ export async function POST(solicitud: NextRequest) {
       )
     }
 
-    const { nombre, categoriaId } = await solicitud.json()
+    const { nombre, categoriaIds } = await solicitud.json() as { nombre: string; categoriaIds: string[] }
 
-    if (!nombre || !categoriaId) {
+    if (!nombre || !categoriaIds || categoriaIds.length === 0) {
       return NextResponse.json<RespuestaAPI<null>>(
-        { error: "Nombre y categoría son obligatorios" },
+        { error: "Nombre y al menos una categoría son obligatorios" },
         { status: 400 }
       )
     }
 
     const material = await prisma.material.create({
-      data: { nombre, categoriaId },
+      data: {
+        nombre,
+        categorias: { connect: categoriaIds.map((id) => ({ id })) },
+      },
     })
 
     return NextResponse.json<RespuestaAPI<Material>>(
@@ -56,7 +73,7 @@ export async function POST(solicitud: NextRequest) {
   } catch (error: any) {
     if (error.code === "P2002") {
       return NextResponse.json<RespuestaAPI<null>>(
-        { error: "Ya existe ese material en esta categoría" },
+        { error: "Ya existe un material con ese nombre" },
         { status: 409 }
       )
     }

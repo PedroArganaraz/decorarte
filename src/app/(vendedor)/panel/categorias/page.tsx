@@ -7,7 +7,6 @@ export default async function PaginaCategorias() {
     orderBy: { orden: "asc" },
     include: {
       _count: { select: { productos: true } },
-      materiales: { orderBy: { nombre: "asc" } },
     },
   })
 
@@ -50,7 +49,7 @@ export default async function PaginaCategorias() {
           <table style={{ width: "100%", borderCollapse: "collapse" }}>
             <thead>
               <tr style={{ borderBottom: "0.5px solid var(--color-borde)" }}>
-                {["Nombre", "Slug", "Productos", "Materiales", "Estado", ""].map((col: string) => (
+                {["Nombre", "Slug", "Productos", "Estado", ""].map((col: string) => (
                   <th key={col} style={{
                     padding: "12px 16px",
                     textAlign: "left",

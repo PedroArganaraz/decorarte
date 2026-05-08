@@ -8,6 +8,7 @@ const navegacion = [
   { label: "Inicio", href: "/panel" },
   { label: "Productos", href: "/panel/productos" },
   { label: "Categorías", href: "/panel/categorias" },
+  { label: "Materiales", href: "/panel/materiales" },
 ]
 
 interface Props {

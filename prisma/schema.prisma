@@ -31,7 +31,7 @@ model Categoria {
   activa      Boolean    @default(true)
   creadoEn    DateTime   @default(now()) @map("creado_en")
   productos   Producto[]
-  materiales  Material[]
+  materiales  Material[]  @relation("CategoriasMateriales")
   @@map("categorias")
 }
 
@@ -62,13 +62,11 @@ model Producto {
 }
 
 model Material {
-  id          String     @id @default(cuid())
-  nombre      String
-  categoriaId String     @map("categoria_id")
-  creadoEn    DateTime   @default(now()) @map("creado_en")
-  categoria   Categoria  @relation(fields: [categoriaId], references: [id], onDelete: Cascade)
+  id          String      @id @default(cuid())
+  nombre      String      @unique
+  creadoEn    DateTime    @default(now()) @map("creado_en")
+  categorias  Categoria[] @relation("CategoriasMateriales")
   productos   Producto[]
-  @@unique([nombre, categoriaId])
   @@map("materiales")
 }
 
