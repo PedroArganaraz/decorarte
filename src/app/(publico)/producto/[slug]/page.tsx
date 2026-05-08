@@ -19,6 +19,25 @@ export default async function PaginaProducto({ params }: Props) {
     include: {
       imagenes: { orderBy: { orden: "asc" } },
       categoria: true,
+      combinadoCon: {
+        where: { activo: true },
+        select: {
+          id: true,
+          nombre: true,
+          slug: true,
+          precio: true,
+          precioAnterior: true,
+          stock: true,
+          activo: true,
+          destacado: true,
+          imagenes: {
+            where: { esPrincipal: true },
+            select: { urlPublica: true, altText: true, esPrincipal: true },
+            take: 1,
+          },
+          categoria: { select: { nombre: true, slug: true } },
+        },
+      },
     },
   })
 
@@ -54,12 +73,30 @@ export default async function PaginaProducto({ params }: Props) {
     precioAnterior: p.precioAnterior ? Number(p.precioAnterior) : null,
   }))
 
+  const combinadosSerializados = producto.combinadoCon.map((p) => ({
+    ...p,
+    precio: Number(p.precio),
+    precioAnterior: p.precioAnterior ? Number(p.precioAnterior) : null,
+  }))
+
   const productoSerializado = {
     ...producto,
     precio: Number(producto.precio),
     precioAnterior: producto.precioAnterior
       ? Number(producto.precioAnterior)
       : null,
+  }
+
+  const productoParaCarrito = {
+    id: producto.id,
+    nombre: producto.nombre,
+    slug: producto.slug,
+    precio: Number(producto.precio),
+    imagenes: producto.imagenes.map((img) => ({
+      urlPublica: img.urlPublica,
+      esPrincipal: img.esPrincipal,
+      altText: img.altText,
+    })),
   }
 
   return (
@@ -254,7 +291,7 @@ export default async function PaginaProducto({ params }: Props) {
               flexDirection: "column",
               gap: "12px",
             }}>
-              <BotonAgregarCarrito producto={productoSerializado} />
+              <BotonAgregarCarrito producto={productoParaCarrito} />
             </div>
 
           </div>
@@ -284,6 +321,32 @@ export default async function PaginaProducto({ params }: Props) {
             </div>
           </div>
         )}
+
+        {/* COMBINADOS */}
+        {combinadosSerializados.length > 0 && (
+          <div style={{ marginTop: "64px" }}>
+            <h2 style={{
+              fontFamily: "'Cormorant Garamond', serif",
+              fontSize: "28px",
+              fontWeight: 300,
+              letterSpacing: "0.05em",
+              color: "var(--color-texto)",
+              marginBottom: "32px",
+            }}>
+              Combinalo con
+            </h2>
+            <div style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
+              gap: "16px",
+            }}>
+              {combinadosSerializados.map((p: typeof combinadosSerializados[number]) => (
+                <TarjetaProducto key={p.id} producto={p} />
+              ))}
+            </div>
+          </div>
+        )}
+
       </div>
     </div>
   )

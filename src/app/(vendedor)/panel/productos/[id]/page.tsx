@@ -4,6 +4,7 @@ import Link from "next/link"
 import FormularioProducto from "@/components/productos/FormularioProducto"
 import SubidorImagenes from "@/components/productos/SubidorImagenes"
 import EliminarProducto from "@/components/productos/EliminarProducto"
+import SelectorCombinados from "@/components/productos/SelectorCombinados"
 
 export default async function PaginaEditarProducto({
   params,
@@ -17,6 +18,9 @@ export default async function PaginaEditarProducto({
     include: {
       imagenes: { orderBy: { orden: "asc" } },
       categoria: true,
+      combinadoCon: {
+        select: { id: true, nombre: true, slug: true },
+      },
     },
   })
 
@@ -78,6 +82,13 @@ export default async function PaginaEditarProducto({
         <SubidorImagenes
           productoId={producto.id}
           imagenesActuales={producto.imagenes}
+        />
+      </div>
+
+      <div style={{ marginTop: "24px" }}>
+        <SelectorCombinados
+          productoId={producto.id}
+          combinadosIniciales={producto.combinadoCon}
         />
       </div>
 

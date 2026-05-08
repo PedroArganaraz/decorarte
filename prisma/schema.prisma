@@ -58,6 +58,8 @@ model Producto {
   materialRel    Material?        @relation(fields: [materialId], references: [id])
   imagenes       ImagenProducto[]
   itemsCarrito   ItemCarrito[]
+  combinadoCon   Producto[]       @relation("ProductosCombinados")
+  combinadoEn    Producto[]       @relation("ProductosCombinados")
   @@map("productos")
 }
 
