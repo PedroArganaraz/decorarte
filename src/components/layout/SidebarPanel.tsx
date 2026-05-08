@@ -27,17 +27,23 @@ export default function SidebarPanel({ onCerrar }: Props) {
   return (
     <aside style={{
       width: "220px",
-      minHeight: "100vh",
+      height: "100vh",
       backgroundColor: "var(--color-card)",
       borderRight: "0.5px solid var(--color-borde)",
       display: "flex",
       flexDirection: "column",
+      padding: "16px 0",
       flexShrink: 0,
+      position: "sticky",
+      top: 0,
+      overflowY: "auto",
     }}>
       {/* LOGO */}
       <div style={{
-        padding: "24px 20px 20px",
+        padding: "16px 20px",
+        paddingBottom: "16px",
         borderBottom: "0.5px solid var(--color-borde)",
+        marginBottom: "0",
       }}>
         <Link href="/" style={{ textDecoration: "none" }}>
           <span style={{
@@ -65,7 +71,7 @@ export default function SidebarPanel({ onCerrar }: Props) {
       {/* NAVEGACIÓN */}
       <nav style={{
         flex: 1,
-        padding: "16px 0",
+        padding: "0 12px",
       }}>
         {navegacion.map(({ label, href }) => {
           const activo = pathname === href
@@ -97,8 +103,9 @@ export default function SidebarPanel({ onCerrar }: Props) {
 
       {/* CERRAR SESIÓN */}
       <div style={{
-        padding: "16px 20px",
+        padding: "24px 24px 0",
         borderTop: "0.5px solid var(--color-borde)",
+        marginTop: "auto",
       }}>
         <button
           onClick={cerrarSesion}

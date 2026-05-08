@@ -33,12 +33,13 @@ export default function LayoutPanel({
 
       {/* SIDEBAR */}
       <div style={{
-        position: esMobile ? "fixed" : "relative",
-        left: esMobile ? (sidebarAbierto ? 0 : "-220px") : 0,
+        position: esMobile ? "fixed" : "sticky",
         top: 0,
-        zIndex: 50,
+        height: "100vh",
+        flexShrink: 0,
+        left: esMobile ? (sidebarAbierto ? 0 : "-220px") : "auto",
+        zIndex: esMobile ? 50 : "auto",
         transition: "left 0.25s ease",
-        height: esMobile ? "100vh" : "auto",
       }}>
         <SidebarPanel onCerrar={() => setSidebarAbierto(false)} />
       </div>
