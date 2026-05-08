@@ -149,6 +149,9 @@ export default function PaginaLogin() {
         <Link
           href="/"
           style={{
+            position: "fixed",
+            top: "24px",
+            left: "24px",
             fontSize: "11px",
             letterSpacing: "0.08em",
             textTransform: "uppercase",
@@ -157,7 +160,6 @@ export default function PaginaLogin() {
             display: "inline-flex",
             alignItems: "center",
             gap: "6px",
-            marginBottom: "32px",
           }}
         >
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">

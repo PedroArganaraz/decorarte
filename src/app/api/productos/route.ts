@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
+import { revalidatePath } from "next/cache"
 import { prisma } from "@/lib/prisma"
 import { crearClienteServidor } from "@/lib/supabase/servidor"
 import slugify from "slugify"
@@ -71,7 +72,7 @@ export async function POST(solicitud: NextRequest) {
     })
 
     const cuerpo = await solicitud.json()
-    const { nombre, descripcion, precio, precioAnterior, stock, activo, destacado, categoriaId, talle } = cuerpo
+    const { nombre, descripcion, precio, precioAnterior, stock, activo, destacado, categoriaId, material, talle } = cuerpo
 
     if (!nombre || !precio || !categoriaId) {
       return NextResponse.json<RespuestaAPI<null>>(
@@ -84,6 +85,14 @@ export async function POST(solicitud: NextRequest) {
     const productoExistente = await prisma.producto.findUnique({ where: { slug: slugBase } })
     const slug = productoExistente ? `${slugBase}-${Date.now()}` : slugBase
 
+    let materialId: string | null = null
+    if (material && categoriaId) {
+      const materialEncontrado = await prisma.material.findFirst({
+        where: { nombre: material, categoriaId },
+      })
+      materialId = materialEncontrado?.id ?? null
+    }
+
     const producto = await prisma.producto.create({
       data: {
         nombre,
@@ -94,12 +103,17 @@ export async function POST(solicitud: NextRequest) {
         stock: stock ?? 0,
         activo: activo ?? true,
         destacado: destacado ?? false,
-        categoriaId,
         talle: talle || null,
+        material: material || null,
+        materialId,
+        categoriaId,
         vendedorId: user.id,
       },
       include: { categoria: true, imagenes: true },
     })
+
+    revalidatePath("/")
+    revalidatePath("/catalogo")
 
     return NextResponse.json<RespuestaAPI<typeof producto>>(
       { datos: producto, mensaje: "Producto creado correctamente" },

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
+import { revalidatePath } from "next/cache"
 import { prisma } from "@/lib/prisma"
 import { crearClienteServidor, crearClienteAdmin } from "@/lib/supabase/servidor"
 import slugify from "slugify"
@@ -89,6 +90,10 @@ export async function PUT(
       },
     })
 
+    revalidatePath("/")
+    revalidatePath("/catalogo")
+    revalidatePath(`/producto/${productoActualizado.slug}`)
+
     return NextResponse.json<RespuestaAPI<typeof productoActualizado>>({
       datos: productoActualizado,
       mensaje: "Producto actualizado correctamente",
@@ -138,6 +143,9 @@ export async function DELETE(
     }
 
     await prisma.producto.delete({ where: { id } })
+
+    revalidatePath("/")
+    revalidatePath("/catalogo")
 
     return NextResponse.json<RespuestaAPI<null>>({
       mensaje: "Producto eliminado correctamente",
