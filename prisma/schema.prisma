@@ -48,6 +48,8 @@ model Producto {
   material       String?
   talle          String?          @map("talle")
   color          String?          @map("color")
+  costo          Float?
+  precioMinimo   Float?           @map("precio_minimo")
   materialId     String?          @map("material_id")
   categoriaId    String           @map("categoria_id")
   vendedorId     String           @map("vendedor_id")
