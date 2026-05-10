@@ -115,12 +115,14 @@ export async function POST(solicitud: NextRequest) {
           items: {
             create: items.map((item) => {
               const prod = productos.find((p) => p.id === item.productoId)!
+              const precioUnitario = Number(item.precioUnitario)
+              const cantidad = Number(item.cantidad)
               return {
                 productoId: item.productoId,
-                cantidad: item.cantidad,
-                precioUnitario: item.precioUnitario,
-                precioTotal: item.precioUnitario * item.cantidad,
-                costoUnitario: prod.costo ?? null,
+                cantidad,
+                precioUnitario,
+                precioTotal: precioUnitario * cantidad,
+                costoUnitario: prod.costo != null ? Number(prod.costo) : null,
               }
             }),
           },

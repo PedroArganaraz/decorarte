@@ -2,13 +2,16 @@
 
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
+import { ShoppingCart } from "lucide-react"
 import { crearClienteNavegador } from "@/lib/supabase/cliente"
+import type { LucideIcon } from "lucide-react"
 
-const navegacion = [
+const navegacion: { label: string; href: string; Icono?: LucideIcon }[] = [
   { label: "Inicio", href: "/panel" },
   { label: "Productos", href: "/panel/productos" },
   { label: "Categorías", href: "/panel/categorias" },
   { label: "Materiales", href: "/panel/materiales" },
+  { label: "Nueva venta", href: "/ventas/nueva", Icono: ShoppingCart },
 ]
 
 interface Props {
@@ -74,7 +77,7 @@ export default function SidebarPanel({ onCerrar }: Props) {
         flex: 1,
         padding: "0 12px",
       }}>
-        {navegacion.map(({ label, href }) => {
+        {navegacion.map(({ label, href, Icono }) => {
           const activo = pathname === href
           return (
             <Link
@@ -82,7 +85,9 @@ export default function SidebarPanel({ onCerrar }: Props) {
               href={href}
               onClick={onCerrar}
               style={{
-                display: "block",
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
                 padding: "10px 20px",
                 fontSize: "11px",
                 fontWeight: activo ? 500 : 400,
@@ -96,6 +101,7 @@ export default function SidebarPanel({ onCerrar }: Props) {
                   : "2px solid transparent",
               }}
             >
+              {Icono && <Icono size={13} strokeWidth={1.5} />}
               {label}
             </Link>
           )
