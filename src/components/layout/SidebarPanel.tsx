@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
-import { ShoppingCart } from "lucide-react"
+import { List } from "lucide-react"
 import { crearClienteNavegador } from "@/lib/supabase/cliente"
 import type { LucideIcon } from "lucide-react"
 
@@ -11,7 +11,7 @@ const navegacion: { label: string; href: string; Icono?: LucideIcon }[] = [
   { label: "Productos", href: "/panel/productos" },
   { label: "Categorías", href: "/panel/categorias" },
   { label: "Materiales", href: "/panel/materiales" },
-  { label: "Nueva venta", href: "/ventas/nueva", Icono: ShoppingCart },
+  { label: "Ventas", href: "/ventas", Icono: List },
 ]
 
 interface Props {
