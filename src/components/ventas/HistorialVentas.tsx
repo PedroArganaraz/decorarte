@@ -11,12 +11,14 @@ interface ItemVenta {
   producto: { id: string; nombre: string; slug: string }
 }
 
+type EstadoVenta = "PAGADO" | "ENTREGADO" | "PAGADO_Y_ENTREGADO" | "REGALO" | "PENDIENTE"
+
 interface Venta {
   id: string
   fecha: string
   cliente: string | null
   metodoPago: "EFECTIVO" | "TRANSFERENCIA" | null
-  estado: "PAGADO" | "ENTREGADO" | "PAGADO_Y_ENTREGADO" | "REGALO" | "PENDIENTE"
+  estado: EstadoVenta
   esRegalo: boolean
   notas: string | null
   items: ItemVenta[]
@@ -541,7 +543,7 @@ export default function HistorialVentas() {
             setVentas((prev) =>
               prev.map((v) =>
                 v.id === actualizada.id
-                  ? { ...v, ...actualizada, vendedor: v.vendedor }
+                  ? { ...v, ...actualizada, estado: actualizada.estado as EstadoVenta, vendedor: v.vendedor }
                   : v
               )
             )
