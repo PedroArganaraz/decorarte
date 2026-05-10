@@ -14,6 +14,8 @@ model Usuario {
   creadoEn      DateTime   @default(now()) @map("creado_en")
   actualizadoEn DateTime   @updatedAt @map("actualizado_en")
   productos     Producto[]
+  ventas        Venta[]
+  gastos        Gasto[]
   @@map("usuarios")
 }
 
@@ -60,8 +62,10 @@ model Producto {
   materialRel    Material?        @relation(fields: [materialId], references: [id])
   imagenes       ImagenProducto[]
   itemsCarrito   ItemCarrito[]
-  combinadoCon   Producto[]       @relation("ProductosCombinados")
-  combinadoEn    Producto[]       @relation("ProductosCombinados")
+  combinadoCon   Producto[]        @relation("ProductosCombinados")
+  combinadoEn    Producto[]        @relation("ProductosCombinados")
+  ventas         ItemVenta[]
+  movimientos    MovimientoStock[]
   @@map("productos")
 }
 
@@ -106,4 +110,104 @@ model ItemCarrito {
   producto   Producto @relation(fields: [productoId], references: [id])
   @@unique([carritoId, productoId])
   @@map("items_carrito")
+}
+
+model Venta {
+  id            String      @id @default(cuid())
+  fecha         DateTime    @default(now())
+  cliente       String?
+  metodoPago    MetodoPago? @map("metodo_pago")
+  estado        EstadoVenta @default(PAGADO_Y_ENTREGADO) @map("estado")
+  esRegalo      Boolean     @default(false) @map("es_regalo")
+  notas         String?
+  vendedorId    String?     @map("vendedor_id")
+  creadoEn      DateTime    @default(now()) @map("creado_en")
+  actualizadoEn DateTime    @updatedAt @map("actualizado_en")
+
+  vendedor      Usuario?    @relation(fields: [vendedorId], references: [id])
+  items         ItemVenta[]
+
+  @@map("ventas")
+}
+
+model ItemVenta {
+  id             String   @id @default(cuid())
+  ventaId        String   @map("venta_id")
+  productoId     String   @map("producto_id")
+  cantidad       Int      @default(1)
+  precioUnitario Float    @map("precio_unitario")
+  precioTotal    Float    @map("precio_total")
+  costoUnitario  Float?   @map("costo_unitario")
+  creadoEn       DateTime @default(now()) @map("creado_en")
+
+  venta          Venta    @relation(fields: [ventaId], references: [id], onDelete: Cascade)
+  producto       Producto @relation(fields: [productoId], references: [id])
+
+  @@map("items_venta")
+}
+
+model MovimientoStock {
+  id          String         @id @default(cuid())
+  productoId  String         @map("producto_id")
+  tipo        TipoMovimiento
+  cantidad    Int
+  motivo      String?
+  ventaId     String?        @map("venta_id")
+  fecha       DateTime       @default(now())
+  creadoEn    DateTime       @default(now()) @map("creado_en")
+
+  producto    Producto       @relation(fields: [productoId], references: [id])
+
+  @@map("movimientos_stock")
+}
+
+model Gasto {
+  id          String         @id @default(cuid())
+  fecha       DateTime       @default(now())
+  descripcion String
+  monto       Float
+  categoria   CategoriaGasto @default(OTROS)
+  metodoPago  MetodoPago     @map("metodo_pago")
+  notas       String?
+  vendedorId  String?        @map("vendedor_id")
+  creadoEn    DateTime       @default(now()) @map("creado_en")
+
+  vendedor    Usuario?       @relation(fields: [vendedorId], references: [id])
+
+  @@map("gastos")
+}
+
+enum MetodoPago {
+  EFECTIVO
+  TRANSFERENCIA
+
+  @@map("metodo_pago")
+}
+
+enum EstadoVenta {
+  PAGADO
+  ENTREGADO
+  PAGADO_Y_ENTREGADO
+  REGALO
+  PENDIENTE
+
+  @@map("estado_venta")
+}
+
+enum TipoMovimiento {
+  ENTRADA
+  SALIDA
+  AJUSTE
+
+  @@map("tipo_movimiento")
+}
+
+enum CategoriaGasto {
+  INSUMOS
+  PACKAGING
+  LOGISTICA
+  FERIA
+  OTROS
+
+  @@map("categoria_gasto")
 }
