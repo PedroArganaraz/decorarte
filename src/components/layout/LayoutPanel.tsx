@@ -1,16 +1,31 @@
 "use client"
 
 import { useTamanioPantalla } from "@/hooks/useTamanioPantalla"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import SidebarPanel from "./SidebarPanel"
 
-export default function LayoutPanel({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+const STORAGE_KEY = "panel-sidebar-colapsado"
+
+export default function LayoutPanel({ children }: { children: React.ReactNode }) {
   const { esMobile } = useTamanioPantalla()
   const [sidebarAbierto, setSidebarAbierto] = useState(false)
+  const [colapsado, setColapsado] = useState(false)
+
+  useEffect(() => {
+    try {
+      setColapsado(localStorage.getItem(STORAGE_KEY) === "true")
+    } catch {}
+  }, [])
+
+  const toggleColapso = () => {
+    setColapsado((prev) => {
+      const nuevo = !prev
+      try { localStorage.setItem(STORAGE_KEY, String(nuevo)) } catch {}
+      return nuevo
+    })
+  }
+
+  const anchoSidebar = esMobile ? "220px" : colapsado ? "60px" : "220px"
 
   return (
     <div style={{
@@ -31,27 +46,32 @@ export default function LayoutPanel({
         />
       )}
 
-      {/* SIDEBAR */}
+      {/* SIDEBAR WRAPPER — controla ancho y transición */}
       <div style={{
+        width: anchoSidebar,
+        flexShrink: 0,
         position: esMobile ? "fixed" : "sticky",
         top: 0,
         height: "100vh",
-        flexShrink: 0,
         left: esMobile ? (sidebarAbierto ? 0 : "-220px") : "auto",
         zIndex: esMobile ? 50 : "auto",
-        transition: "left 0.25s ease",
+        transition: esMobile ? "left 0.25s ease" : "width 0.25s ease",
+        overflow: "hidden",
       }}>
-        <SidebarPanel onCerrar={() => setSidebarAbierto(false)} />
+        <SidebarPanel
+          onCerrar={() => setSidebarAbierto(false)}
+          colapsado={!esMobile && colapsado}
+          onToggleColapso={toggleColapso}
+        />
       </div>
 
-      {/* CONTENIDO */}
+      {/* CONTENIDO PRINCIPAL — se ajusta automáticamente con flex */}
       <main style={{
         flex: 1,
         padding: esMobile ? "16px" : "32px",
         backgroundColor: "var(--color-superficie)",
         minWidth: 0,
       }}>
-        {/* BOTÓN HAMBURGER MOBILE */}
         {esMobile && (
           <button
             onClick={() => setSidebarAbierto(true)}
