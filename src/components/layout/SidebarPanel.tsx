@@ -9,6 +9,7 @@ import {
   Package,
   Tag,
   Layers,
+  Receipt,
   ShoppingBag,
   LogOut,
   Minus,
@@ -22,6 +23,7 @@ const navegacion: { label: string; href: string; Icono: LucideIcon }[] = [
   { label: "Categorías",  href: "/panel/categorias",  Icono: Tag },
   { label: "Materiales",  href: "/panel/materiales",  Icono: Layers },
   { label: "Ventas",      href: "/ventas",             Icono: ShoppingBag },
+  { label: "Gastos",      href: "/gastos",             Icono: Receipt },
 ]
 
 interface Props {

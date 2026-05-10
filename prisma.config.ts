@@ -22,11 +22,20 @@ function leerEnvLocal(): Record<string, string> {
 }
 
 const envVars = leerEnvLocal()
-const directUrl = envVars["DIRECT_URL"] ?? ""
+
+// En Vercel no existe .env.local — caer en las variables de entorno del proceso
+const directUrl =
+  envVars["DIRECT_URL"] ??
+  process.env.DIRECT_URL ??
+  process.env.DATABASE_URL ??
+  ""
 
 export default defineConfig({
   schema: "./prisma/schema.prisma",
-  datasource: {
-    url: directUrl,
-  },
+  // Solo sobreescribir el datasource si hay una URL real; si no, Prisma usa la del schema
+  ...(directUrl && {
+    datasource: {
+      url: directUrl,
+    },
+  }),
 })
