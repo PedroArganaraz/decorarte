@@ -381,85 +381,95 @@ export default function DashboardReportes() {
           </div>
 
           {/* CAJA */}
-          <div>
-            <h2 style={estiloTituloSeccion}>Caja</h2>
-            <div style={{
-              backgroundColor: "var(--color-card)",
-              border: "0.5px solid var(--color-borde)",
-            }}>
-              <div style={{
-                display: "grid",
-                gridTemplateColumns: "140px 1fr 1fr 1fr",
-                borderBottom: "0.5px solid var(--color-borde)",
-              }}>
-                <div />
-                {["Ingresos", "Gastos", "Balance"].map((h) => (
-                  <div key={h} style={{ padding: "10px 16px" }}>
-                    <span style={{
-                      fontSize: "9px",
-                      fontFamily: "'Jost', sans-serif",
-                      fontWeight: 500,
-                      letterSpacing: "0.15em",
-                      textTransform: "uppercase",
-                      color: "var(--color-texto-muted)",
-                    }}>
-                      {h}
+          {(() => {
+            const gananciaPositiva = datos.gananciaNeta >= 0
+            const filaBase: React.CSSProperties = {
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "baseline",
+              padding: "9px 20px",
+            }
+            const conceptoBase: React.CSSProperties = {
+              fontSize: "13px",
+              fontFamily: "'Jost', sans-serif",
+              fontWeight: 400,
+              color: "var(--color-texto-muted)",
+              letterSpacing: "0.02em",
+            }
+            const montoBase: React.CSSProperties = {
+              fontFamily: "'Cormorant Garamond', serif",
+              fontSize: "16px",
+              fontWeight: 400,
+              textAlign: "right",
+            }
+            const separador = (
+              <div style={{ borderTop: "0.5px solid var(--color-borde)", margin: "4px 0" }} />
+            )
+            return (
+              <div>
+                <h2 style={estiloTituloSeccion}>Caja</h2>
+                <div style={{
+                  backgroundColor: "var(--color-card)",
+                  border: "0.5px solid var(--color-borde)",
+                  padding: "8px 0",
+                }}>
+                  {/* Ingresos por método */}
+                  {datos.ventas.desglosePago.efectivo > 0 && (
+                    <div style={filaBase}>
+                      <span style={conceptoBase}>Ingresos efectivo</span>
+                      <span style={{ ...montoBase, color: "var(--color-texto)" }}>{fmt(datos.ventas.desglosePago.efectivo)}</span>
+                    </div>
+                  )}
+                  {datos.ventas.desglosePago.transferencia > 0 && (
+                    <div style={filaBase}>
+                      <span style={conceptoBase}>Ingresos transferencia</span>
+                      <span style={{ ...montoBase, color: "var(--color-texto)" }}>{fmt(datos.ventas.desglosePago.transferencia)}</span>
+                    </div>
+                  )}
+                  {datos.ventas.desglosePago.sinMetodo > 0 && (
+                    <div style={filaBase}>
+                      <span style={conceptoBase}>Ingresos sin método</span>
+                      <span style={{ ...montoBase, color: "var(--color-texto)" }}>{fmt(datos.ventas.desglosePago.sinMetodo)}</span>
+                    </div>
+                  )}
+
+                  {separador}
+
+                  {/* Total ingresos */}
+                  <div style={{ ...filaBase, padding: "10px 20px" }}>
+                    <span style={{ ...conceptoBase, fontWeight: 600, color: "var(--color-texto)" }}>Total ingresos</span>
+                    <span style={{ ...montoBase, fontSize: "18px", fontWeight: 600, color: "var(--color-texto)" }}>{fmt(datos.ventas.ingresosBrutos)}</span>
+                  </div>
+
+                  {separador}
+
+                  {/* Egresos */}
+                  {datos.gastos.total > 0 && (
+                    <div style={filaBase}>
+                      <span style={conceptoBase}>Gastos operativos</span>
+                      <span style={{ ...montoBase, color: "var(--color-acento)" }}>−{fmt(datos.gastos.total)}</span>
+                    </div>
+                  )}
+                  {datos.ventas.costoMercaderia > 0 && (
+                    <div style={filaBase}>
+                      <span style={conceptoBase}>Costo mercadería</span>
+                      <span style={{ ...montoBase, color: "var(--color-acento)" }}>−{fmt(datos.ventas.costoMercaderia)}</span>
+                    </div>
+                  )}
+
+                  {separador}
+
+                  {/* Ganancia neta */}
+                  <div style={{ ...filaBase, padding: "10px 20px" }}>
+                    <span style={{ ...conceptoBase, fontWeight: 600, color: "var(--color-texto)" }}>Ganancia neta</span>
+                    <span style={{ ...montoBase, fontSize: "18px", fontWeight: 600, color: gananciaPositiva ? "var(--color-texto)" : "var(--color-acento)" }}>
+                      {gananciaPositiva ? "" : "−"}{fmt(Math.abs(datos.gananciaNeta))}
                     </span>
                   </div>
-                ))}
+                </div>
               </div>
-
-              {[
-                { label: "Efectivo",      ingresos: datos.ventas.desglosePago.efectivo,      gastos: datos.gastos.desglosePago.efectivo,      esTotal: false, esCosto: false },
-                { label: "Transferencia", ingresos: datos.ventas.desglosePago.transferencia, gastos: datos.gastos.desglosePago.transferencia, esTotal: false, esCosto: false },
-                { label: "Costo mercadería", ingresos: null,                                 gastos: datos.ventas.costoMercaderia,            esTotal: false, esCosto: true  },
-                { label: "Total",         ingresos: datos.ventas.ingresosBrutos,             gastos: datos.gastos.total + datos.ventas.costoMercaderia, esTotal: true,  esCosto: false },
-              ].map(({ label, ingresos, gastos: g, esTotal, esCosto }, idx, arr) => {
-                const balance = esTotal ? datos.gananciaNeta : null
-                const negativo = balance !== null && balance < 0
-                return (
-                  <div key={label} style={{
-                    display: "grid",
-                    gridTemplateColumns: "140px 1fr 1fr 1fr",
-                    borderBottom: idx < arr.length - 1 ? "0.5px solid var(--color-borde)" : "none",
-                    backgroundColor: esTotal ? "var(--color-superficie)" : "transparent",
-                  }}>
-                    <div style={{ padding: "12px 16px", display: "flex", alignItems: "center" }}>
-                      <span style={{
-                        fontSize: esTotal ? "9px" : "11px",
-                        fontFamily: "'Jost', sans-serif",
-                        fontWeight: esTotal ? 500 : 400,
-                        letterSpacing: esTotal ? "0.12em" : "0.04em",
-                        textTransform: esTotal ? "uppercase" : "none",
-                        color: "var(--color-texto-muted)",
-                      }}>
-                        {label}
-                      </span>
-                    </div>
-                    <div style={{ padding: "12px 16px" }}>
-                      {ingresos !== null && (
-                        <span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: esTotal ? "18px" : "16px", fontWeight: 400, color: "var(--color-texto)" }}>
-                          {fmt(ingresos)}
-                        </span>
-                      )}
-                    </div>
-                    <div style={{ padding: "12px 16px" }}>
-                      <span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: esTotal ? "18px" : "16px", fontWeight: 400, color: esCosto ? "var(--color-acento)" : "var(--color-texto-muted)" }}>
-                        {fmt(g)}
-                      </span>
-                    </div>
-                    <div style={{ padding: "12px 16px" }}>
-                      {balance !== null && (
-                        <span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: esTotal ? "18px" : "16px", fontWeight: 400, color: negativo ? "var(--color-acento)" : "var(--color-texto)" }}>
-                          {negativo && "−"}{fmt(Math.abs(balance))}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-          </div>
+            )
+          })()}
 
           {/* GRÁFICO 1 — BARRAS VERTICALES: ventas por categoría */}
           {datos.ventas.porCategoria.length > 0 && (() => {
