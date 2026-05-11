@@ -110,8 +110,8 @@ export default async function PaginaEditarProducto({
             letterSpacing: "0.12em",
             textTransform: "uppercase",
             backgroundColor: "transparent",
-            color: "var(--color-texto)",
-            border: "0.5px solid var(--color-texto)",
+            color: "var(--color-texto-muted)",
+            border: "0.5px solid var(--color-borde)",
             textDecoration: "none",
             display: "inline-block",
           }}
@@ -122,10 +122,10 @@ export default async function PaginaEditarProducto({
           type="submit"
           form="formulario-producto"
           style={{
-            padding: "12px 32px",
+            padding: "14px 40px",
             fontSize: "11px",
             fontFamily: "'Jost', sans-serif",
-            fontWeight: 400,
+            fontWeight: 500,
             letterSpacing: "0.12em",
             textTransform: "uppercase",
             backgroundColor: "var(--color-texto)",

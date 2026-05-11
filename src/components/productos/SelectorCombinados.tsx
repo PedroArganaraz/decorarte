@@ -71,6 +71,17 @@ export default function SelectorCombinados({ productoId, combinadosIniciales }: 
     if (modalAbierto) buscarProductos()
   }, [modalAbierto])
 
+  useEffect(() => {
+    if (!modalAbierto) return
+    const timer = setTimeout(() => buscarProductos(), 300)
+    return () => clearTimeout(timer)
+  }, [busqueda]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    if (!modalAbierto) return
+    buscarProductos()
+  }, [categoriaFiltro]) // eslint-disable-line react-hooks/exhaustive-deps
+
   const toggleSeleccion = (producto: ProductoOpcion) => {
     setSeleccionTemp((prev) => {
       if (prev.includes(producto.id)) {
@@ -151,9 +162,9 @@ export default function SelectorCombinados({ productoId, combinadosIniciales }: 
               fontWeight: 400,
               letterSpacing: "0.1em",
               textTransform: "uppercase",
-              backgroundColor: "var(--color-texto)",
-              color: "var(--color-fondo)",
-              border: "none",
+              backgroundColor: "transparent",
+              color: "var(--color-texto)",
+              border: "0.5px solid var(--color-texto)",
               borderRadius: 0,
               cursor: "pointer",
             }}
@@ -229,7 +240,7 @@ export default function SelectorCombinados({ productoId, combinadosIniciales }: 
                 type="text"
                 value={busqueda}
                 onChange={(e) => setBusqueda(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && buscarProductos()}
+                onKeyDown={(e) => { if (e.key === "Enter") e.preventDefault() }}
                 placeholder="Buscar por nombre..."
                 style={{ ...estiloInput, flex: 1, minWidth: "160px" }}
               />
@@ -243,23 +254,6 @@ export default function SelectorCombinados({ productoId, combinadosIniciales }: 
                   <option key={cat.id} value={cat.slug}>{cat.nombre}</option>
                 ))}
               </select>
-              <button
-                onClick={buscarProductos}
-                style={{
-                  padding: "8px 16px",
-                  fontSize: "11px",
-                  fontFamily: "'Jost', sans-serif",
-                  letterSpacing: "0.1em",
-                  textTransform: "uppercase",
-                  backgroundColor: "var(--color-texto)",
-                  color: "var(--color-fondo)",
-                  border: "none",
-                  borderRadius: 0,
-                  cursor: "pointer",
-                }}
-              >
-                Buscar
-              </button>
             </div>
 
             {/* LISTA DE PRODUCTOS */}

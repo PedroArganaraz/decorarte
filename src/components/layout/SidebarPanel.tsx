@@ -56,22 +56,26 @@ export default function SidebarPanel({
       borderRight: "0.5px solid var(--color-borde)",
       display: "flex",
       flexDirection: "column",
-      padding: "16px 0",
       flexShrink: 0,
     }}>
 
       {/* HEADER: logo + botón colapsar */}
       <div style={{
-        padding: colapsado ? "14px 0" : "14px 20px",
         borderBottom: "0.5px solid var(--color-borde)",
         display: "flex",
-        alignItems: "center",
-        justifyContent: colapsado ? "center" : "space-between",
-        gap: "8px",
+        alignItems: "stretch",
         minHeight: "64px",
       }}>
         {!colapsado && (
-          <Link href="/" style={{ textDecoration: "none", flex: 1, minWidth: 0 }}>
+          <Link href="/" style={{
+            textDecoration: "none",
+            flex: 1,
+            minWidth: 0,
+            padding: "14px 20px",
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "center",
+          }}>
             <span style={{
               fontFamily: "'Cormorant Garamond', serif",
               fontSize: "18px",
@@ -102,15 +106,17 @@ export default function SidebarPanel({
           onClick={onToggleColapso}
           title={colapsado ? "Expandir sidebar" : "Colapsar sidebar"}
           style={{
-            background: "none",
+            backgroundColor: "var(--color-card)",
             border: "none",
+            borderLeft: colapsado ? "none" : "0.5px solid var(--color-borde)",
             cursor: "pointer",
-            padding: "6px",
-            color: "var(--color-texto-muted)",
+            padding: "16px 12px",
+            color: "#3D3835",
             display: "flex",
             alignItems: "center",
-            flexShrink: 0,
+            justifyContent: "center",
             borderRadius: 0,
+            flex: colapsado ? 1 : undefined,
           }}
         >
           {colapsado
@@ -123,7 +129,7 @@ export default function SidebarPanel({
       {/* NAVEGACIÓN */}
       <nav style={{
         flex: 1,
-        padding: colapsado ? "8px 0" : "8px 12px",
+        padding: colapsado ? "2px 0" : "2px 12px",
         overflowY: "auto",
         overflowX: "hidden",
       }}>

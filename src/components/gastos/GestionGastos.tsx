@@ -145,82 +145,70 @@ export default function GestionGastos() {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
 
-      {/* HEADER */}
-      <div style={{
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "flex-end",
-      }}>
-        <div>
-          <h1 style={{
-            fontFamily: "'Cormorant Garamond', serif",
-            fontSize: "28px",
-            fontWeight: 300,
-            letterSpacing: "0.05em",
-            color: "var(--color-texto)",
-            margin: 0,
-          }}>
-            Gastos
-          </h1>
-          <p style={{
-            fontSize: "11px",
-            fontFamily: "'Jost', sans-serif",
-            color: "var(--color-texto-muted)",
-            marginTop: "6px",
-            letterSpacing: "0.05em",
-          }}>
-            Registro de gastos por período
-          </p>
-        </div>
-        <button
-          onClick={abrirNuevo}
-          style={{
-            padding: "10px 20px",
-            fontSize: "11px",
-            fontFamily: "'Jost', sans-serif",
-            fontWeight: 400,
-            letterSpacing: "0.12em",
-            textTransform: "uppercase",
-            backgroundColor: "var(--color-texto)",
-            color: "var(--color-fondo)",
-            border: "none",
-            borderRadius: 0,
-            cursor: "pointer",
-          }}
-        >
-          + Nuevo gasto
-        </button>
-      </div>
-
-      {/* FILTROS */}
+      {/* HEADER + FILTROS */}
       <div style={{
         display: "flex",
         flexDirection: esMobile ? "column" : "row",
-        gap: esMobile ? "12px" : "20px",
-        alignItems: esMobile ? "stretch" : "flex-end",
-        flexWrap: "wrap",
-        marginBottom: "20px",
+        justifyContent: "space-between",
+        alignItems: esMobile ? "flex-start" : "flex-end",
+        gap: esMobile ? "12px" : "24px",
       }}>
         <div>
-          <label style={estiloLabel}>Categoría</label>
-          <select value={filtroCategoria} onChange={(e) => setFiltroCategoria(e.target.value)} style={estiloSelect}>
-            <option value="">Todas</option>
-            {Object.entries(CATEGORIA_LABELS).map(([v, l]) => (
-              <option key={v} value={v}>{l}</option>
-            ))}
-          </select>
+          <h1 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "28px", fontWeight: 300, letterSpacing: "0.05em", color: "var(--color-texto)", margin: 0 }}>
+            Gastos
+          </h1>
+          <p style={{ fontSize: "11px", fontFamily: "'Jost', sans-serif", color: "var(--color-texto-muted)", marginTop: "6px", letterSpacing: "0.05em" }}>
+            {MESES[mes]} {anio}
+          </p>
         </div>
-        <div>
-          <label style={estiloLabel}>Mes</label>
-          <select value={mes} onChange={(e) => setMes(Number(e.target.value))} style={estiloSelect}>
-            {MESES.map((m, i) => <option key={i} value={i}>{m}</option>)}
-          </select>
-        </div>
-        <div>
-          <label style={estiloLabel}>Año</label>
-          <select value={anio} onChange={(e) => setAnio(Number(e.target.value))} style={estiloSelect}>
-            {ANIOS.map((a) => <option key={a} value={a}>{a}</option>)}
-          </select>
+        <div style={{
+          display: "flex",
+          flexDirection: esMobile ? "column" : "row",
+          gap: esMobile ? "10px" : "8px",
+          alignItems: esMobile ? "stretch" : "flex-end",
+          width: esMobile ? "100%" : undefined,
+        }}>
+          <div>
+            <label style={estiloLabel}>Categoría</label>
+            <select value={filtroCategoria} onChange={(e) => setFiltroCategoria(e.target.value)} style={{ ...estiloSelect, width: esMobile ? "100%" : undefined }}>
+              <option value="">Todas</option>
+              {Object.entries(CATEGORIA_LABELS).map(([v, l]) => (
+                <option key={v} value={v}>{l}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label style={estiloLabel}>Mes</label>
+            <select value={mes} onChange={(e) => setMes(Number(e.target.value))} style={{ ...estiloSelect, width: esMobile ? "100%" : undefined }}>
+              {MESES.map((m, i) => <option key={i} value={i}>{m}</option>)}
+            </select>
+          </div>
+          <div>
+            <label style={estiloLabel}>Año</label>
+            <select value={anio} onChange={(e) => setAnio(Number(e.target.value))} style={{ ...estiloSelect, width: esMobile ? "100%" : undefined }}>
+              {ANIOS.map((a) => <option key={a} value={a}>{a}</option>)}
+            </select>
+          </div>
+          <button
+            onClick={abrirNuevo}
+            style={{
+              padding: "10px 20px",
+              fontSize: "11px",
+              fontFamily: "'Jost', sans-serif",
+              fontWeight: 400,
+              letterSpacing: "0.12em",
+              textTransform: "uppercase",
+              backgroundColor: "var(--color-texto)",
+              color: "var(--color-fondo)",
+              border: "none",
+              borderRadius: 0,
+              cursor: "pointer",
+              alignSelf: esMobile ? undefined : "flex-end",
+              width: esMobile ? "100%" : undefined,
+            }}
+          >
+            + Nuevo gasto
+          </button>
         </div>
       </div>
 

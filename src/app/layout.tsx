@@ -16,7 +16,7 @@ export default function LayoutRaiz({
     <html lang="es">
       <body>
         {children}
-        <Toaster position="bottom-right" />
+        <Toaster position="bottom-center" />
       </body>
     </html>
   )

@@ -89,9 +89,6 @@ const estiloTd: React.CSSProperties = {
 export default function HistorialVentas() {
   const [mes, setMes] = useState(HOY.getMonth())
   const [anio, setAnio] = useState(ANIO_ACTUAL)
-  const [filtroMetodo, setFiltroMetodo] = useState("")
-  const [filtroEstado, setFiltroEstado] = useState("")
-
   const [ventas, setVentas] = useState<Venta[]>([])
   const [cargando, setCargando] = useState(true)
   const [errorCarga, setErrorCarga] = useState<string | null>(null)
@@ -141,11 +138,7 @@ export default function HistorialVentas() {
     }
   }
 
-  const ventasFiltradas = ventas.filter((v) => {
-    if (filtroMetodo && v.metodoPago !== filtroMetodo) return false
-    if (filtroEstado && v.estado !== filtroEstado) return false
-    return true
-  })
+  const ventasFiltradas = ventas
 
   let totalPeriodo = 0
   let totalEfectivo = 0
@@ -160,92 +153,66 @@ export default function HistorialVentas() {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
 
-      {/* HEADER */}
+      {/* HEADER + FILTROS */}
       <div style={{
         display: "flex",
         flexDirection: esMobile ? "column" : "row",
         justifyContent: "space-between",
         alignItems: esMobile ? "flex-start" : "flex-end",
-        gap: esMobile ? "12px" : "0",
+        gap: esMobile ? "12px" : "24px",
       }}>
         <div>
           <h1 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "28px", fontWeight: 300, letterSpacing: "0.05em", color: "var(--color-texto)", margin: 0 }}>
             Ventas
           </h1>
           <p style={{ fontSize: "11px", fontFamily: "'Jost', sans-serif", color: "var(--color-texto-muted)", marginTop: "6px", letterSpacing: "0.05em" }}>
-            Registro de ventas por período
+            {MESES[mes]} {anio}
           </p>
         </div>
-        <a
-          href="/ventas/nueva"
-          style={{
-            padding: "10px 20px",
-            fontSize: "11px",
-            fontFamily: "'Jost', sans-serif",
-            fontWeight: 400,
-            letterSpacing: "0.12em",
-            textTransform: "uppercase",
-            backgroundColor: "var(--color-texto)",
-            color: "var(--color-fondo)",
-            textDecoration: "none",
-            display: "block",
-            width: esMobile ? "100%" : undefined,
-            boxSizing: "border-box",
-            textAlign: "center",
-          }}
-        >
-          + Nueva venta
-        </a>
-      </div>
-
-      {/* FILTROS */}
-      <div style={{
-        display: "flex",
-        flexDirection: esMobile ? "column" : "row",
-        gap: esMobile ? "12px" : "20px",
-        alignItems: esMobile ? "stretch" : "flex-end",
-        flexWrap: "wrap",
-        marginBottom: "20px",
-      }}>
-        <div>
-          <label style={estiloLabel}>Mes</label>
-          <select value={mes} onChange={(e) => setMes(Number(e.target.value))} style={{ ...estiloSelect, width: esMobile ? "100%" : undefined }}>
-            {MESES.map((m, i) => (
-              <option key={i} value={i}>{m}</option>
-            ))}
-          </select>
-        </div>
-
-        <div>
-          <label style={estiloLabel}>Año</label>
-          <select value={anio} onChange={(e) => setAnio(Number(e.target.value))} style={{ ...estiloSelect, width: esMobile ? "100%" : undefined }}>
-            {ANIOS.map((a) => (
-              <option key={a} value={a}>{a}</option>
-            ))}
-          </select>
-        </div>
-
-        {!esMobile && <div style={{ width: "1px", height: "32px", backgroundColor: "var(--color-borde)", flexShrink: 0 }} />}
-
-        <div>
-          <label style={estiloLabel}>Método de pago</label>
-          <select value={filtroMetodo} onChange={(e) => setFiltroMetodo(e.target.value)} style={{ ...estiloSelect, width: esMobile ? "100%" : undefined }}>
-            <option value="">Todos</option>
-            <option value="EFECTIVO">Efectivo</option>
-            <option value="TRANSFERENCIA">Transferencia</option>
-          </select>
-        </div>
-
-        <div>
-          <label style={estiloLabel}>Estado</label>
-          <select value={filtroEstado} onChange={(e) => setFiltroEstado(e.target.value)} style={{ ...estiloSelect, width: esMobile ? "100%" : undefined }}>
-            <option value="">Todos</option>
-            <option value="PAGADO_Y_ENTREGADO">Pagado y entregado</option>
-            <option value="PAGADO">Pagado</option>
-            <option value="ENTREGADO">Entregado</option>
-            <option value="PENDIENTE">Pendiente</option>
-            <option value="REGALO">Regalo</option>
-          </select>
+        <div style={{
+          display: "flex",
+          flexDirection: esMobile ? "column" : "row",
+          gap: esMobile ? "10px" : "8px",
+          alignItems: esMobile ? "stretch" : "flex-end",
+          width: esMobile ? "100%" : undefined,
+        }}>
+          <div>
+            <label style={estiloLabel}>Mes</label>
+            <select value={mes} onChange={(e) => setMes(Number(e.target.value))} style={{ ...estiloSelect, width: esMobile ? "100%" : undefined }}>
+              {MESES.map((m, i) => (
+                <option key={i} value={i}>{m}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label style={estiloLabel}>Año</label>
+            <select value={anio} onChange={(e) => setAnio(Number(e.target.value))} style={{ ...estiloSelect, width: esMobile ? "100%" : undefined }}>
+              {ANIOS.map((a) => (
+                <option key={a} value={a}>{a}</option>
+              ))}
+            </select>
+          </div>
+          <a
+            href="/ventas/nueva"
+            style={{
+              padding: "10px 20px",
+              fontSize: "11px",
+              fontFamily: "'Jost', sans-serif",
+              fontWeight: 400,
+              letterSpacing: "0.12em",
+              textTransform: "uppercase",
+              backgroundColor: "var(--color-texto)",
+              color: "var(--color-fondo)",
+              textDecoration: "none",
+              display: "block",
+              width: esMobile ? "100%" : undefined,
+              boxSizing: "border-box",
+              textAlign: "center",
+              alignSelf: esMobile ? undefined : "flex-end",
+            }}
+          >
+            + Nueva venta
+          </a>
         </div>
       </div>
 

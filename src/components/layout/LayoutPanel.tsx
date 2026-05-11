@@ -1,7 +1,7 @@
 "use client"
 
 import { useTamanioPantalla } from "@/hooks/useTamanioPantalla"
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import SidebarPanel from "./SidebarPanel"
 
 const STORAGE_KEY = "panel-sidebar-colapsado"
@@ -9,13 +9,12 @@ const STORAGE_KEY = "panel-sidebar-colapsado"
 export default function LayoutPanel({ children }: { children: React.ReactNode }) {
   const { esMobile } = useTamanioPantalla()
   const [sidebarAbierto, setSidebarAbierto] = useState(false)
-  const [colapsado, setColapsado] = useState(false)
-
-  useEffect(() => {
-    try {
-      setColapsado(localStorage.getItem(STORAGE_KEY) === "true")
-    } catch {}
-  }, [])
+  const [colapsado, setColapsado] = useState(() => {
+    if (typeof window !== "undefined") {
+      try { return localStorage.getItem(STORAGE_KEY) === "true" } catch {}
+    }
+    return false
+  })
 
   const toggleColapso = () => {
     setColapsado((prev) => {
@@ -47,7 +46,7 @@ export default function LayoutPanel({ children }: { children: React.ReactNode })
       )}
 
       {/* SIDEBAR WRAPPER — controla ancho y transición */}
-      <div style={{
+      <div suppressHydrationWarning style={{
         width: anchoSidebar,
         flexShrink: 0,
         position: esMobile ? "fixed" : "sticky",
