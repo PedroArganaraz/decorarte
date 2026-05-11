@@ -262,19 +262,23 @@ export default function GestionGastos() {
 
       {/* DESGLOSE POR CATEGORÍA */}
       {Object.keys(porCategoria).length > 0 && (
-        <div style={{ backgroundColor: "var(--color-card)", border: "0.5px solid var(--color-borde)", padding: "16px 24px" }}>
-          <p style={{ fontSize: "9px", fontFamily: "'Jost', sans-serif", fontWeight: 500, letterSpacing: "0.15em", textTransform: "uppercase", color: "var(--color-texto-muted)", margin: "0 0 12px" }}>
+        <div>
+          <p style={{ fontSize: "9px", fontFamily: "'Jost', sans-serif", fontWeight: 500, letterSpacing: "0.15em", textTransform: "uppercase", color: "var(--color-texto-muted)", margin: "0 0 10px" }}>
             Por categoría
           </p>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: "20px" }}>
+          <div style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))",
+            gap: "12px",
+          }}>
             {Object.entries(porCategoria)
               .sort(([, a], [, b]) => b - a)
               .map(([cat, total]) => (
-                <div key={cat}>
-                  <p style={{ fontSize: "9px", fontFamily: "'Jost', sans-serif", letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--color-texto-muted)", margin: "0 0 3px" }}>
+                <div key={cat} style={{ backgroundColor: "var(--color-fondo)", border: "1px solid var(--color-texto-muted)", padding: "16px 20px" }}>
+                  <p style={{ fontSize: "9px", fontFamily: "'Jost', sans-serif", fontWeight: 500, letterSpacing: "0.15em", textTransform: "uppercase", color: "var(--color-texto-muted)", margin: "0 0 8px" }}>
                     {CATEGORIA_LABELS[cat] ?? cat}
                   </p>
-                  <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "18px", fontWeight: 400, color: "var(--color-texto)", margin: 0 }}>
+                  <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "24px", fontWeight: 400, color: "var(--color-texto)", margin: 0 }}>
                     ${total.toLocaleString("es-AR")}
                   </p>
                 </div>
