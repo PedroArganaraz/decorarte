@@ -201,6 +201,15 @@ export default function GestionGastos() {
         flexWrap: "wrap",
       }}>
         <div>
+          <label style={estiloLabel}>Categoría</label>
+          <select value={filtroCategoria} onChange={(e) => setFiltroCategoria(e.target.value)} style={estiloSelect}>
+            <option value="">Todas</option>
+            {Object.entries(CATEGORIA_LABELS).map(([v, l]) => (
+              <option key={v} value={v}>{l}</option>
+            ))}
+          </select>
+        </div>
+        <div>
           <label style={estiloLabel}>Mes</label>
           <select value={mes} onChange={(e) => setMes(Number(e.target.value))} style={estiloSelect}>
             {MESES.map((m, i) => <option key={i} value={i}>{m}</option>)}
@@ -210,16 +219,6 @@ export default function GestionGastos() {
           <label style={estiloLabel}>Año</label>
           <select value={anio} onChange={(e) => setAnio(Number(e.target.value))} style={estiloSelect}>
             {ANIOS.map((a) => <option key={a} value={a}>{a}</option>)}
-          </select>
-        </div>
-        <div style={{ width: "1px", height: "32px", backgroundColor: "var(--color-borde)", flexShrink: 0 }} />
-        <div>
-          <label style={estiloLabel}>Categoría</label>
-          <select value={filtroCategoria} onChange={(e) => setFiltroCategoria(e.target.value)} style={estiloSelect}>
-            <option value="">Todas</option>
-            {Object.entries(CATEGORIA_LABELS).map(([v, l]) => (
-              <option key={v} value={v}>{l}</option>
-            ))}
           </select>
         </div>
       </div>

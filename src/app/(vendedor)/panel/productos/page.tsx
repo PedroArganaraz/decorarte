@@ -6,17 +6,19 @@ interface Props {
   searchParams: Promise<{
     nombre?: string
     categoriaId?: string
+    soloActivos?: string
   }>
 }
 
 export default async function PaginaProductos({ searchParams }: Props) {
-  const { nombre, categoriaId } = await searchParams
+  const { nombre, categoriaId, soloActivos } = await searchParams
 
   const [productos, categorias] = await Promise.all([
     prisma.producto.findMany({
       where: {
         ...(nombre && { nombre: { contains: nombre, mode: "insensitive" } }),
         ...(categoriaId && { categoriaId }),
+        ...(soloActivos === "1" && { activo: true }),
       },
       orderBy: { stock: "asc" },
       include: {

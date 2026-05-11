@@ -14,18 +14,21 @@ export default function FiltrosProductos({ categorias }: Props) {
   const searchParams = useSearchParams()
   const [nombre, setNombre] = useState(searchParams.get("nombre") ?? "")
   const [categoriaId, setCategoriaId] = useState(searchParams.get("categoriaId") ?? "")
+  const [soloActivos, setSoloActivos] = useState(searchParams.get("soloActivos") === "1")
   const { esMobile } = useTamanioPantalla()
 
   const aplicar = () => {
     const params = new URLSearchParams()
     if (nombre) params.set("nombre", nombre)
     if (categoriaId) params.set("categoriaId", categoriaId)
+    if (soloActivos) params.set("soloActivos", "1")
     router.push(`/panel/productos?${params.toString()}`)
   }
 
   const limpiar = () => {
     setNombre("")
     setCategoriaId("")
+    setSoloActivos(false)
     router.push("/panel/productos")
   }
 
@@ -71,6 +74,26 @@ export default function FiltrosProductos({ categorias }: Props) {
           </option>
         ))}
       </select>
+
+      <label style={{
+        display: "flex",
+        alignItems: "center",
+        gap: "7px",
+        cursor: "pointer",
+        fontSize: "11px",
+        fontFamily: "'Jost', sans-serif",
+        letterSpacing: "0.08em",
+        color: "var(--color-texto)",
+        userSelect: "none",
+      }}>
+        <input
+          type="checkbox"
+          checked={soloActivos}
+          onChange={(e) => setSoloActivos(e.target.checked)}
+          style={{ width: "13px", height: "13px", cursor: "pointer", accentColor: "var(--color-texto)" }}
+        />
+        Solo activos
+      </label>
 
       <button
         onClick={aplicar}

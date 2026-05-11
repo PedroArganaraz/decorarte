@@ -11,6 +11,7 @@ import {
   Layers,
   Receipt,
   ShoppingBag,
+  BarChart2,
   LogOut,
   Minus,
 } from "lucide-react"
@@ -24,6 +25,7 @@ const navegacion: { label: string; href: string; Icono: LucideIcon }[] = [
   { label: "Materiales",  href: "/panel/materiales",  Icono: Layers },
   { label: "Ventas",      href: "/ventas",             Icono: ShoppingBag },
   { label: "Gastos",      href: "/gastos",             Icono: Receipt },
+  { label: "Reportes",   href: "/reportes",           Icono: BarChart2 },
 ]
 
 interface Props {
