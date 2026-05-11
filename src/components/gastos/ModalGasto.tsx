@@ -251,26 +251,6 @@ export default function ModalGasto({ gasto, onCerrar, onGuardado }: Props) {
           )}
           <div style={{ display: "flex", gap: "8px" }}>
             <button
-              onClick={guardar}
-              disabled={guardando}
-              style={{
-                flex: 1,
-                padding: "11px",
-                fontSize: "11px",
-                fontFamily: "'Jost', sans-serif",
-                fontWeight: 500,
-                letterSpacing: "0.12em",
-                textTransform: "uppercase",
-                backgroundColor: guardando ? "var(--color-texto-muted)" : "var(--color-texto)",
-                color: "var(--color-card)",
-                border: "none",
-                borderRadius: 0,
-                cursor: guardando ? "not-allowed" : "pointer",
-              }}
-            >
-              {guardando ? "Guardando..." : gasto ? "Guardar cambios" : "Registrar gasto"}
-            </button>
-            <button
               onClick={onCerrar}
               disabled={guardando}
               style={{
@@ -290,6 +270,26 @@ export default function ModalGasto({ gasto, onCerrar, onGuardado }: Props) {
               }}
             >
               Cancelar
+            </button>
+            <button
+              onClick={guardar}
+              disabled={guardando}
+              style={{
+                flex: 1,
+                padding: "11px",
+                fontSize: "11px",
+                fontFamily: "'Jost', sans-serif",
+                fontWeight: 500,
+                letterSpacing: "0.12em",
+                textTransform: "uppercase",
+                backgroundColor: guardando ? "var(--color-texto-muted)" : "var(--color-texto)",
+                color: "var(--color-card)",
+                border: "none",
+                borderRadius: 0,
+                cursor: guardando ? "not-allowed" : "pointer",
+              }}
+            >
+              {guardando ? "Guardando..." : gasto ? "Guardar cambios" : "Registrar gasto"}
             </button>
           </div>
         </div>

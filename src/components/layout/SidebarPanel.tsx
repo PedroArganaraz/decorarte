@@ -207,7 +207,9 @@ export default function SidebarPanel({
               border: "0.5px solid var(--color-texto)",
               borderRadius: 0,
               cursor: "pointer",
-              textAlign: "left",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
             }}
           >
             Cerrar sesión

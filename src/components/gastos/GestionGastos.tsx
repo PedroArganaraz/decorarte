@@ -61,6 +61,7 @@ const estiloTd: React.CSSProperties = {
 export default function GestionGastos() {
   const [mes, setMes] = useState(HOY.getMonth())
   const [anio, setAnio] = useState(ANIO_ACTUAL)
+  const [verAnioCompleto, setVerAnioCompleto] = useState(false)
   const [filtroCategoria, setFiltroCategoria] = useState("")
 
   const [gastos, setGastos] = useState<Gasto[]>([])
@@ -78,8 +79,12 @@ export default function GestionGastos() {
   const fetchGastos = useCallback(async () => {
     setCargando(true)
     setErrorCarga(null)
-    const desde = new Date(anio, mes, 1).toISOString()
-    const hasta = new Date(anio, mes + 1, 0, 23, 59, 59, 999).toISOString()
+    const desde = verAnioCompleto
+      ? new Date(anio, 0, 1).toISOString()
+      : new Date(anio, mes, 1).toISOString()
+    const hasta = verAnioCompleto
+      ? new Date(anio, 11, 31, 23, 59, 59, 999).toISOString()
+      : new Date(anio, mes + 1, 0, 23, 59, 59, 999).toISOString()
     try {
       const res = await fetch(
         `/api/gastos?desde=${encodeURIComponent(desde)}&hasta=${encodeURIComponent(hasta)}`
@@ -92,7 +97,7 @@ export default function GestionGastos() {
     } finally {
       setCargando(false)
     }
-  }, [mes, anio])
+  }, [mes, anio, verAnioCompleto])
 
   useEffect(() => { fetchGastos() }, [fetchGastos])
 
@@ -158,7 +163,7 @@ export default function GestionGastos() {
             Gastos
           </h1>
           <p style={{ fontSize: "11px", fontFamily: "'Jost', sans-serif", color: "var(--color-texto-muted)", marginTop: "6px", letterSpacing: "0.05em" }}>
-            {MESES[mes]} {anio}
+            {verAnioCompleto ? String(anio) : `${MESES[mes]} ${anio}`}
           </p>
         </div>
         <div style={{
@@ -179,7 +184,12 @@ export default function GestionGastos() {
           </div>
           <div>
             <label style={estiloLabel}>Mes</label>
-            <select value={mes} onChange={(e) => setMes(Number(e.target.value))} style={{ ...estiloSelect, width: esMobile ? "100%" : undefined }}>
+            <select
+              value={mes}
+              onChange={(e) => { setMes(Number(e.target.value)); setVerAnioCompleto(false) }}
+              disabled={verAnioCompleto}
+              style={{ ...estiloSelect, width: esMobile ? "100%" : undefined, opacity: verAnioCompleto ? 0.4 : 1 }}
+            >
               {MESES.map((m, i) => <option key={i} value={i}>{m}</option>)}
             </select>
           </div>
@@ -189,6 +199,25 @@ export default function GestionGastos() {
               {ANIOS.map((a) => <option key={a} value={a}>{a}</option>)}
             </select>
           </div>
+          <button
+            onClick={() => setVerAnioCompleto((v) => !v)}
+            style={{
+              padding: "8px 14px",
+              fontSize: "10px",
+              fontFamily: "'Jost', sans-serif",
+              fontWeight: verAnioCompleto ? 500 : 400,
+              letterSpacing: "0.1em",
+              textTransform: "uppercase",
+              border: "0.5px solid var(--color-texto)",
+              backgroundColor: verAnioCompleto ? "var(--color-texto)" : "transparent",
+              color: verAnioCompleto ? "var(--color-card)" : "var(--color-texto)",
+              cursor: "pointer",
+              borderRadius: 0,
+              width: esMobile ? "100%" : undefined,
+            }}
+          >
+            {verAnioCompleto ? "Ver mes" : "Ver año completo"}
+          </button>
           <button
             onClick={abrirNuevo}
             style={{

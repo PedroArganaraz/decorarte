@@ -22,7 +22,7 @@ const COLORES_PAGO: Record<string, string> = {
   "Sin método":  "#D8CCC4",
 }
 
-function truncar(str: string, max = 20): string {
+function truncar(str: string, max = 25): string {
   return str.length > max ? `${str.slice(0, max)}…` : str
 }
 
@@ -794,7 +794,7 @@ export default function DashboardReportes() {
                             dataKey="nombreCorto"
                             axisLine={false}
                             tickLine={false}
-                            width={120}
+                            width={160}
                             tick={{ fontFamily: "'Jost', sans-serif", fontSize: 11, fill: "var(--color-texto-muted)" }}
                           />
                           <Tooltip content={<TooltipTopProductos />} cursor={{ fill: "var(--color-superficie)" }} />
