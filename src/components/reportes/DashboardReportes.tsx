@@ -410,12 +410,13 @@ export default function DashboardReportes() {
               </div>
 
               {[
-                { label: "Efectivo",      ingresos: datos.ventas.desglosePago.efectivo,      gastos: datos.gastos.desglosePago.efectivo,      esTotal: false },
-                { label: "Transferencia", ingresos: datos.ventas.desglosePago.transferencia, gastos: datos.gastos.desglosePago.transferencia, esTotal: false },
-                { label: "Total",         ingresos: datos.ventas.ingresosBrutos,             gastos: datos.gastos.total,                      esTotal: true  },
-              ].map(({ label, ingresos, gastos: g, esTotal }, idx, arr) => {
-                const balance = ingresos - g
-                const negativo = balance < 0
+                { label: "Efectivo",      ingresos: datos.ventas.desglosePago.efectivo,      gastos: datos.gastos.desglosePago.efectivo,      esTotal: false, esCosto: false },
+                { label: "Transferencia", ingresos: datos.ventas.desglosePago.transferencia, gastos: datos.gastos.desglosePago.transferencia, esTotal: false, esCosto: false },
+                { label: "Costo mercadería", ingresos: null,                                 gastos: datos.ventas.costoMercaderia,            esTotal: false, esCosto: true  },
+                { label: "Total",         ingresos: datos.ventas.ingresosBrutos,             gastos: datos.gastos.total + datos.ventas.costoMercaderia, esTotal: true,  esCosto: false },
+              ].map(({ label, ingresos, gastos: g, esTotal, esCosto }, idx, arr) => {
+                const balance = esTotal ? datos.gananciaNeta : null
+                const negativo = balance !== null && balance < 0
                 return (
                   <div key={label} style={{
                     display: "grid",
@@ -436,19 +437,23 @@ export default function DashboardReportes() {
                       </span>
                     </div>
                     <div style={{ padding: "12px 16px" }}>
-                      <span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: esTotal ? "18px" : "16px", fontWeight: 400, color: "var(--color-texto)" }}>
-                        {fmt(ingresos)}
-                      </span>
+                      {ingresos !== null && (
+                        <span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: esTotal ? "18px" : "16px", fontWeight: 400, color: "var(--color-texto)" }}>
+                          {fmt(ingresos)}
+                        </span>
+                      )}
                     </div>
                     <div style={{ padding: "12px 16px" }}>
-                      <span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: esTotal ? "18px" : "16px", fontWeight: 400, color: "var(--color-texto-muted)" }}>
+                      <span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: esTotal ? "18px" : "16px", fontWeight: 400, color: esCosto ? "var(--color-acento)" : "var(--color-texto-muted)" }}>
                         {fmt(g)}
                       </span>
                     </div>
                     <div style={{ padding: "12px 16px" }}>
-                      <span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: esTotal ? "18px" : "16px", fontWeight: 400, color: negativo ? "var(--color-acento)" : "var(--color-texto)" }}>
-                        {negativo && "−"}{fmt(Math.abs(balance))}
-                      </span>
+                      {balance !== null && (
+                        <span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: esTotal ? "18px" : "16px", fontWeight: 400, color: negativo ? "var(--color-acento)" : "var(--color-texto)" }}>
+                          {negativo && "−"}{fmt(Math.abs(balance))}
+                        </span>
+                      )}
                     </div>
                   </div>
                 )
