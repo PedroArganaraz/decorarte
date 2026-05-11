@@ -49,6 +49,7 @@ export default function FormularioProducto({ categorias, accionesExtra, producto
 
   const [cargando, setCargando] = useState(false)
   const [materialesDisponibles, setMaterialesDisponibles] = useState<string[]>([])
+  const [campoFocus, setCampoFocus] = useState<string | null>(null)
 
   const { esMobile } = useTamanioPantalla()
 
@@ -78,6 +79,12 @@ export default function FormularioProducto({ categorias, accionesExtra, producto
         : prev.precioMinimo
       return { ...prev, costo: valor, precioMinimo }
     })
+  }
+
+  const valorDisplay = (campo: string, valor: string) => {
+    if (campoFocus === campo || valor === "") return valor
+    const num = Number(valor)
+    return isNaN(num) ? valor : num.toLocaleString("es-AR")
   }
 
   const manejarEnvio = async (e: React.FormEvent) => {
@@ -278,13 +285,13 @@ export default function FormularioProducto({ categorias, accionesExtra, producto
             <div>
               <label style={estiloLabel}>Precio *</label>
               <input
-                type="number"
-                value={form.precio}
+                type="text"
+                inputMode="decimal"
+                value={valorDisplay("precio", form.precio)}
                 onChange={(e) => actualizar("precio", e.target.value)}
-                onWheel={(e) => (e.target as HTMLInputElement).blur()}
+                onFocus={(e) => { setCampoFocus("precio"); e.target.select() }}
+                onBlur={() => setCampoFocus(null)}
                 required
-                min="0"
-                step="0.01"
                 placeholder="0"
                 style={estiloInput}
               />
@@ -309,12 +316,12 @@ export default function FormularioProducto({ categorias, accionesExtra, producto
             <div>
               <label style={estiloLabel}>Precio nuevo (opcional)</label>
               <input
-                type="number"
-                value={form.precioAnterior}
+                type="text"
+                inputMode="decimal"
+                value={valorDisplay("precioAnterior", form.precioAnterior)}
                 onChange={(e) => actualizar("precioAnterior", e.target.value)}
-                onWheel={(e) => (e.target as HTMLInputElement).blur()}
-                min="0"
-                step="0.01"
+                onFocus={(e) => { setCampoFocus("precioAnterior"); e.target.select() }}
+                onBlur={() => setCampoFocus(null)}
                 placeholder="0"
                 style={estiloInput}
               />
@@ -323,12 +330,12 @@ export default function FormularioProducto({ categorias, accionesExtra, producto
             <div>
               <label style={estiloLabel}>Stock</label>
               <input
-                type="number"
-                value={form.stock}
+                type="text"
+                inputMode="numeric"
+                value={valorDisplay("stock", form.stock)}
                 onChange={(e) => actualizar("stock", e.target.value)}
-                onWheel={(e) => (e.target as HTMLInputElement).blur()}
-                min="0"
-                step="1"
+                onFocus={(e) => { setCampoFocus("stock"); e.target.select() }}
+                onBlur={() => setCampoFocus(null)}
                 style={estiloInput}
               />
             </div>
@@ -355,12 +362,12 @@ export default function FormularioProducto({ categorias, accionesExtra, producto
               <div>
                 <label style={estiloLabel}>Costo (opcional)</label>
                 <input
-                  type="number"
-                  value={form.costo}
+                  type="text"
+                  inputMode="decimal"
+                  value={valorDisplay("costo", form.costo)}
                   onChange={(e) => actualizarCosto(e.target.value)}
-                  onWheel={(e) => (e.target as HTMLInputElement).blur()}
-                  min="0"
-                  step="0.01"
+                  onFocus={(e) => { setCampoFocus("costo"); e.target.select() }}
+                  onBlur={() => setCampoFocus(null)}
                   placeholder="0"
                   style={estiloInput}
                 />
@@ -380,12 +387,12 @@ export default function FormularioProducto({ categorias, accionesExtra, producto
               <div>
                 <label style={estiloLabel}>Precio mínimo</label>
                 <input
-                  type="number"
-                  value={form.precioMinimo}
+                  type="text"
+                  inputMode="decimal"
+                  value={valorDisplay("precioMinimo", form.precioMinimo)}
                   onChange={(e) => actualizar("precioMinimo", e.target.value)}
-                  onWheel={(e) => (e.target as HTMLInputElement).blur()}
-                  min="0"
-                  step="0.01"
+                  onFocus={(e) => { setCampoFocus("precioMinimo"); e.target.select() }}
+                  onBlur={() => setCampoFocus(null)}
                   placeholder="0"
                   style={estiloInput}
                 />

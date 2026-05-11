@@ -262,8 +262,8 @@ export default async function PaginaProductos({ searchParams }: Props) {
                         textTransform: "uppercase",
                         padding: "4px 12px",
                         backgroundColor: "transparent",
-                        color: "var(--color-texto-muted)",
-                        border: "0.5px solid var(--color-borde)",
+                        color: "var(--color-texto)",
+                        border: "0.5px solid var(--color-texto)",
                         textDecoration: "none",
                         display: "inline-block",
                       }}

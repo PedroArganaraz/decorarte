@@ -73,6 +73,7 @@ export default function ModalGasto({ gasto, onCerrar, onGuardado }: Props) {
   const [fecha, setFecha] = useState(gasto ? isoAFechaInput(gasto.fecha) : fechaHoyLocal())
   const [notas, setNotas] = useState(gasto?.notas ?? "")
 
+  const [montoFocused, setMontoFocused] = useState(false)
   const [guardando, setGuardando] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -181,11 +182,12 @@ export default function ModalGasto({ gasto, onCerrar, onGuardado }: Props) {
             <div>
               <label style={estiloLabel}>Monto *</label>
               <input
-                type="number"
-                min="0"
-                step="0.01"
-                value={monto}
+                type="text"
+                inputMode="decimal"
+                value={montoFocused ? monto : (monto === "" || isNaN(Number(monto)) ? monto : Number(monto).toLocaleString("es-AR"))}
                 onChange={(e) => setMonto(e.target.value)}
+                onFocus={(e) => { setMontoFocused(true); e.target.select() }}
+                onBlur={() => setMontoFocused(false)}
                 placeholder="0"
                 style={estiloInput}
               />

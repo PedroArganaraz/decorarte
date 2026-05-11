@@ -380,16 +380,18 @@ export default function HistorialVentas() {
                     <td style={estiloTd}><span style={{ fontSize: "11px", fontFamily: "'Jost', sans-serif", color: "var(--color-texto-muted)" }}>{venta.metodoPago === "EFECTIVO" ? "Efectivo" : venta.metodoPago === "TRANSFERENCIA" ? "Transferencia" : "—"}</span></td>
                     <td style={estiloTd}><span style={{ fontSize: "10px", fontFamily: "'Jost', sans-serif", letterSpacing: "0.06em", color: venta.estado === "PENDIENTE" ? "var(--color-acento)" : "var(--color-texto-muted)" }}>{estadoLabel}{venta.esRegalo && venta.estado !== "REGALO" && " · regalo"}</span></td>
                     <td style={estiloTd}><span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "17px", fontWeight: 400, color: "var(--color-texto)", whiteSpace: "nowrap" }}>${total.toLocaleString("es-AR")}</span></td>
-                    <td style={{ ...estiloTd, whiteSpace: "nowrap" }}>
+                    <td style={{ ...estiloTd, minWidth: "160px" }}>
                       {esConfirmando ? (
-                        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                          <span style={{ fontSize: "11px", fontFamily: "'Jost', sans-serif", color: "var(--color-acento)", whiteSpace: "nowrap" }}>¿Anular? Se restaura el stock.</span>
+                        <div style={{ display: "flex", flexDirection: "column", gap: "8px", alignItems: "flex-start" }}>
+                          <span style={{ fontSize: "11px", fontFamily: "'Jost', sans-serif", color: "var(--color-acento)" }}>¿Anular? Se restaura el stock.</span>
+                          <div style={{ display: "flex", gap: "6px" }}>
                           {esProcesando ? (
                             <span style={{ fontSize: "11px", fontFamily: "'Jost', sans-serif", letterSpacing: "0.08em", color: "var(--color-texto-muted)" }}>Anulando...</span>
                           ) : (
                             <button onClick={() => ejecutarAnular(venta.id)} style={{ padding: "4px 10px", fontSize: "10px", fontFamily: "'Jost', sans-serif", letterSpacing: "0.1em", textTransform: "uppercase", border: "0.5px solid var(--color-acento)", backgroundColor: "transparent", color: "var(--color-acento)", cursor: "pointer", borderRadius: 0 }}>Confirmar</button>
                           )}
                           <button onClick={() => setAnulando(null)} disabled={esProcesando} style={{ padding: "4px 10px", fontSize: "10px", fontFamily: "'Jost', sans-serif", letterSpacing: "0.1em", textTransform: "uppercase", border: "0.5px solid var(--color-borde)", backgroundColor: "transparent", color: "var(--color-texto-muted)", cursor: esProcesando ? "not-allowed" : "pointer", borderRadius: 0, opacity: esProcesando ? 0.4 : 1 }}>Cancelar</button>
+                          </div>
                         </div>
                       ) : (
                         <div style={{ display: "flex", gap: "6px" }}>
