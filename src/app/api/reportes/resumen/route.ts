@@ -109,6 +109,38 @@ export async function GET(solicitud: NextRequest) {
       gastosPorCategoria[gasto.categoria] = (gastosPorCategoria[gasto.categoria] ?? 0) + gasto.monto
     }
 
+    // Combinaciones frecuentes (pares de productos comprados en la misma venta)
+    const parMap: Record<string, {
+      prod1: { id: string; nombre: string }
+      prod2: { id: string; nombre: string }
+      veces: number
+    }> = {}
+
+    for (const venta of ventas) {
+      if (venta.items.length < 2) continue
+      for (let i = 0; i < venta.items.length; i++) {
+        for (let j = i + 1; j < venta.items.length; j++) {
+          const a = venta.items[i]
+          const b = venta.items[j]
+          const [first, second] = a.productoId < b.productoId ? [a, b] : [b, a]
+          const key = `${first.productoId}|${second.productoId}`
+          if (!parMap[key]) {
+            parMap[key] = {
+              prod1: { id: first.productoId, nombre: first.producto.nombre },
+              prod2: { id: second.productoId, nombre: second.producto.nombre },
+              veces: 0,
+            }
+          }
+          parMap[key].veces++
+        }
+      }
+    }
+
+    const combinacionesFrecuentes = Object.values(parMap)
+      .sort((a, b) => b.veces - a.veces)
+      .slice(0, 20)
+      .map(({ prod1, prod2, veces }) => ({ producto1: prod1, producto2: prod2, veces }))
+
     const gananciaProductos = ingresosBrutos - costoMercaderia
     const gananciaNeta = gananciaProductos - totalGastos
 
@@ -144,6 +176,7 @@ export async function GET(solicitud: NextRequest) {
       },
       gananciaNeta: Math.round(gananciaNeta * 100) / 100,
       productosSinStock: productosSinStock,
+      combinacionesFrecuentes,
       topProductos: Object.entries(productoMap)
         .map(([productoId, d]) => ({
           productoId,

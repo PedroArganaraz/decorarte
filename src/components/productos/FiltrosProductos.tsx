@@ -1,9 +1,11 @@
 "use client"
 
 import { useRouter, useSearchParams } from "next/navigation"
-import { useState } from "react"
+import { useState, useEffect, useRef } from "react"
 import type { Categoria } from "@prisma/client"
 import { useTamanioPantalla } from "@/hooks/useTamanioPantalla"
+
+const STORAGE_KEY = "filtros-productos"
 
 interface Props {
   categorias: Categoria[]
@@ -16,6 +18,41 @@ export default function FiltrosProductos({ categorias }: Props) {
   const [categoriaId, setCategoriaId] = useState(searchParams.get("categoriaId") ?? "")
   const [soloActivos, setSoloActivos] = useState(searchParams.get("soloActivos") === "1")
   const { esMobile } = useTamanioPantalla()
+  const inicializado = useRef(false)
+
+  // Restaurar desde localStorage al montar si la URL no tiene parámetros
+  useEffect(() => {
+    const tieneParams = searchParams.get("nombre") || searchParams.get("categoriaId") || searchParams.get("soloActivos")
+    if (!tieneParams) {
+      try {
+        const guardados = localStorage.getItem(STORAGE_KEY)
+        if (guardados) {
+          const parsed = JSON.parse(guardados) as { nombre?: string; categoriaId?: string; soloActivos?: boolean }
+          const n = parsed.nombre ?? ""
+          const c = parsed.categoriaId ?? ""
+          const s = parsed.soloActivos ?? false
+          setNombre(n)
+          setCategoriaId(c)
+          setSoloActivos(s)
+          const params = new URLSearchParams()
+          if (n) params.set("nombre", n)
+          if (c) params.set("categoriaId", c)
+          if (s) params.set("soloActivos", "1")
+          const qs = params.toString()
+          if (qs) router.push(`/panel/productos?${qs}`)
+        }
+      } catch {}
+    }
+    inicializado.current = true
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Guardar en localStorage al cambiar cualquier filtro (solo tras inicialización)
+  useEffect(() => {
+    if (!inicializado.current) return
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ nombre, categoriaId, soloActivos }))
+    } catch {}
+  }, [nombre, categoriaId, soloActivos])
 
   const aplicar = () => {
     const params = new URLSearchParams()
@@ -26,6 +63,7 @@ export default function FiltrosProductos({ categorias }: Props) {
   }
 
   const limpiar = () => {
+    try { localStorage.removeItem(STORAGE_KEY) } catch {}
     setNombre("")
     setCategoriaId("")
     setSoloActivos(false)

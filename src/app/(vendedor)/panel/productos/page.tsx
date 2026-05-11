@@ -2,25 +2,34 @@ import { prisma } from "@/lib/prisma"
 import Link from "next/link"
 import FiltrosProductos from "@/components/productos/FiltrosProductos"
 
+const LIMIT = 20
+
 interface Props {
   searchParams: Promise<{
     nombre?: string
     categoriaId?: string
     soloActivos?: string
+    page?: string
   }>
 }
 
 export default async function PaginaProductos({ searchParams }: Props) {
-  const { nombre, categoriaId, soloActivos } = await searchParams
+  const { nombre, categoriaId, soloActivos, page } = await searchParams
 
-  const [productos, categorias] = await Promise.all([
+  const pageNum = Math.max(1, parseInt(page ?? "1", 10) || 1)
+
+  const filtro = {
+    ...(nombre && { nombre: { contains: nombre, mode: "insensitive" as const } }),
+    ...(categoriaId && { categoriaId }),
+    ...(soloActivos === "1" && { activo: true }),
+  }
+
+  const [productos, total, categorias] = await Promise.all([
     prisma.producto.findMany({
-      where: {
-        ...(nombre && { nombre: { contains: nombre, mode: "insensitive" } }),
-        ...(categoriaId && { categoriaId }),
-        ...(soloActivos === "1" && { activo: true }),
-      },
+      where: filtro,
       orderBy: { stock: "asc" },
+      skip: (pageNum - 1) * LIMIT,
+      take: LIMIT,
       include: {
         categoria: true,
         imagenes: {
@@ -32,11 +41,54 @@ export default async function PaginaProductos({ searchParams }: Props) {
         },
       },
     }),
+    prisma.producto.count({ where: filtro }),
     prisma.categoria.findMany({
       where: { activa: true },
       orderBy: { orden: "asc" },
     }),
   ])
+
+  const totalPaginas = Math.max(1, Math.ceil(total / LIMIT))
+
+  function urlPagina(pag: number) {
+    const params = new URLSearchParams()
+    if (nombre) params.set("nombre", nombre)
+    if (categoriaId) params.set("categoriaId", categoriaId)
+    if (soloActivos) params.set("soloActivos", soloActivos)
+    if (pag > 1) params.set("page", String(pag))
+    const qs = params.toString()
+    return `/panel/productos${qs ? `?${qs}` : ""}`
+  }
+
+  const estiloBtnActivo: React.CSSProperties = {
+    padding: "8px 16px",
+    fontSize: "11px",
+    fontFamily: "'Jost', sans-serif",
+    fontWeight: 400,
+    letterSpacing: "0.1em",
+    textTransform: "uppercase",
+    backgroundColor: "transparent",
+    color: "var(--color-texto)",
+    border: "0.5px solid var(--color-texto)",
+    borderRadius: 0,
+    textDecoration: "none",
+    display: "inline-block",
+  }
+
+  const estiloBtnDeshabilitado: React.CSSProperties = {
+    padding: "8px 16px",
+    fontSize: "11px",
+    fontFamily: "'Jost', sans-serif",
+    fontWeight: 400,
+    letterSpacing: "0.1em",
+    textTransform: "uppercase",
+    backgroundColor: "transparent",
+    color: "var(--color-texto-muted)",
+    border: "0.5px solid var(--color-borde)",
+    borderRadius: 0,
+    cursor: "not-allowed",
+    opacity: 0.45,
+  }
 
   return (
     <div>
@@ -89,10 +141,16 @@ export default async function PaginaProductos({ searchParams }: Props) {
             color: "var(--color-texto-muted)",
             letterSpacing: "0.05em",
           }}>
-            No hay productos cargados todavía.{" "}
-            <Link href="/panel/productos/nuevo" style={{ color: "var(--color-texto)", textDecoration: "underline" }}>
-              Crear el primero
-            </Link>
+            {total === 0 ? (
+              <>
+                No hay productos cargados todavía.{" "}
+                <Link href="/panel/productos/nuevo" style={{ color: "var(--color-texto)", textDecoration: "underline" }}>
+                  Crear el primero
+                </Link>
+              </>
+            ) : (
+              "No hay productos en esta página."
+            )}
           </div>
         ) : (
           <table style={{ width: "100%", borderCollapse: "collapse" }}>
@@ -219,6 +277,46 @@ export default async function PaginaProductos({ searchParams }: Props) {
           </table>
         )}
       </div>
+
+      {/* PAGINACIÓN */}
+      {total > 0 && (
+        <div style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          marginTop: "16px",
+          flexWrap: "wrap",
+          gap: "12px",
+        }}>
+          {pageNum <= 1 ? (
+            <span style={estiloBtnDeshabilitado}>← Anterior</span>
+          ) : (
+            <Link href={urlPagina(pageNum - 1)} style={estiloBtnActivo}>
+              ← Anterior
+            </Link>
+          )}
+
+          <span style={{
+            fontSize: "11px",
+            fontFamily: "'Jost', sans-serif",
+            color: "var(--color-texto-muted)",
+            letterSpacing: "0.06em",
+          }}>
+            Página {pageNum} de {totalPaginas}
+            <span style={{ color: "var(--color-texto-sutil)", marginLeft: "8px" }}>
+              ({total} {total === 1 ? "producto" : "productos"})
+            </span>
+          </span>
+
+          {pageNum >= totalPaginas ? (
+            <span style={estiloBtnDeshabilitado}>Siguiente →</span>
+          ) : (
+            <Link href={urlPagina(pageNum + 1)} style={estiloBtnActivo}>
+              Siguiente →
+            </Link>
+          )}
+        </div>
+      )}
     </div>
   )
 }

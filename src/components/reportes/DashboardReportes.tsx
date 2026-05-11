@@ -57,6 +57,11 @@ interface Resumen {
   }
   gananciaNeta: number
   topProductos: TopProducto[]
+  combinacionesFrecuentes: Array<{
+    producto1: { id: string; nombre: string }
+    producto2: { id: string; nombre: string }
+    veces: number
+  }>
 }
 
 const estiloLabel: React.CSSProperties = {
@@ -199,6 +204,8 @@ export default function DashboardReportes() {
   const [datos, setDatos] = useState<Resumen | null>(null)
   const [cargando, setCargando] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [verTodosProductos, setVerTodosProductos] = useState(false)
+  const [verTodosCombinaciones, setVerTodosCombinaciones] = useState(false)
 
   const fetchResumen = useCallback(async () => {
     setCargando(true)
@@ -526,22 +533,28 @@ export default function DashboardReportes() {
 
             if (!hasPie && !hasTop) return null
 
+            const productosVisibles = verTodosProductos ? topData : topData.slice(0, 5)
+
             return (
               <div style={{
                 display: "grid",
                 gridTemplateColumns: hasPie && hasTop ? "1fr 1fr" : "1fr",
                 gap: "24px",
-                alignItems: "start",
+                alignItems: "stretch",
               }}>
 
                 {/* GRÁFICO 2 — TORTA: distribución método de pago */}
                 {hasPie && (
-                  <div>
+                  <div style={{ display: "flex", flexDirection: "column" }}>
                     <h2 style={estiloTituloSeccion}>Distribución por método de pago</h2>
                     <div style={{
                       backgroundColor: "var(--color-card)",
                       border: "0.5px solid var(--color-borde)",
                       padding: "20px 8px 16px",
+                      flex: 1,
+                      display: "flex",
+                      flexDirection: "column",
+                      justifyContent: "center",
                     }}>
                       <ResponsiveContainer width="100%" height={260}>
                         <PieChart>
@@ -585,16 +598,19 @@ export default function DashboardReportes() {
 
                 {/* GRÁFICO 3 — BARRAS HORIZONTALES: top productos más vendidos */}
                 {hasTop && (
-                  <div>
+                  <div style={{ display: "flex", flexDirection: "column" }}>
                     <h2 style={estiloTituloSeccion}>Productos más vendidos</h2>
                     <div style={{
                       backgroundColor: "var(--color-card)",
                       border: "0.5px solid var(--color-borde)",
                       padding: "20px 8px 12px",
+                      flex: 1,
+                      display: "flex",
+                      flexDirection: "column",
                     }}>
-                      <ResponsiveContainer width="100%" height={Math.max(180, topData.length * 52)}>
+                      <ResponsiveContainer width="100%" height={Math.max(180, productosVisibles.length * 52)}>
                         <BarChart
-                          data={topData}
+                          data={productosVisibles}
                           layout="vertical"
                           margin={{ top: 4, right: 52, left: 4, bottom: 4 }}
                         >
@@ -619,9 +635,142 @@ export default function DashboardReportes() {
                           </Bar>
                         </BarChart>
                       </ResponsiveContainer>
+                      {topData.length > 5 && (
+                        <div style={{
+                          borderTop: "0.5px solid var(--color-borde)",
+                          marginTop: "12px",
+                          paddingTop: "10px",
+                          textAlign: "center",
+                        }}>
+                          <button
+                            onClick={() => setVerTodosProductos((v) => !v)}
+                            style={{
+                              fontSize: "10px",
+                              fontFamily: "'Jost', sans-serif",
+                              letterSpacing: "0.1em",
+                              textTransform: "uppercase",
+                              background: "none",
+                              border: "none",
+                              color: "var(--color-texto-muted)",
+                              cursor: "pointer",
+                              padding: "2px 8px",
+                            }}
+                          >
+                            {verTodosProductos ? "Ver menos" : `Ver todos (${topData.length})`}
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}
+              </div>
+            )
+          })()}
+
+          {/* COMBINACIONES FRECUENTES */}
+          {(() => {
+            const combinaciones = datos.combinacionesFrecuentes
+            const visibles = verTodosCombinaciones ? combinaciones : combinaciones.slice(0, 5)
+
+            return (
+              <div>
+                <h2 style={estiloTituloSeccion}>Combinaciones frecuentes</h2>
+                <div style={{
+                  backgroundColor: "var(--color-card)",
+                  border: "0.5px solid var(--color-borde)",
+                }}>
+                  {combinaciones.length === 0 ? (
+                    <p style={{
+                      padding: "32px 24px",
+                      textAlign: "center",
+                      fontSize: "12px",
+                      fontFamily: "'Jost', sans-serif",
+                      color: "var(--color-texto-muted)",
+                      letterSpacing: "0.04em",
+                      margin: 0,
+                    }}>
+                      Aún no hay suficientes datos. Las combinaciones aparecerán a medida que se registren ventas con múltiples productos.
+                    </p>
+                  ) : (
+                    <>
+                      <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                        <thead>
+                          <tr style={{ borderBottom: "0.5px solid var(--color-borde)" }}>
+                            {["Producto 1", "Producto 2", "Veces comprados juntos"].map((col) => (
+                              <th key={col} style={{
+                                padding: "10px 16px",
+                                textAlign: col === "Veces comprados juntos" ? "right" : "left",
+                                fontSize: "9px",
+                                fontWeight: 500,
+                                letterSpacing: "0.12em",
+                                textTransform: "uppercase",
+                                color: "var(--color-texto-muted)",
+                                fontFamily: "'Jost', sans-serif",
+                              }}>
+                                {col}
+                              </th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {visibles.map((combo, idx) => (
+                            <tr key={idx} style={{ borderBottom: "0.5px solid var(--color-superficie)" }}>
+                              <td style={{
+                                padding: "11px 16px",
+                                fontSize: "13px",
+                                fontFamily: "'Cormorant Garamond', serif",
+                                color: "var(--color-texto)",
+                              }}>
+                                {combo.producto1.nombre}
+                              </td>
+                              <td style={{
+                                padding: "11px 16px",
+                                fontSize: "13px",
+                                fontFamily: "'Cormorant Garamond', serif",
+                                color: "var(--color-texto)",
+                              }}>
+                                {combo.producto2.nombre}
+                              </td>
+                              <td style={{
+                                padding: "11px 16px",
+                                textAlign: "right",
+                                fontSize: "13px",
+                                fontFamily: "'Jost', sans-serif",
+                                color: "var(--color-texto-muted)",
+                              }}>
+                                {combo.veces} {combo.veces === 1 ? "vez" : "veces"}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                      {combinaciones.length > 5 && (
+                        <div style={{
+                          borderTop: "0.5px solid var(--color-borde)",
+                          padding: "10px",
+                          textAlign: "center",
+                        }}>
+                          <button
+                            onClick={() => setVerTodosCombinaciones((v) => !v)}
+                            style={{
+                              fontSize: "10px",
+                              fontFamily: "'Jost', sans-serif",
+                              letterSpacing: "0.1em",
+                              textTransform: "uppercase",
+                              background: "none",
+                              border: "none",
+                              color: "var(--color-texto-muted)",
+                              cursor: "pointer",
+                              padding: "2px 8px",
+                            }}
+                          >
+                            {verTodosCombinaciones ? "Ver menos" : `Ver todos (${combinaciones.length})`}
+                          </button>
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
               </div>
             )
           })()}
