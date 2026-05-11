@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma"
 import TarjetaProducto from "@/components/productos/TarjetaProducto"
+import NavCategorias from "@/components/catalogo/NavCategorias"
 import Link from "next/link"
 
 export const revalidate = 1800
@@ -61,6 +62,8 @@ export default async function PaginaInicio() {
 
   return (
     <div>
+      <NavCategorias />
+
       {/* HERO */}
       <section style={{
         backgroundColor: "var(--color-superficie)",
@@ -99,8 +102,8 @@ export default async function PaginaInicio() {
           marginBottom: "32px",
           lineHeight: 1.8,
         }}>
-          Accesorios artesanales únicos.<br />
-          Más que simples accesorios, son piezas que invitan a imaginar.
+          Accesorios que te acompañen en tu día a día,<br />
+          reflejando tu estilo personal y tu energía
         </p>
         <Link
           href="/catalogo"

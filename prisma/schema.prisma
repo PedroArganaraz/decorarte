@@ -205,7 +205,6 @@ enum TipoMovimiento {
 enum CategoriaGasto {
   INSUMOS
   PACKAGING
-  LOGISTICA
   FERIA
   OTROS
 

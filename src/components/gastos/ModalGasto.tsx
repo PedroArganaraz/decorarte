@@ -21,7 +21,6 @@ interface Props {
 const CATEGORIAS = [
   { value: "INSUMOS",   label: "Insumos" },
   { value: "PACKAGING", label: "Packaging" },
-  { value: "LOGISTICA", label: "Logística" },
   { value: "FERIA",     label: "Feria" },
   { value: "OTROS",     label: "Otros" },
 ]

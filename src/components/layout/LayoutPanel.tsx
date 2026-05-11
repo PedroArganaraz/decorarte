@@ -1,7 +1,7 @@
 "use client"
 
 import { useTamanioPantalla } from "@/hooks/useTamanioPantalla"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import SidebarPanel from "./SidebarPanel"
 
 const STORAGE_KEY = "panel-sidebar-colapsado"
@@ -9,12 +9,19 @@ const STORAGE_KEY = "panel-sidebar-colapsado"
 export default function LayoutPanel({ children }: { children: React.ReactNode }) {
   const { esMobile } = useTamanioPantalla()
   const [sidebarAbierto, setSidebarAbierto] = useState(false)
+  const [montado, setMontado] = useState(false)
   const [colapsado, setColapsado] = useState(() => {
     if (typeof window !== "undefined") {
       try { return localStorage.getItem(STORAGE_KEY) === "true" } catch {}
     }
     return false
   })
+
+  useEffect(() => {
+    setMontado(true)
+  }, [])
+
+  const colapsadoReal = montado ? colapsado : false
 
   const toggleColapso = () => {
     setColapsado((prev) => {
@@ -24,7 +31,7 @@ export default function LayoutPanel({ children }: { children: React.ReactNode })
     })
   }
 
-  const anchoSidebar = esMobile ? "220px" : colapsado ? "60px" : "220px"
+  const anchoSidebar = esMobile ? "220px" : colapsadoReal ? "60px" : "220px"
 
   return (
     <div style={{
@@ -59,7 +66,7 @@ export default function LayoutPanel({ children }: { children: React.ReactNode })
       }}>
         <SidebarPanel
           onCerrar={() => setSidebarAbierto(false)}
-          colapsado={!esMobile && colapsado}
+          colapsado={!esMobile && colapsadoReal}
           onToggleColapso={toggleColapso}
         />
       </div>

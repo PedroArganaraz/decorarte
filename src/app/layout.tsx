@@ -5,6 +5,10 @@ import "./globals.css"
 export const metadata: Metadata = {
   title: "Decorarte — Accesorios artesanales",
   description: "Anillos, collares, pulseras y aros artesanales. Cada pieza es única.",
+  icons: {
+    icon: "/icon.png",
+    apple: "/apple-icon.png",
+  },
 }
 
 export default function LayoutRaiz({

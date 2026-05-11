@@ -53,7 +53,6 @@ const ESTADOS = [
   { value: "PAGADO", label: "Pagado" },
   { value: "ENTREGADO", label: "Entregado" },
   { value: "PENDIENTE", label: "Pendiente" },
-  { value: "REGALO", label: "Regalo" },
 ]
 
 const estiloLabel: React.CSSProperties = {
@@ -96,7 +95,7 @@ export default function ModalEditarVenta({ venta, onCerrar, onGuardada }: Props)
 
   const [cliente, setCliente] = useState(venta.cliente ?? "")
   const [metodoPago, setMetodoPago] = useState(venta.metodoPago ?? "")
-  const [estado, setEstado] = useState(venta.estado)
+  const [estado, setEstado] = useState(venta.estado === "REGALO" ? "PAGADO_Y_ENTREGADO" : venta.estado)
   const [esRegalo, setEsRegalo] = useState(venta.esRegalo)
   const [notas, setNotas] = useState(venta.notas ?? "")
 
@@ -217,7 +216,7 @@ export default function ModalEditarVenta({ venta, onCerrar, onGuardada }: Props)
         body: JSON.stringify({
           cliente: cliente.trim() || undefined,
           metodoPago,
-          estado,
+          estado: esRegalo ? "REGALO" : estado,
           esRegalo,
           notas: notas.trim() || undefined,
           items: carrito.map((i) => ({

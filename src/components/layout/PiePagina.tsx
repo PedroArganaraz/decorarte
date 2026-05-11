@@ -32,8 +32,8 @@ export default function PiePagina() {
             lineHeight: 1.8,
             color: "var(--color-texto-muted)",
           }}>
-            Accesorios artesanales.<br />
-            Cada pieza es única.
+            Más que un accesorio,<br />
+            una forma de comunicar quién eres.
           </p>
         </div>
 

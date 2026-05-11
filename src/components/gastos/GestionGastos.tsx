@@ -7,7 +7,6 @@ import { useTamanioPantalla } from "@/hooks/useTamanioPantalla"
 const CATEGORIA_LABELS: Record<string, string> = {
   INSUMOS:   "Insumos",
   PACKAGING: "Packaging",
-  LOGISTICA: "Logística",
   FERIA:     "Feria",
   OTROS:     "Otros",
 }

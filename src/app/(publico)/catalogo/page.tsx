@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma"
 import TarjetaProducto from "@/components/productos/TarjetaProducto"
+import NavCategorias from "@/components/catalogo/NavCategorias"
 import Link from "next/link"
 
 export const revalidate = 1800
@@ -56,58 +57,7 @@ export default async function PaginaCatalogo({ searchParams }: Props) {
 
   return (
     <div>
-      {/* FILTROS - pegados al header */}
-      <div style={{
-        borderBottom: "0.5px solid var(--color-borde)",
-        backgroundColor: "var(--color-fondo)",
-        position: "sticky",
-        top: "57px",
-        zIndex: 10,
-      }}>
-        <div style={{
-          maxWidth: "1200px",
-          margin: "0 auto",
-          padding: "0 24px",
-          display: "flex",
-          overflowX: "auto",
-          scrollbarWidth: "none",
-        }}>
-          <Link href="/catalogo" style={{
-            padding: "12px 20px",
-            fontSize: "11px",
-            fontWeight: !categoria ? 500 : 400,
-            letterSpacing: "0.12em",
-            textTransform: "uppercase",
-            textDecoration: "none",
-            color: !categoria ? "var(--color-texto)" : "var(--color-texto-muted)",
-            borderBottom: !categoria ? "2px solid var(--color-texto)" : "2px solid transparent",
-            whiteSpace: "nowrap",
-            marginBottom: "-0.5px",
-          }}>
-            Todos
-          </Link>
-          {categorias.map((cat: typeof categorias[number]) => (
-            <Link
-              key={cat.id}
-              href={`/catalogo?categoria=${cat.slug}`}
-              style={{
-                padding: "12px 20px",
-                fontSize: "11px",
-                fontWeight: categoria === cat.slug ? 500 : 400,
-                letterSpacing: "0.12em",
-                textTransform: "uppercase",
-                textDecoration: "none",
-                color: categoria === cat.slug ? "var(--color-texto)" : "var(--color-texto-muted)",
-                borderBottom: categoria === cat.slug ? "2px solid var(--color-texto)" : "2px solid transparent",
-                whiteSpace: "nowrap",
-                marginBottom: "-0.5px",
-              }}
-            >
-              {cat.nombre}
-            </Link>
-          ))}
-        </div>
-      </div>
+      <NavCategorias categoriaActiva={categoria} todosActivo={!categoria} />
 
       {/* CONTENIDO */}
       <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "24px 24px 64px" }}>

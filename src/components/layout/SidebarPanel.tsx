@@ -66,13 +66,12 @@ export default function SidebarPanel({
         alignItems: "stretch",
         minHeight: "64px",
       }}>
-        {!colapsado && (
-          <Link href="/" style={{
+        <Link href="/" suppressHydrationWarning style={{
             textDecoration: "none",
-            flex: 1,
+            flex: colapsado ? undefined : 1,
             minWidth: 0,
             padding: "14px 20px",
-            display: "flex",
+            display: colapsado ? "none" : "flex",
             flexDirection: "column",
             justifyContent: "center",
           }}>
@@ -100,7 +99,6 @@ export default function SidebarPanel({
               Panel de gestión
             </span>
           </Link>
-        )}
 
         <button
           onClick={onToggleColapso}

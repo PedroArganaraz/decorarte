@@ -27,9 +27,9 @@ const METODOS_PAGO = [
 
 const ESTADOS = [
   { value: "PAGADO_Y_ENTREGADO", label: "Pagado y entregado" },
-  { value: "PAGADO_SIN_ENTREGAR", label: "Pagado sin entregar" },
-  { value: "PENDIENTE", label: "Pendiente" },
-  { value: "CANCELADO", label: "Cancelado" },
+  { value: "PAGADO",             label: "Pagado" },
+  { value: "ENTREGADO",          label: "Entregado" },
+  { value: "PENDIENTE",          label: "Pendiente" },
 ]
 
 export default function FormularioVenta() {
@@ -161,7 +161,7 @@ export default function FormularioVenta() {
         body: JSON.stringify({
           cliente: cliente.trim() || undefined,
           metodoPago,
-          estado,
+          estado: esRegalo ? "REGALO" : estado,
           esRegalo,
           notas: notas.trim() || undefined,
           items: carrito.map((i) => ({
