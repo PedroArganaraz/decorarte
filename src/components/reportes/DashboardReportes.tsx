@@ -1,6 +1,10 @@
 "use client"
 
 import { useState, useEffect, useCallback } from "react"
+import {
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
+  ResponsiveContainer, Cell, LabelList, PieChart, Pie,
+} from "recharts"
 
 const HOY = new Date()
 const ANIO_ACTUAL = HOY.getFullYear()
@@ -10,10 +14,29 @@ const MESES = [
   "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre",
 ]
 
+const PALETA = ["#3D3835", "#7C6F65", "#A89080", "#C4B0A2", "#D8CCC4"]
+const COLORES_PAGO: Record<string, string> = {
+  Efectivo:      "#3D3835",
+  Transferencia: "#A89080",
+  "Sin método":  "#D8CCC4",
+}
+
+function truncar(str: string, max = 20): string {
+  return str.length > max ? `${str.slice(0, max)}…` : str
+}
+
 interface CategoriaDatos {
   categoria: string
   cantidad: number
   total: number
+}
+
+interface TopProducto {
+  productoId: string
+  nombre: string
+  categoria: string
+  unidades: number
+  montoTotal: number
 }
 
 interface Resumen {
@@ -30,8 +53,10 @@ interface Resumen {
     cantidad: number
     total: number
     desglosePago: { efectivo: number; transferencia: number }
+    porCategoria: { categoria: string; total: number }[]
   }
   gananciaNeta: number
+  topProductos: TopProducto[]
 }
 
 const estiloLabel: React.CSSProperties = {
@@ -58,8 +83,113 @@ const estiloSelect: React.CSSProperties = {
   cursor: "pointer",
 }
 
+const estiloTituloSeccion: React.CSSProperties = {
+  fontFamily: "'Cormorant Garamond', serif",
+  fontSize: "18px",
+  fontWeight: 400,
+  letterSpacing: "0.04em",
+  color: "var(--color-texto)",
+  margin: "0 0 12px",
+}
+
 function fmt(n: number): string {
   return `$${n.toLocaleString("es-AR")}`
+}
+
+// Tooltip compartido para barras
+function TooltipBarra({ active, payload }: { active?: boolean; payload?: Array<{ value: unknown; payload?: { label?: string; categoria?: string } }> }) {
+  if (!active || !payload?.length) return null
+  const item = payload[0]
+  const etiqueta = item.payload?.label ?? item.payload?.categoria ?? ""
+  return (
+    <div style={{
+      backgroundColor: "var(--color-card)",
+      border: "0.5px solid var(--color-borde)",
+      padding: "8px 12px",
+      fontFamily: "'Jost', sans-serif",
+    }}>
+      {etiqueta && (
+        <p style={{ fontSize: "10px", color: "var(--color-texto-muted)", margin: "0 0 3px", letterSpacing: "0.06em" }}>
+          {etiqueta}
+        </p>
+      )}
+      <p style={{ fontSize: "15px", fontFamily: "'Cormorant Garamond', serif", color: "var(--color-texto)", margin: 0 }}>
+        {fmt(Number(item.value))}
+      </p>
+    </div>
+  )
+}
+
+// Tooltip para torta
+function TooltipTorta({ active, payload }: { active?: boolean; payload?: Array<{ name?: string; value?: unknown }> }) {
+  if (!active || !payload?.length) return null
+  const item = payload[0]
+  return (
+    <div style={{
+      backgroundColor: "var(--color-card)",
+      border: "0.5px solid var(--color-borde)",
+      padding: "8px 12px",
+      fontFamily: "'Jost', sans-serif",
+    }}>
+      <p style={{ fontSize: "10px", color: "var(--color-texto-muted)", margin: "0 0 3px", letterSpacing: "0.06em" }}>
+        {item.name}
+      </p>
+      <p style={{ fontSize: "15px", fontFamily: "'Cormorant Garamond', serif", color: "var(--color-texto)", margin: 0 }}>
+        {fmt(Number(item.value))}
+      </p>
+    </div>
+  )
+}
+
+// Tooltip para top productos
+function TooltipTopProductos({ active, payload }: { active?: boolean; payload?: Array<{ payload: TopProducto & { nombreCorto: string } }> }) {
+  if (!active || !payload?.length) return null
+  const item = payload[0].payload
+  return (
+    <div style={{
+      backgroundColor: "var(--color-card)",
+      border: "0.5px solid var(--color-borde)",
+      padding: "10px 14px",
+      fontFamily: "'Jost', sans-serif",
+      maxWidth: "240px",
+    }}>
+      <p style={{ fontSize: "14px", fontFamily: "'Cormorant Garamond', serif", color: "var(--color-texto)", margin: "0 0 3px" }}>
+        {item.nombre}
+      </p>
+      <p style={{ fontSize: "10px", color: "var(--color-texto-muted)", margin: "0 0 8px", letterSpacing: "0.06em" }}>
+        {item.categoria}
+      </p>
+      <p style={{ fontSize: "12px", fontFamily: "'Jost', sans-serif", color: "var(--color-texto)", margin: "0 0 2px" }}>
+        {item.unidades} {item.unidades === 1 ? "unidad vendida" : "unidades vendidas"}
+      </p>
+      <p style={{ fontSize: "15px", fontFamily: "'Cormorant Garamond', serif", color: "var(--color-texto)", margin: 0 }}>
+        {fmt(item.montoTotal)}
+      </p>
+    </div>
+  )
+}
+
+// Etiqueta de porcentaje dentro de cada porción
+function EtiquetaTorta({ cx, cy, midAngle, innerRadius, outerRadius, percent }: {
+  cx?: number; cy?: number; midAngle?: number
+  innerRadius?: number; outerRadius?: number; percent?: number
+}) {
+  if (!cx || !cy || !midAngle || !innerRadius || !outerRadius || !percent || percent < 0.05) return null
+  const RADIAN = Math.PI / 180
+  const radio = innerRadius + (outerRadius - innerRadius) * 0.5
+  const x = cx + radio * Math.cos(-midAngle * RADIAN)
+  const y = cy + radio * Math.sin(-midAngle * RADIAN)
+  return (
+    <text
+      x={x} y={y}
+      fill="white"
+      textAnchor="middle"
+      dominantBaseline="central"
+      style={{ fontSize: "12px", fontFamily: "'Jost', sans-serif", fontWeight: 500 }}
+    >
+      {`${(percent * 100).toFixed(0)}%`}
+    </text>
+  )
 }
 
 export default function DashboardReportes() {
@@ -243,23 +373,13 @@ export default function DashboardReportes() {
             })}
           </div>
 
-          {/* SECCIÓN CAJA */}
+          {/* CAJA */}
           <div>
-            <h2 style={{
-              fontFamily: "'Cormorant Garamond', serif",
-              fontSize: "18px",
-              fontWeight: 400,
-              letterSpacing: "0.04em",
-              color: "var(--color-texto)",
-              margin: "0 0 12px",
-            }}>
-              Caja
-            </h2>
+            <h2 style={estiloTituloSeccion}>Caja</h2>
             <div style={{
               backgroundColor: "var(--color-card)",
               border: "0.5px solid var(--color-borde)",
             }}>
-              {/* Cabecera de columnas */}
               <div style={{
                 display: "grid",
                 gridTemplateColumns: "140px 1fr 1fr 1fr",
@@ -282,39 +402,20 @@ export default function DashboardReportes() {
                 ))}
               </div>
 
-              {/* Filas */}
               {[
-                {
-                  label: "Efectivo",
-                  ingresos: datos.ventas.desglosePago.efectivo,
-                  gastos: datos.gastos.desglosePago.efectivo,
-                  esTotal: false,
-                },
-                {
-                  label: "Transferencia",
-                  ingresos: datos.ventas.desglosePago.transferencia,
-                  gastos: datos.gastos.desglosePago.transferencia,
-                  esTotal: false,
-                },
-                {
-                  label: "Total",
-                  ingresos: datos.ventas.ingresosBrutos,
-                  gastos: datos.gastos.total,
-                  esTotal: true,
-                },
+                { label: "Efectivo",      ingresos: datos.ventas.desglosePago.efectivo,      gastos: datos.gastos.desglosePago.efectivo,      esTotal: false },
+                { label: "Transferencia", ingresos: datos.ventas.desglosePago.transferencia, gastos: datos.gastos.desglosePago.transferencia, esTotal: false },
+                { label: "Total",         ingresos: datos.ventas.ingresosBrutos,             gastos: datos.gastos.total,                      esTotal: true  },
               ].map(({ label, ingresos, gastos: g, esTotal }, idx, arr) => {
                 const balance = ingresos - g
                 const negativo = balance < 0
                 return (
-                  <div
-                    key={label}
-                    style={{
-                      display: "grid",
-                      gridTemplateColumns: "140px 1fr 1fr 1fr",
-                      borderBottom: idx < arr.length - 1 ? "0.5px solid var(--color-borde)" : "none",
-                      backgroundColor: esTotal ? "var(--color-superficie)" : "transparent",
-                    }}
-                  >
+                  <div key={label} style={{
+                    display: "grid",
+                    gridTemplateColumns: "140px 1fr 1fr 1fr",
+                    borderBottom: idx < arr.length - 1 ? "0.5px solid var(--color-borde)" : "none",
+                    backgroundColor: esTotal ? "var(--color-superficie)" : "transparent",
+                  }}>
                     <div style={{ padding: "12px 16px", display: "flex", alignItems: "center" }}>
                       <span style={{
                         fontSize: esTotal ? "9px" : "11px",
@@ -328,32 +429,17 @@ export default function DashboardReportes() {
                       </span>
                     </div>
                     <div style={{ padding: "12px 16px" }}>
-                      <span style={{
-                        fontFamily: "'Cormorant Garamond', serif",
-                        fontSize: esTotal ? "18px" : "16px",
-                        fontWeight: 400,
-                        color: "var(--color-texto)",
-                      }}>
+                      <span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: esTotal ? "18px" : "16px", fontWeight: 400, color: "var(--color-texto)" }}>
                         {fmt(ingresos)}
                       </span>
                     </div>
                     <div style={{ padding: "12px 16px" }}>
-                      <span style={{
-                        fontFamily: "'Cormorant Garamond', serif",
-                        fontSize: esTotal ? "18px" : "16px",
-                        fontWeight: 400,
-                        color: "var(--color-texto-muted)",
-                      }}>
+                      <span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: esTotal ? "18px" : "16px", fontWeight: 400, color: "var(--color-texto-muted)" }}>
                         {fmt(g)}
                       </span>
                     </div>
                     <div style={{ padding: "12px 16px" }}>
-                      <span style={{
-                        fontFamily: "'Cormorant Garamond', serif",
-                        fontSize: esTotal ? "18px" : "16px",
-                        fontWeight: 400,
-                        color: negativo ? "var(--color-acento)" : "var(--color-texto)",
-                      }}>
+                      <span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: esTotal ? "18px" : "16px", fontWeight: 400, color: negativo ? "var(--color-acento)" : "var(--color-texto)" }}>
                         {negativo && "−"}{fmt(Math.abs(balance))}
                       </span>
                     </div>
@@ -363,85 +449,182 @@ export default function DashboardReportes() {
             </div>
           </div>
 
-          {/* VENTAS POR CATEGORÍA */}
+          {/* GRÁFICO 1 — BARRAS VERTICALES: ventas por categoría */}
           {datos.ventas.porCategoria.length > 0 && (() => {
-            const ordenadas = [...datos.ventas.porCategoria].sort((a, b) => b.total - a.total)
-            const maxTotal = Math.max(...ordenadas.map((c) => c.total), 1)
+            const ordenadas = [...datos.ventas.porCategoria]
+              .sort((a, b) => b.total - a.total)
+              .map((c) => ({ ...c, label: c.categoria }))
             return (
               <div>
-                <h2 style={{
-                  fontFamily: "'Cormorant Garamond', serif",
-                  fontSize: "18px",
-                  fontWeight: 400,
-                  letterSpacing: "0.04em",
-                  color: "var(--color-texto)",
-                  margin: "0 0 12px",
-                }}>
-                  Ventas por categoría
-                </h2>
+                <h2 style={estiloTituloSeccion}>Ventas por categoría</h2>
                 <div style={{
                   backgroundColor: "var(--color-card)",
                   border: "0.5px solid var(--color-borde)",
-                  padding: "20px 24px",
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "16px",
+                  padding: "20px 8px 8px",
                 }}>
-                  {ordenadas.map((cat) => {
-                    const pct = (cat.total / maxTotal) * 100
-                    return (
-                      <div key={cat.categoria} style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-                        <span style={{
-                          fontSize: "11px",
-                          fontFamily: "'Jost', sans-serif",
-                          color: "var(--color-texto-muted)",
-                          minWidth: "100px",
-                          textAlign: "right",
-                          flexShrink: 0,
-                        }}>
-                          {cat.categoria}
+                  <ResponsiveContainer width="100%" height={300}>
+                    <BarChart data={ordenadas} margin={{ top: 28, right: 24, left: 8, bottom: 8 }}>
+                      <CartesianGrid vertical={false} stroke="var(--color-borde)" strokeDasharray="3 3" />
+                      <XAxis
+                        dataKey="categoria"
+                        axisLine={false}
+                        tickLine={false}
+                        tick={{ fontFamily: "'Jost', sans-serif", fontSize: 11, fill: "var(--color-texto-muted)" }}
+                      />
+                      <YAxis hide />
+                      <Tooltip content={<TooltipBarra />} cursor={{ fill: "var(--color-superficie)" }} />
+                      <Bar dataKey="total" radius={[2, 2, 0, 0]} maxBarSize={72}>
+                        {ordenadas.map((_, i) => (
+                          <Cell key={i} fill={PALETA[i % PALETA.length]} />
+                        ))}
+                        <LabelList
+                          dataKey="total"
+                          position="top"
+                          formatter={(v: unknown) => fmt(Number(v))}
+                          style={{ fontSize: "10px", fontFamily: "'Jost', sans-serif", fill: "var(--color-texto-muted)" }}
+                        />
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                  {/* Leyenda por cantidad */}
+                  <div style={{ display: "flex", justifyContent: "center", gap: "20px", padding: "4px 16px 12px", flexWrap: "wrap" }}>
+                    {ordenadas.map((cat, i) => (
+                      <div key={cat.categoria} style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                        <div style={{ width: "8px", height: "8px", borderRadius: "50%", backgroundColor: PALETA[i % PALETA.length], flexShrink: 0 }} />
+                        <span style={{ fontSize: "10px", fontFamily: "'Jost', sans-serif", color: "var(--color-texto-muted)" }}>
+                          {cat.categoria} · {cat.cantidad} un.
                         </span>
-                        <div style={{
-                          flex: 1,
-                          height: "7px",
-                          backgroundColor: "var(--color-superficie)",
-                          position: "relative",
-                        }}>
-                          <div style={{
-                            position: "absolute",
-                            top: 0,
-                            left: 0,
-                            height: "100%",
-                            width: `${pct}%`,
-                            backgroundColor: "var(--color-texto)",
-                          }} />
-                        </div>
-                        <div style={{ minWidth: "130px", flexShrink: 0, textAlign: "right" }}>
-                          <span style={{
-                            fontFamily: "'Cormorant Garamond', serif",
-                            fontSize: "16px",
-                            fontWeight: 400,
-                            color: "var(--color-texto)",
-                          }}>
-                            {fmt(cat.total)}
-                          </span>
-                          <span style={{
-                            fontSize: "10px",
-                            fontFamily: "'Jost', sans-serif",
-                            color: "var(--color-texto-muted)",
-                            marginLeft: "8px",
-                          }}>
-                            {cat.cantidad} {cat.cantidad === 1 ? "un." : "un."}
-                          </span>
-                        </div>
                       </div>
-                    )
-                  })}
+                    ))}
+                  </div>
                 </div>
               </div>
             )
           })()}
 
+          {/* GRÁFICOS 2 Y 3 — en columnas */}
+          {(() => {
+            const pieDatos = [
+              datos.ventas.desglosePago.efectivo > 0
+                ? { name: "Efectivo",      value: datos.ventas.desglosePago.efectivo,      color: COLORES_PAGO["Efectivo"] }
+                : null,
+              datos.ventas.desglosePago.transferencia > 0
+                ? { name: "Transferencia", value: datos.ventas.desglosePago.transferencia, color: COLORES_PAGO["Transferencia"] }
+                : null,
+              datos.ventas.desglosePago.sinMetodo > 0
+                ? { name: "Sin método",    value: datos.ventas.desglosePago.sinMetodo,    color: COLORES_PAGO["Sin método"] }
+                : null,
+            ].filter((x): x is NonNullable<typeof x> => x !== null)
+
+            const topData = datos.topProductos.map((p) => ({
+              ...p,
+              nombreCorto: truncar(p.nombre),
+            }))
+
+            const hasPie  = pieDatos.length >= 1 && datos.ventas.ingresosBrutos > 0
+            const hasTop  = topData.length > 0
+
+            if (!hasPie && !hasTop) return null
+
+            return (
+              <div style={{
+                display: "grid",
+                gridTemplateColumns: hasPie && hasTop ? "1fr 1fr" : "1fr",
+                gap: "24px",
+                alignItems: "start",
+              }}>
+
+                {/* GRÁFICO 2 — TORTA: distribución método de pago */}
+                {hasPie && (
+                  <div>
+                    <h2 style={estiloTituloSeccion}>Distribución por método de pago</h2>
+                    <div style={{
+                      backgroundColor: "var(--color-card)",
+                      border: "0.5px solid var(--color-borde)",
+                      padding: "20px 8px 16px",
+                    }}>
+                      <ResponsiveContainer width="100%" height={260}>
+                        <PieChart>
+                          <Pie
+                            data={pieDatos}
+                            cx="50%"
+                            cy="50%"
+                            innerRadius={60}
+                            outerRadius={100}
+                            paddingAngle={2}
+                            dataKey="value"
+                            labelLine={false}
+                            label={EtiquetaTorta}
+                          >
+                            {pieDatos.map((entry) => (
+                              <Cell key={entry.name} fill={entry.color} />
+                            ))}
+                          </Pie>
+                          <Tooltip content={<TooltipTorta />} />
+                        </PieChart>
+                      </ResponsiveContainer>
+                      {/* Leyenda manual */}
+                      <div style={{ display: "flex", justifyContent: "center", gap: "20px", flexWrap: "wrap", paddingTop: "4px" }}>
+                        {pieDatos.map((entry) => (
+                          <div key={entry.name} style={{ display: "flex", alignItems: "center", gap: "7px" }}>
+                            <div style={{ width: "10px", height: "10px", borderRadius: "50%", backgroundColor: entry.color, flexShrink: 0 }} />
+                            <div>
+                              <span style={{ fontSize: "10px", fontFamily: "'Jost', sans-serif", color: "var(--color-texto-muted)", display: "block" }}>
+                                {entry.name}
+                              </span>
+                              <span style={{ fontSize: "13px", fontFamily: "'Cormorant Garamond', serif", color: "var(--color-texto)", display: "block", lineHeight: 1.2 }}>
+                                {fmt(entry.value)}
+                              </span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* GRÁFICO 3 — BARRAS HORIZONTALES: top productos más vendidos */}
+                {hasTop && (
+                  <div>
+                    <h2 style={estiloTituloSeccion}>Productos más vendidos</h2>
+                    <div style={{
+                      backgroundColor: "var(--color-card)",
+                      border: "0.5px solid var(--color-borde)",
+                      padding: "20px 8px 12px",
+                    }}>
+                      <ResponsiveContainer width="100%" height={Math.max(180, topData.length * 52)}>
+                        <BarChart
+                          data={topData}
+                          layout="vertical"
+                          margin={{ top: 4, right: 52, left: 4, bottom: 4 }}
+                        >
+                          <CartesianGrid horizontal={false} stroke="var(--color-borde)" strokeDasharray="3 3" />
+                          <XAxis type="number" hide />
+                          <YAxis
+                            type="category"
+                            dataKey="nombreCorto"
+                            axisLine={false}
+                            tickLine={false}
+                            width={120}
+                            tick={{ fontFamily: "'Jost', sans-serif", fontSize: 11, fill: "var(--color-texto-muted)" }}
+                          />
+                          <Tooltip content={<TooltipTopProductos />} cursor={{ fill: "var(--color-superficie)" }} />
+                          <Bar dataKey="unidades" radius={[0, 2, 2, 0]} maxBarSize={28} fill={PALETA[0]}>
+                            <LabelList
+                              dataKey="unidades"
+                              position="right"
+                              formatter={(v: unknown) => `${v} un.`}
+                              style={{ fontSize: "10px", fontFamily: "'Jost', sans-serif", fill: "var(--color-texto-muted)" }}
+                            />
+                          </Bar>
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )
+          })()}
         </>
       ) : null}
     </div>

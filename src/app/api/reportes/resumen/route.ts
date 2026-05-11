@@ -36,6 +36,8 @@ export async function GET(solicitud: NextRequest) {
             include: {
               producto: {
                 select: {
+                  id: true,
+                  nombre: true,
                   categoria: { select: { nombre: true } },
                 },
               },
@@ -59,6 +61,7 @@ export async function GET(solicitud: NextRequest) {
     let transferenciaVentas = 0
 
     const ventasPorCategoria: Record<string, { cantidad: number; total: number }> = {}
+    const productoMap: Record<string, { nombre: string; categoria: string; unidades: number; montoTotal: number }> = {}
 
     for (const venta of ventas) {
       for (const item of venta.items) {
@@ -71,6 +74,13 @@ export async function GET(solicitud: NextRequest) {
         }
         ventasPorCategoria[catNombre].cantidad += item.cantidad
         ventasPorCategoria[catNombre].total += item.precioTotal
+
+        const prodId = item.productoId
+        if (!productoMap[prodId]) {
+          productoMap[prodId] = { nombre: item.producto.nombre, categoria: catNombre, unidades: 0, montoTotal: 0 }
+        }
+        productoMap[prodId].unidades += item.cantidad
+        productoMap[prodId].montoTotal += item.precioTotal
       }
 
       if (venta.metodoPago === "EFECTIVO") {
@@ -90,11 +100,13 @@ export async function GET(solicitud: NextRequest) {
     let totalGastos = 0
     let efectivoGastos = 0
     let transferenciaGastos = 0
+    const gastosPorCategoria: Record<string, number> = {}
 
     for (const gasto of gastos) {
       totalGastos += gasto.monto
       if (gasto.metodoPago === "EFECTIVO") efectivoGastos += gasto.monto
       else if (gasto.metodoPago === "TRANSFERENCIA") transferenciaGastos += gasto.monto
+      gastosPorCategoria[gasto.categoria] = (gastosPorCategoria[gasto.categoria] ?? 0) + gasto.monto
     }
 
     const gananciaProductos = ingresosBrutos - costoMercaderia
@@ -125,9 +137,23 @@ export async function GET(solicitud: NextRequest) {
           efectivo: Math.round(efectivoGastos * 100) / 100,
           transferencia: Math.round(transferenciaGastos * 100) / 100,
         },
+        porCategoria: Object.entries(gastosPorCategoria).map(([categoria, total]) => ({
+          categoria,
+          total: Math.round(total * 100) / 100,
+        })),
       },
       gananciaNeta: Math.round(gananciaNeta * 100) / 100,
       productosSinStock: productosSinStock,
+      topProductos: Object.entries(productoMap)
+        .map(([productoId, d]) => ({
+          productoId,
+          nombre: d.nombre,
+          categoria: d.categoria,
+          unidades: d.unidades,
+          montoTotal: Math.round(d.montoTotal * 100) / 100,
+        }))
+        .sort((a, b) => b.unidades - a.unidades)
+        .slice(0, 10),
     }
 
     return NextResponse.json<RespuestaAPI<typeof resumen>>({ datos: resumen })

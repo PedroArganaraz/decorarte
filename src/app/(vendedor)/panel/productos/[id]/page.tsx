@@ -37,6 +37,8 @@ export default async function PaginaEditarProducto({
     descripcion: producto.descripcion,
     precio: Number(producto.precio),
     precioAnterior: producto.precioAnterior ? Number(producto.precioAnterior) : null,
+    costo: producto.costo != null ? Number(producto.costo) : null,
+    precioMinimo: producto.precioMinimo != null ? Number(producto.precioMinimo) : null,
     stock: producto.stock,
     activo: producto.activo,
     destacado: producto.destacado,

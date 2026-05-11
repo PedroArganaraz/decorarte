@@ -15,6 +15,8 @@ interface Props {
     descripcion: string | null
     precio: number
     precioAnterior: number | null
+    costo: number | null
+    precioMinimo: number | null
     stock: number
     activo: boolean
     destacado: boolean
@@ -34,6 +36,8 @@ export default function FormularioProducto({ categorias, accionesExtra, producto
     descripcion: producto?.descripcion ?? "",
     precio: producto?.precio?.toString() ?? "",
     precioAnterior: producto?.precioAnterior?.toString() ?? "",
+    costo: producto?.costo?.toString() ?? "",
+    precioMinimo: producto?.precioMinimo?.toString() ?? "",
     stock: producto?.stock?.toString() ?? "0",
     activo: producto?.activo ?? true,
     destacado: producto?.destacado ?? false,
@@ -66,6 +70,16 @@ export default function FormularioProducto({ categorias, accionesExtra, producto
     setForm((prev) => ({ ...prev, [campo]: valor }))
   }
 
+  const actualizarCosto = (valor: string) => {
+    setForm((prev) => {
+      const costoNum = parseFloat(valor)
+      const precioMinimo = !isNaN(costoNum) && costoNum > 0
+        ? String(Math.round(costoNum * 3))
+        : prev.precioMinimo
+      return { ...prev, costo: valor, precioMinimo }
+    })
+  }
+
   const manejarEnvio = async (e: React.FormEvent) => {
     e.preventDefault()
     setCargando(true)
@@ -75,6 +89,8 @@ export default function FormularioProducto({ categorias, accionesExtra, producto
       descripcion: form.descripcion || null,
       precio: parseFloat(form.precio),
       precioAnterior: form.precioAnterior ? parseFloat(form.precioAnterior) : null,
+      costo: form.costo ? parseFloat(form.costo) : null,
+      precioMinimo: form.precioMinimo ? parseFloat(form.precioMinimo) : null,
       stock: parseInt(form.stock),
       activo: form.activo,
       destacado: form.destacado,
@@ -272,6 +288,22 @@ export default function FormularioProducto({ categorias, accionesExtra, producto
                 placeholder="0"
                 style={estiloInput}
               />
+              {form.precio && form.precioMinimo &&
+                parseFloat(form.precio) > 0 &&
+                parseFloat(form.precioMinimo) > 0 &&
+                parseFloat(form.precio) < parseFloat(form.precioMinimo) && (
+                <p style={{
+                  fontSize: "11px",
+                  fontFamily: "'Jost', sans-serif",
+                  color: "var(--color-acento)",
+                  padding: "7px 10px",
+                  border: "0.5px solid var(--color-acento)",
+                  backgroundColor: "#fdf5f3",
+                  margin: "6px 0 0",
+                }}>
+                  El precio de venta está por debajo del mínimo rentable.
+                </p>
+              )}
             </div>
 
             <div>
@@ -299,6 +331,65 @@ export default function FormularioProducto({ categorias, accionesExtra, producto
                 step="1"
                 style={estiloInput}
               />
+            </div>
+
+            <div style={{
+              borderTop: "0.5px solid var(--color-borde)",
+              paddingTop: "16px",
+              display: "flex",
+              flexDirection: "column",
+              gap: "16px",
+            }}>
+              <p style={{
+                fontSize: "9px",
+                fontFamily: "'Jost', sans-serif",
+                fontWeight: 500,
+                letterSpacing: "0.15em",
+                textTransform: "uppercase",
+                color: "var(--color-texto-muted)",
+                margin: 0,
+              }}>
+                Rentabilidad
+              </p>
+
+              <div>
+                <label style={estiloLabel}>Costo (opcional)</label>
+                <input
+                  type="number"
+                  value={form.costo}
+                  onChange={(e) => actualizarCosto(e.target.value)}
+                  onWheel={(e) => (e.target as HTMLInputElement).blur()}
+                  min="0"
+                  step="0.01"
+                  placeholder="0"
+                  style={estiloInput}
+                />
+                {form.costo && parseFloat(form.costo) > 0 && (
+                  <p style={{
+                    fontSize: "10px",
+                    fontFamily: "'Jost', sans-serif",
+                    color: "var(--color-texto-muted)",
+                    margin: "5px 0 0",
+                    letterSpacing: "0.03em",
+                  }}>
+                    Precio mínimo sugerido: ${Math.round(parseFloat(form.costo) * 3).toLocaleString("es-AR")}
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <label style={estiloLabel}>Precio mínimo</label>
+                <input
+                  type="number"
+                  value={form.precioMinimo}
+                  onChange={(e) => actualizar("precioMinimo", e.target.value)}
+                  onWheel={(e) => (e.target as HTMLInputElement).blur()}
+                  min="0"
+                  step="0.01"
+                  placeholder="0"
+                  style={estiloInput}
+                />
+              </div>
             </div>
           </div>
 

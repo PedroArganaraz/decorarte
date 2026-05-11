@@ -152,8 +152,31 @@ export default async function PaginaProductos({ searchParams }: Props) {
                   <td style={{ padding: "12px 16px", fontSize: "12px", color: "var(--color-acento)" }}>
                     {producto.materialRel?.nombre ?? producto.material ?? "—"}
                   </td>
-                  <td style={{ padding: "12px 16px", fontSize: "13px", color: "var(--color-texto)" }}>
-                    ${Number(producto.precio).toLocaleString("es-AR")}
+                  <td style={{ padding: "12px 16px" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                      <span style={{ fontSize: "13px", color: "var(--color-texto)" }}>
+                        ${Number(producto.precio).toLocaleString("es-AR")}
+                      </span>
+                      {producto.precioMinimo != null &&
+                        Number(producto.precio) < Number(producto.precioMinimo) && (
+                        <span
+                          title={`Precio mínimo: $${Number(producto.precioMinimo).toLocaleString("es-AR")}`}
+                          style={{
+                            fontSize: "9px",
+                            fontFamily: "'Jost', sans-serif",
+                            fontWeight: 500,
+                            letterSpacing: "0.06em",
+                            color: "var(--color-acento)",
+                            border: "0.5px solid var(--color-acento)",
+                            padding: "2px 5px",
+                            flexShrink: 0,
+                            cursor: "default",
+                          }}
+                        >
+                          ⚠ mín
+                        </span>
+                      )}
+                    </div>
                   </td>
                   <td style={{ padding: "12px 16px", fontSize: "13px", color: producto.stock === 0 ? "#A32D2D" : "var(--color-texto-muted)" }}>
                     {producto.stock}
