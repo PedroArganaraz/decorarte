@@ -104,17 +104,22 @@ export async function GET(solicitud: NextRequest) {
       }
     }
 
-    // Gastos
-    let totalGastos = 0
+    // Gastos — separados entre operativos y retiros de capital
+    let totalGastosOperativos = 0
+    let totalRetiros = 0
     let efectivoGastos = 0
     let transferenciaGastos = 0
     const gastosPorCategoria: Record<string, number> = {}
 
     for (const gasto of gastos) {
-      totalGastos += gasto.monto
-      if (gasto.metodoPago === "EFECTIVO") efectivoGastos += gasto.monto
-      else if (gasto.metodoPago === "TRANSFERENCIA") transferenciaGastos += gasto.monto
-      gastosPorCategoria[gasto.categoria] = (gastosPorCategoria[gasto.categoria] ?? 0) + gasto.monto
+      if (gasto.categoria === "RETIRO") {
+        totalRetiros += gasto.monto
+      } else {
+        totalGastosOperativos += gasto.monto
+        if (gasto.metodoPago === "EFECTIVO") efectivoGastos += gasto.monto
+        else if (gasto.metodoPago === "TRANSFERENCIA") transferenciaGastos += gasto.monto
+        gastosPorCategoria[gasto.categoria] = (gastosPorCategoria[gasto.categoria] ?? 0) + gasto.monto
+      }
     }
 
     // Combinaciones frecuentes (pares de productos comprados en la misma venta)
@@ -150,7 +155,7 @@ export async function GET(solicitud: NextRequest) {
       .map(({ prod1, prod2, veces }) => ({ producto1: prod1, producto2: prod2, veces }))
 
     const gananciaProductos = ingresosBrutos - costoMercaderia
-    const gananciaNeta = gananciaProductos - totalGastos
+    const gananciaNeta = gananciaProductos - totalGastosOperativos
 
     const resumen = {
       periodo: { desde: desde ?? null, hasta: hasta ?? null },
@@ -171,8 +176,9 @@ export async function GET(solicitud: NextRequest) {
         })),
       },
       gastos: {
-        cantidad: gastos.length,
-        total: Math.round(totalGastos * 100) / 100,
+        cantidad: gastos.filter((g) => g.categoria !== "RETIRO").length,
+        total: Math.round(totalGastosOperativos * 100) / 100,
+        retiros: Math.round(totalRetiros * 100) / 100,
         desglosePago: {
           efectivo: Math.round(efectivoGastos * 100) / 100,
           transferencia: Math.round(transferenciaGastos * 100) / 100,

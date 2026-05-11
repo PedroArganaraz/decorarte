@@ -33,7 +33,7 @@ export async function GET(solicitud: NextRequest) {
       include: {
         vendedor: { select: { nombre: true } },
       },
-      orderBy: { fecha: "desc" },
+      orderBy: { creadoEn: "desc" },
     })
 
     return NextResponse.json<RespuestaAPI<typeof gastos>>({ datos: gastos })

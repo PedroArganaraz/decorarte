@@ -207,6 +207,7 @@ enum CategoriaGasto {
   PACKAGING
   FERIA
   OTROS
+  RETIRO
 
   @@map("categoria_gasto")
 }

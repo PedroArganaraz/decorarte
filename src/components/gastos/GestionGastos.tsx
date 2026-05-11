@@ -9,6 +9,7 @@ const CATEGORIA_LABELS: Record<string, string> = {
   PACKAGING: "Packaging",
   FERIA:     "Feria",
   OTROS:     "Otros",
+  RETIRO:    "Retiro",
 }
 
 const MESES = [
@@ -129,9 +130,9 @@ export default function GestionGastos() {
   }
 
   // Filtros y totales
-  const gastosFiltrados = gastos.filter((g) =>
-    !filtroCategoria || g.categoria === filtroCategoria
-  )
+  const gastosFiltrados = gastos
+    .filter((g) => !filtroCategoria || g.categoria === filtroCategoria)
+    .sort((a, b) => new Date(b.creadoEn ?? b.fecha).getTime() - new Date(a.creadoEn ?? a.fecha).getTime())
 
   let totalPeriodo = 0
   let totalEfectivo = 0
@@ -307,7 +308,7 @@ export default function GestionGastos() {
             const esProcesando = procesando === gasto.id
             const estiloBoton: React.CSSProperties = { padding: "6px 14px", fontSize: "10px", fontFamily: "'Jost', sans-serif", letterSpacing: "0.1em", textTransform: "uppercase", borderRadius: 0, cursor: "pointer", border: "0.5px solid var(--color-borde)", backgroundColor: "transparent", color: "var(--color-texto-muted)" }
             return (
-              <div key={gasto.id} style={{ backgroundColor: esEliminando ? "var(--color-superficie)" : "var(--color-card)", border: "0.5px solid var(--color-borde)", padding: "14px 16px" } as React.CSSProperties}>
+              <div key={gasto.id} style={{ backgroundColor: esEliminando ? "var(--color-superficie)" : gasto.categoria === "RETIRO" ? "#c8e6c9" : "var(--color-card)", border: "0.5px solid var(--color-borde)", padding: "14px 16px" } as React.CSSProperties}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "4px" }}>
                   <span style={{ fontSize: "11px", fontFamily: "'Jost', sans-serif", color: "var(--color-texto-muted)" }}>{formatFecha(gasto.fecha)}</span>
                   <span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "18px", color: "var(--color-texto)" }}>${Number(gasto.monto).toLocaleString("es-AR")}</span>
@@ -353,7 +354,7 @@ export default function GestionGastos() {
                 const esEliminando = eliminando === gasto.id
                 const esProcesando = procesando === gasto.id
                 return (
-                  <tr key={gasto.id} style={{ borderBottom: "0.5px solid var(--color-borde)", backgroundColor: esEliminando ? "var(--color-superficie)" : "transparent" }}>
+                  <tr key={gasto.id} style={{ borderBottom: "0.5px solid var(--color-borde)", backgroundColor: esEliminando ? "var(--color-superficie)" : gasto.categoria === "RETIRO" ? "#c8e6c9" : "transparent" }}>
                     <td style={estiloTd}><span style={{ fontSize: "12px", fontFamily: "'Jost', sans-serif", color: "var(--color-texto)", whiteSpace: "nowrap" }}>{formatFecha(gasto.fecha)}</span></td>
                     <td style={{ ...estiloTd, maxWidth: "240px" }}>
                       <span style={{ fontSize: "13px", fontFamily: "'Cormorant Garamond', serif", color: "var(--color-texto)", display: "block", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={gasto.descripcion}>{gasto.descripcion}</span>

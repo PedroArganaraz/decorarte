@@ -53,6 +53,7 @@ interface Resumen {
   gastos: {
     cantidad: number
     total: number
+    retiros: number
     desglosePago: { efectivo: number; transferencia: number }
     porCategoria: { categoria: string; total: number }[]
   }
@@ -354,7 +355,7 @@ export default function DashboardReportes() {
             {[
               { label: "Ventas brutas",    valor: datos.ventas.ingresosBrutos },
               { label: "Costo mercadería", valor: datos.ventas.costoMercaderia },
-              { label: "Total gastos",     valor: datos.gastos.total },
+              { label: "Gastos operativos", valor: datos.gastos.total },
               { label: "Ganancia neta",    valor: datos.gananciaNeta },
             ].map(({ label, valor }) => {
               const negativo = valor < 0
@@ -475,6 +476,17 @@ export default function DashboardReportes() {
                       {gananciaPositiva ? "" : "−"}{fmt(Math.abs(datos.gananciaNeta))}
                     </span>
                   </div>
+
+                  {/* Retiros de capital — separados, no afectan ganancia neta */}
+                  {datos.gastos.retiros > 0 && (
+                    <>
+                      {separador}
+                      <div style={filaBase}>
+                        <span style={{ ...conceptoBase, fontStyle: "italic" }}>Retiros de capital</span>
+                        <span style={{ ...montoBase, color: "var(--color-texto-muted)" }}>−{fmt(datos.gastos.retiros)}</span>
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
             )

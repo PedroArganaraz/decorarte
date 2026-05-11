@@ -9,6 +9,7 @@ export interface Gasto {
   categoria: string
   metodoPago: "EFECTIVO" | "TRANSFERENCIA"
   fecha: string
+  creadoEn?: string
   notas: string | null
 }
 
@@ -18,7 +19,7 @@ interface Props {
   onGuardado: (gasto: Gasto) => void
 }
 
-const CATEGORIAS = [
+const CATEGORIAS_OPERATIVAS = [
   { value: "INSUMOS",   label: "Insumos" },
   { value: "PACKAGING", label: "Packaging" },
   { value: "FERIA",     label: "Feria" },
@@ -171,7 +172,7 @@ export default function ModalGasto({ gasto, onCerrar, onGuardado }: Props) {
               type="text"
               value={descripcion}
               onChange={(e) => setDescripcion(e.target.value)}
-              placeholder="Ej: Bolsas de tela"
+              placeholder=""
               style={estiloInput}
               autoFocus
             />
@@ -207,9 +208,14 @@ export default function ModalGasto({ gasto, onCerrar, onGuardado }: Props) {
               <label style={estiloLabel}>Categoría *</label>
               <select value={categoria} onChange={(e) => setCategoria(e.target.value)} style={estiloInput}>
                 <option value="">Seleccioná...</option>
-                {CATEGORIAS.map((c) => (
-                  <option key={c.value} value={c.value}>{c.label}</option>
-                ))}
+                <optgroup label="Gastos operativos">
+                  {CATEGORIAS_OPERATIVAS.map((c) => (
+                    <option key={c.value} value={c.value}>{c.label}</option>
+                  ))}
+                </optgroup>
+                <optgroup label="Capital">
+                  <option value="RETIRO">Retiro</option>
+                </optgroup>
               </select>
             </div>
             <div>
