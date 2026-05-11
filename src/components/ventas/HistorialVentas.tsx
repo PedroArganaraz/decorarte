@@ -160,13 +160,11 @@ export default function HistorialVentas() {
 
       {/* FILTROS */}
       <div style={{
-        backgroundColor: "var(--color-card)",
-        border: "0.5px solid var(--color-borde)",
-        padding: "20px 24px",
         display: "flex",
         gap: "20px",
         alignItems: "flex-end",
         flexWrap: "wrap",
+        marginBottom: "20px",
       }}>
         <div>
           <label style={estiloLabel}>Mes</label>

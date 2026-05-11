@@ -28,7 +28,7 @@ export async function GET(solicitud: NextRequest) {
         }
       : {}
 
-    const [ventas, gastos, productosSinStock] = await Promise.all([
+    const [ventas, gastos, productosSinStock, productosConStock] = await Promise.all([
       prisma.venta.findMany({
         where: filtroPeriodo,
         include: {
@@ -51,6 +51,14 @@ export async function GET(solicitud: NextRequest) {
       prisma.producto.findMany({
         where: { activo: true, stock: 0 },
         select: { id: true, nombre: true, slug: true },
+      }),
+      prisma.producto.findMany({
+        where: { activo: true, stock: { gt: 0 }, costo: { not: null } },
+        select: {
+          stock: true,
+          costo: true,
+          categoria: { select: { nombre: true } },
+        },
       }),
     ])
 
@@ -176,6 +184,28 @@ export async function GET(solicitud: NextRequest) {
       },
       gananciaNeta: Math.round(gananciaNeta * 100) / 100,
       productosSinStock: productosSinStock,
+      inventario: (() => {
+        const porCat: Record<string, { unidades: number; capital: number }> = {}
+        let totalCapital = 0
+        for (const p of productosConStock) {
+          const capital = p.stock * Number(p.costo)
+          totalCapital += capital
+          const cat = p.categoria.nombre
+          if (!porCat[cat]) porCat[cat] = { unidades: 0, capital: 0 }
+          porCat[cat].unidades += p.stock
+          porCat[cat].capital += capital
+        }
+        return {
+          totalCapital: Math.round(totalCapital * 100) / 100,
+          porCategoria: Object.entries(porCat)
+            .map(([categoria, d]) => ({
+              categoria,
+              unidades: d.unidades,
+              totalCapital: Math.round(d.capital * 100) / 100,
+            }))
+            .sort((a, b) => b.totalCapital - a.totalCapital),
+        }
+      })(),
       combinacionesFrecuentes,
       topProductos: Object.entries(productoMap)
         .map(([productoId, d]) => ({

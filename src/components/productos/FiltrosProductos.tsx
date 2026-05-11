@@ -20,7 +20,9 @@ export default function FiltrosProductos({ categorias }: Props) {
   const { esMobile } = useTamanioPantalla()
   const inicializado = useRef(false)
 
-  // Restaurar desde localStorage al montar si la URL no tiene parámetros
+  // Restaurar desde localStorage al montar si la URL no tiene parámetros.
+  // inicializado se activa con setTimeout(0) para que los efectos de auto-apply
+  // no se disparen con los setState del restore (se dispararían antes del tick).
   useEffect(() => {
     const tieneParams = searchParams.get("nombre") || searchParams.get("categoriaId") || searchParams.get("soloActivos")
     if (!tieneParams) {
@@ -43,7 +45,7 @@ export default function FiltrosProductos({ categorias }: Props) {
         }
       } catch {}
     }
-    inicializado.current = true
+    setTimeout(() => { inicializado.current = true }, 0)
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Guardar en localStorage al cambiar cualquier filtro (solo tras inicialización)
@@ -54,13 +56,28 @@ export default function FiltrosProductos({ categorias }: Props) {
     } catch {}
   }, [nombre, categoriaId, soloActivos])
 
-  const aplicar = () => {
+  // Auto-apply: texto con debounce 300ms
+  useEffect(() => {
+    if (!inicializado.current) return
+    const timer = setTimeout(() => {
+      const params = new URLSearchParams()
+      if (nombre) params.set("nombre", nombre)
+      if (categoriaId) params.set("categoriaId", categoriaId)
+      if (soloActivos) params.set("soloActivos", "1")
+      router.push(`/panel/productos?${params.toString()}`)
+    }, 300)
+    return () => clearTimeout(timer)
+  }, [nombre]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Auto-apply: categoría y checkbox de forma inmediata
+  useEffect(() => {
+    if (!inicializado.current) return
     const params = new URLSearchParams()
     if (nombre) params.set("nombre", nombre)
     if (categoriaId) params.set("categoriaId", categoriaId)
     if (soloActivos) params.set("soloActivos", "1")
     router.push(`/panel/productos?${params.toString()}`)
-  }
+  }, [categoriaId, soloActivos]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const limpiar = () => {
     try { localStorage.removeItem(STORAGE_KEY) } catch {}
@@ -95,7 +112,7 @@ export default function FiltrosProductos({ categorias }: Props) {
         type="text"
         value={nombre}
         onChange={(e) => setNombre(e.target.value)}
-        onKeyDown={(e) => e.key === "Enter" && aplicar()}
+        onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault() } }}
         placeholder="Buscar por nombre..."
         style={{ ...estiloInput, minWidth: "200px", width: esMobile ? "100%" : "auto" }}
       />
@@ -133,26 +150,7 @@ export default function FiltrosProductos({ categorias }: Props) {
         Solo activos
       </label>
 
-      <button
-        onClick={aplicar}
-        style={{
-          padding: "8px 20px",
-          fontSize: "11px",
-          fontFamily: "'Jost', sans-serif",
-          fontWeight: 400,
-          letterSpacing: "0.12em",
-          textTransform: "uppercase",
-          backgroundColor: "var(--color-texto)",
-          color: "var(--color-fondo)",
-          border: "none",
-          borderRadius: 0,
-          cursor: "pointer",
-        }}
-      >
-        Filtrar
-      </button>
-
-      {(nombre || categoriaId) && (
+      {(nombre || categoriaId || soloActivos) && (
         <button
           onClick={limpiar}
           style={{
