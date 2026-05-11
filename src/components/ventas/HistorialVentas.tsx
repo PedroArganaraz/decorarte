@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react"
 import ModalEditarVenta, { type VentaParaEditar } from "./ModalEditarVenta"
+import { useTamanioPantalla } from "@/hooks/useTamanioPantalla"
 
 interface ItemVenta {
   id: string
@@ -100,6 +101,7 @@ export default function HistorialVentas() {
   const [errorAnular, setErrorAnular] = useState<string | null>(null)
 
   const [editandoVenta, setEditandoVenta] = useState<Venta | null>(null)
+  const { esMobile } = useTamanioPantalla()
 
   const fetchVentas = useCallback(async () => {
     setCargando(true)
@@ -158,17 +160,56 @@ export default function HistorialVentas() {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
 
+      {/* HEADER */}
+      <div style={{
+        display: "flex",
+        flexDirection: esMobile ? "column" : "row",
+        justifyContent: "space-between",
+        alignItems: esMobile ? "flex-start" : "flex-end",
+        gap: esMobile ? "12px" : "0",
+      }}>
+        <div>
+          <h1 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "28px", fontWeight: 300, letterSpacing: "0.05em", color: "var(--color-texto)", margin: 0 }}>
+            Ventas
+          </h1>
+          <p style={{ fontSize: "11px", fontFamily: "'Jost', sans-serif", color: "var(--color-texto-muted)", marginTop: "6px", letterSpacing: "0.05em" }}>
+            Registro de ventas por período
+          </p>
+        </div>
+        <a
+          href="/ventas/nueva"
+          style={{
+            padding: "10px 20px",
+            fontSize: "11px",
+            fontFamily: "'Jost', sans-serif",
+            fontWeight: 400,
+            letterSpacing: "0.12em",
+            textTransform: "uppercase",
+            backgroundColor: "var(--color-texto)",
+            color: "var(--color-fondo)",
+            textDecoration: "none",
+            display: "block",
+            width: esMobile ? "100%" : undefined,
+            boxSizing: "border-box",
+            textAlign: "center",
+          }}
+        >
+          + Nueva venta
+        </a>
+      </div>
+
       {/* FILTROS */}
       <div style={{
         display: "flex",
-        gap: "20px",
-        alignItems: "flex-end",
+        flexDirection: esMobile ? "column" : "row",
+        gap: esMobile ? "12px" : "20px",
+        alignItems: esMobile ? "stretch" : "flex-end",
         flexWrap: "wrap",
         marginBottom: "20px",
       }}>
         <div>
           <label style={estiloLabel}>Mes</label>
-          <select value={mes} onChange={(e) => setMes(Number(e.target.value))} style={estiloSelect}>
+          <select value={mes} onChange={(e) => setMes(Number(e.target.value))} style={{ ...estiloSelect, width: esMobile ? "100%" : undefined }}>
             {MESES.map((m, i) => (
               <option key={i} value={i}>{m}</option>
             ))}
@@ -177,18 +218,18 @@ export default function HistorialVentas() {
 
         <div>
           <label style={estiloLabel}>Año</label>
-          <select value={anio} onChange={(e) => setAnio(Number(e.target.value))} style={estiloSelect}>
+          <select value={anio} onChange={(e) => setAnio(Number(e.target.value))} style={{ ...estiloSelect, width: esMobile ? "100%" : undefined }}>
             {ANIOS.map((a) => (
               <option key={a} value={a}>{a}</option>
             ))}
           </select>
         </div>
 
-        <div style={{ width: "1px", height: "32px", backgroundColor: "var(--color-borde)", flexShrink: 0 }} />
+        {!esMobile && <div style={{ width: "1px", height: "32px", backgroundColor: "var(--color-borde)", flexShrink: 0 }} />}
 
         <div>
           <label style={estiloLabel}>Método de pago</label>
-          <select value={filtroMetodo} onChange={(e) => setFiltroMetodo(e.target.value)} style={estiloSelect}>
+          <select value={filtroMetodo} onChange={(e) => setFiltroMetodo(e.target.value)} style={{ ...estiloSelect, width: esMobile ? "100%" : undefined }}>
             <option value="">Todos</option>
             <option value="EFECTIVO">Efectivo</option>
             <option value="TRANSFERENCIA">Transferencia</option>
@@ -197,7 +238,7 @@ export default function HistorialVentas() {
 
         <div>
           <label style={estiloLabel}>Estado</label>
-          <select value={filtroEstado} onChange={(e) => setFiltroEstado(e.target.value)} style={estiloSelect}>
+          <select value={filtroEstado} onChange={(e) => setFiltroEstado(e.target.value)} style={{ ...estiloSelect, width: esMobile ? "100%" : undefined }}>
             <option value="">Todos</option>
             <option value="PAGADO_Y_ENTREGADO">Pagado y entregado</option>
             <option value="PAGADO">Pagado</option>
@@ -211,7 +252,7 @@ export default function HistorialVentas() {
       {/* TOTALES */}
       <div style={{
         display: "grid",
-        gridTemplateColumns: "repeat(4, 1fr)",
+        gridTemplateColumns: esMobile ? "repeat(2, 1fr)" : "repeat(4, 1fr)",
         gap: "12px",
       }}>
         {([
@@ -264,61 +305,65 @@ export default function HistorialVentas() {
         </p>
       )}
 
-      {/* TABLA */}
-      <div style={{
-        backgroundColor: "var(--color-card)",
-        border: "0.5px solid var(--color-borde)",
-        overflowX: "auto",
-      }}>
-        {cargando ? (
-          <p style={{
-            padding: "40px 24px",
-            textAlign: "center",
-            fontSize: "13px",
-            fontFamily: "'Jost', sans-serif",
-            color: "var(--color-texto-sutil)",
-            margin: 0,
-          }}>
-            Cargando...
-          </p>
-        ) : errorCarga ? (
-          <p style={{
-            padding: "40px 24px",
-            textAlign: "center",
-            fontSize: "13px",
-            fontFamily: "'Jost', sans-serif",
-            color: "var(--color-acento)",
-            margin: 0,
-          }}>
-            {errorCarga}
-          </p>
-        ) : ventasFiltradas.length === 0 ? (
-          <p style={{
-            padding: "40px 24px",
-            textAlign: "center",
-            fontSize: "13px",
-            fontFamily: "'Jost', sans-serif",
-            color: "var(--color-texto-sutil)",
-            margin: 0,
-          }}>
-            No hay ventas en este período.
-          </p>
-        ) : (
+      {/* LISTA / TABLA */}
+      {cargando ? (
+        <p style={{ padding: "40px 0", textAlign: "center", fontSize: "13px", fontFamily: "'Jost', sans-serif", color: "var(--color-texto-sutil)", margin: 0 }}>Cargando...</p>
+      ) : errorCarga ? (
+        <p style={{ padding: "40px 0", textAlign: "center", fontSize: "13px", fontFamily: "'Jost', sans-serif", color: "var(--color-acento)", margin: 0 }}>{errorCarga}</p>
+      ) : ventasFiltradas.length === 0 ? (
+        <p style={{ padding: "40px 0", textAlign: "center", fontSize: "13px", fontFamily: "'Jost', sans-serif", color: "var(--color-texto-sutil)", margin: 0 }}>No hay ventas en este período.</p>
+      ) : esMobile ? (
+        <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+          {ventasFiltradas.map((venta) => {
+            const esConfirmando = anulando === venta.id
+            const esProcesando = procesando === venta.id
+            const total = sumarVenta(venta)
+            const resumenItems = venta.items.map((i) => `${i.cantidad}× ${i.producto.nombre}`).join(", ")
+            const estadoLabel = ESTADO_LABELS[venta.estado] ?? venta.estado
+            const estiloBoton: React.CSSProperties = { padding: "6px 14px", fontSize: "10px", fontFamily: "'Jost', sans-serif", letterSpacing: "0.1em", textTransform: "uppercase", borderRadius: 0, cursor: "pointer", border: "0.5px solid var(--color-borde)", backgroundColor: "transparent", color: "var(--color-texto-muted)" }
+            return (
+              <div key={venta.id} style={{ backgroundColor: esConfirmando ? "var(--color-superficie)" : "var(--color-card)", border: "0.5px solid var(--color-borde)", padding: "14px 16px" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "6px" }}>
+                  <span style={{ fontSize: "11px", fontFamily: "'Jost', sans-serif", color: "var(--color-texto-muted)" }}>{formatFecha(venta.fecha)}</span>
+                  <span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "18px", color: "var(--color-texto)" }}>${total.toLocaleString("es-AR")}</span>
+                </div>
+                <p style={{ fontSize: "13px", fontFamily: "'Cormorant Garamond', serif", color: "var(--color-texto)", margin: "0 0 6px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={resumenItems}>{resumenItems}</p>
+                <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginBottom: "10px" }}>
+                  {venta.cliente && <span style={{ fontSize: "11px", fontFamily: "'Jost', sans-serif", color: "var(--color-texto-muted)" }}>{venta.cliente}</span>}
+                  <span style={{ fontSize: "10px", fontFamily: "'Jost', sans-serif", color: "var(--color-texto-muted)", letterSpacing: "0.06em" }}>
+                    {venta.metodoPago === "EFECTIVO" ? "Efectivo" : venta.metodoPago === "TRANSFERENCIA" ? "Transferencia" : "—"}
+                  </span>
+                  <span style={{ fontSize: "10px", fontFamily: "'Jost', sans-serif", letterSpacing: "0.06em", color: venta.estado === "PENDIENTE" ? "var(--color-acento)" : "var(--color-texto-muted)" }}>
+                    {estadoLabel}{venta.esRegalo && venta.estado !== "REGALO" && " · regalo"}
+                  </span>
+                </div>
+                {esConfirmando ? (
+                  <div style={{ borderTop: "0.5px solid var(--color-superficie)", paddingTop: "10px" }}>
+                    <p style={{ fontSize: "11px", fontFamily: "'Jost', sans-serif", color: "var(--color-acento)", margin: "0 0 8px" }}>¿Anular? Se restaura el stock.</p>
+                    <div style={{ display: "flex", gap: "8px" }}>
+                      <button onClick={() => ejecutarAnular(venta.id)} disabled={esProcesando} style={{ ...estiloBoton, border: "0.5px solid var(--color-acento)", color: "var(--color-acento)", opacity: esProcesando ? 0.4 : 1 }}>
+                        {esProcesando ? "Anulando..." : "Confirmar"}
+                      </button>
+                      <button onClick={() => setAnulando(null)} disabled={esProcesando} style={{ ...estiloBoton, opacity: esProcesando ? 0.4 : 1 }}>Cancelar</button>
+                    </div>
+                  </div>
+                ) : (
+                  <div style={{ display: "flex", gap: "8px", borderTop: "0.5px solid var(--color-superficie)", paddingTop: "10px" }}>
+                    <button onClick={() => setEditandoVenta(venta)} style={{ ...estiloBoton, border: "0.5px solid var(--color-texto)", color: "var(--color-texto)" }}>Editar</button>
+                    <button onClick={() => { setErrorAnular(null); setAnulando(venta.id) }} style={estiloBoton}>Anular</button>
+                  </div>
+                )}
+              </div>
+            )
+          })}
+        </div>
+      ) : (
+        <div style={{ backgroundColor: "var(--color-card)", border: "0.5px solid var(--color-borde)", overflowX: "auto" }}>
           <table style={{ width: "100%", borderCollapse: "collapse" }}>
             <thead>
               <tr style={{ borderBottom: "0.5px solid var(--color-borde)" }}>
                 {["Fecha", "Cliente", "Productos", "Método", "Estado", "Total", ""].map((h) => (
-                  <th key={h} style={{
-                    padding: "12px 16px",
-                    textAlign: "left",
-                    fontSize: "9px",
-                    fontFamily: "'Jost', sans-serif",
-                    fontWeight: 500,
-                    letterSpacing: "0.15em",
-                    textTransform: "uppercase",
-                    color: "var(--color-texto-muted)",
-                    whiteSpace: "nowrap",
-                  }}>
+                  <th key={h} style={{ padding: "12px 16px", textAlign: "left", fontSize: "9px", fontFamily: "'Jost', sans-serif", fontWeight: 500, letterSpacing: "0.15em", textTransform: "uppercase", color: "var(--color-texto-muted)", whiteSpace: "nowrap" }}>
                     {h}
                   </th>
                 ))}
@@ -329,199 +374,31 @@ export default function HistorialVentas() {
                 const esConfirmando = anulando === venta.id
                 const esProcesando = procesando === venta.id
                 const total = sumarVenta(venta)
-                const resumenItems = venta.items
-                  .map((i) => `${i.cantidad}× ${i.producto.nombre}`)
-                  .join(", ")
-                const estadoLabel =
-                  ESTADO_LABELS[venta.estado] ?? venta.estado
-
+                const resumenItems = venta.items.map((i) => `${i.cantidad}× ${i.producto.nombre}`).join(", ")
+                const estadoLabel = ESTADO_LABELS[venta.estado] ?? venta.estado
                 return (
-                  <tr
-                    key={venta.id}
-                    style={{
-                      borderBottom: "0.5px solid var(--color-borde)",
-                      backgroundColor: esConfirmando
-                        ? "var(--color-superficie)"
-                        : "transparent",
-                    }}
-                  >
-                    <td style={estiloTd}>
-                      <span style={{
-                        fontSize: "12px",
-                        fontFamily: "'Jost', sans-serif",
-                        color: "var(--color-texto)",
-                        whiteSpace: "nowrap",
-                      }}>
-                        {formatFecha(venta.fecha)}
-                      </span>
-                    </td>
-
-                    <td style={estiloTd}>
-                      <span style={{
-                        fontSize: "12px",
-                        fontFamily: "'Jost', sans-serif",
-                        color: venta.cliente
-                          ? "var(--color-texto)"
-                          : "var(--color-texto-sutil)",
-                      }}>
-                        {venta.cliente ?? "—"}
-                      </span>
-                    </td>
-
-                    <td style={{ ...estiloTd, maxWidth: "260px" }}>
-                      <span style={{
-                        fontSize: "12px",
-                        fontFamily: "'Jost', sans-serif",
-                        color: "var(--color-texto)",
-                        display: "block",
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                        whiteSpace: "nowrap",
-                      }}
-                        title={resumenItems}
-                      >
-                        {resumenItems}
-                      </span>
-                    </td>
-
-                    <td style={estiloTd}>
-                      <span style={{
-                        fontSize: "11px",
-                        fontFamily: "'Jost', sans-serif",
-                        color: "var(--color-texto-muted)",
-                      }}>
-                        {venta.metodoPago === "EFECTIVO"
-                          ? "Efectivo"
-                          : venta.metodoPago === "TRANSFERENCIA"
-                          ? "Transferencia"
-                          : "—"}
-                      </span>
-                    </td>
-
-                    <td style={estiloTd}>
-                      <span style={{
-                        fontSize: "10px",
-                        fontFamily: "'Jost', sans-serif",
-                        letterSpacing: "0.06em",
-                        color: venta.estado === "PENDIENTE"
-                          ? "var(--color-acento)"
-                          : "var(--color-texto-muted)",
-                      }}>
-                        {estadoLabel}
-                        {venta.esRegalo && venta.estado !== "REGALO" && " · regalo"}
-                      </span>
-                    </td>
-
-                    <td style={estiloTd}>
-                      <span style={{
-                        fontFamily: "'Cormorant Garamond', serif",
-                        fontSize: "17px",
-                        fontWeight: 400,
-                        color: "var(--color-texto)",
-                        whiteSpace: "nowrap",
-                      }}>
-                        ${total.toLocaleString("es-AR")}
-                      </span>
-                    </td>
-
+                  <tr key={venta.id} style={{ borderBottom: "0.5px solid var(--color-borde)", backgroundColor: esConfirmando ? "var(--color-superficie)" : "transparent" }}>
+                    <td style={estiloTd}><span style={{ fontSize: "12px", fontFamily: "'Jost', sans-serif", color: "var(--color-texto)", whiteSpace: "nowrap" }}>{formatFecha(venta.fecha)}</span></td>
+                    <td style={estiloTd}><span style={{ fontSize: "12px", fontFamily: "'Jost', sans-serif", color: venta.cliente ? "var(--color-texto)" : "var(--color-texto-sutil)" }}>{venta.cliente ?? "—"}</span></td>
+                    <td style={{ ...estiloTd, maxWidth: "260px" }}><span style={{ fontSize: "12px", fontFamily: "'Jost', sans-serif", color: "var(--color-texto)", display: "block", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={resumenItems}>{resumenItems}</span></td>
+                    <td style={estiloTd}><span style={{ fontSize: "11px", fontFamily: "'Jost', sans-serif", color: "var(--color-texto-muted)" }}>{venta.metodoPago === "EFECTIVO" ? "Efectivo" : venta.metodoPago === "TRANSFERENCIA" ? "Transferencia" : "—"}</span></td>
+                    <td style={estiloTd}><span style={{ fontSize: "10px", fontFamily: "'Jost', sans-serif", letterSpacing: "0.06em", color: venta.estado === "PENDIENTE" ? "var(--color-acento)" : "var(--color-texto-muted)" }}>{estadoLabel}{venta.esRegalo && venta.estado !== "REGALO" && " · regalo"}</span></td>
+                    <td style={estiloTd}><span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "17px", fontWeight: 400, color: "var(--color-texto)", whiteSpace: "nowrap" }}>${total.toLocaleString("es-AR")}</span></td>
                     <td style={{ ...estiloTd, whiteSpace: "nowrap" }}>
                       {esConfirmando ? (
                         <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                          <span style={{
-                            fontSize: "11px",
-                            fontFamily: "'Jost', sans-serif",
-                            color: "var(--color-acento)",
-                            whiteSpace: "nowrap",
-                          }}>
-                            ¿Anular? Se restaura el stock.
-                          </span>
+                          <span style={{ fontSize: "11px", fontFamily: "'Jost', sans-serif", color: "var(--color-acento)", whiteSpace: "nowrap" }}>¿Anular? Se restaura el stock.</span>
                           {esProcesando ? (
-                            <span style={{
-                              fontSize: "11px",
-                              fontFamily: "'Jost', sans-serif",
-                              letterSpacing: "0.08em",
-                              color: "var(--color-texto-muted)",
-                            }}>
-                              Anulando...
-                            </span>
+                            <span style={{ fontSize: "11px", fontFamily: "'Jost', sans-serif", letterSpacing: "0.08em", color: "var(--color-texto-muted)" }}>Anulando...</span>
                           ) : (
-                            <button
-                              onClick={() => ejecutarAnular(venta.id)}
-                              style={{
-                                padding: "4px 10px",
-                                fontSize: "10px",
-                                fontFamily: "'Jost', sans-serif",
-                                letterSpacing: "0.1em",
-                                textTransform: "uppercase",
-                                border: "0.5px solid var(--color-acento)",
-                                backgroundColor: "transparent",
-                                color: "var(--color-acento)",
-                                cursor: "pointer",
-                                borderRadius: 0,
-                              }}
-                            >
-                              Confirmar
-                            </button>
+                            <button onClick={() => ejecutarAnular(venta.id)} style={{ padding: "4px 10px", fontSize: "10px", fontFamily: "'Jost', sans-serif", letterSpacing: "0.1em", textTransform: "uppercase", border: "0.5px solid var(--color-acento)", backgroundColor: "transparent", color: "var(--color-acento)", cursor: "pointer", borderRadius: 0 }}>Confirmar</button>
                           )}
-                          <button
-                            onClick={() => setAnulando(null)}
-                            disabled={esProcesando}
-                            style={{
-                              padding: "4px 10px",
-                              fontSize: "10px",
-                              fontFamily: "'Jost', sans-serif",
-                              letterSpacing: "0.1em",
-                              textTransform: "uppercase",
-                              border: "0.5px solid var(--color-borde)",
-                              backgroundColor: "transparent",
-                              color: "var(--color-texto-muted)",
-                              cursor: esProcesando ? "not-allowed" : "pointer",
-                              borderRadius: 0,
-                              opacity: esProcesando ? 0.4 : 1,
-                            }}
-                          >
-                            Cancelar
-                          </button>
+                          <button onClick={() => setAnulando(null)} disabled={esProcesando} style={{ padding: "4px 10px", fontSize: "10px", fontFamily: "'Jost', sans-serif", letterSpacing: "0.1em", textTransform: "uppercase", border: "0.5px solid var(--color-borde)", backgroundColor: "transparent", color: "var(--color-texto-muted)", cursor: esProcesando ? "not-allowed" : "pointer", borderRadius: 0, opacity: esProcesando ? 0.4 : 1 }}>Cancelar</button>
                         </div>
                       ) : (
                         <div style={{ display: "flex", gap: "6px" }}>
-                          <button
-                            onClick={() => setEditandoVenta(venta)}
-                            style={{
-                              padding: "4px 10px",
-                              fontSize: "10px",
-                              fontFamily: "'Jost', sans-serif",
-                              letterSpacing: "0.1em",
-                              textTransform: "uppercase",
-                              border: "0.5px solid var(--color-texto)",
-                              backgroundColor: "transparent",
-                              color: "var(--color-texto)",
-                              cursor: "pointer",
-                              borderRadius: 0,
-                            }}
-                          >
-                            Editar
-                          </button>
-                          <button
-                            onClick={() => {
-                              setErrorAnular(null)
-                              setAnulando(venta.id)
-                            }}
-                            style={{
-                              padding: "4px 10px",
-                              fontSize: "10px",
-                              fontFamily: "'Jost', sans-serif",
-                              letterSpacing: "0.1em",
-                              textTransform: "uppercase",
-                              border: "0.5px solid var(--color-borde)",
-                              backgroundColor: "transparent",
-                              color: "var(--color-texto-muted)",
-                              cursor: "pointer",
-                              borderRadius: 0,
-                            }}
-                          >
-                            Anular
-                          </button>
+                          <button onClick={() => setEditandoVenta(venta)} style={{ padding: "4px 10px", fontSize: "10px", fontFamily: "'Jost', sans-serif", letterSpacing: "0.1em", textTransform: "uppercase", border: "0.5px solid var(--color-texto)", backgroundColor: "transparent", color: "var(--color-texto)", cursor: "pointer", borderRadius: 0 }}>Editar</button>
+                          <button onClick={() => { setErrorAnular(null); setAnulando(venta.id) }} style={{ padding: "4px 10px", fontSize: "10px", fontFamily: "'Jost', sans-serif", letterSpacing: "0.1em", textTransform: "uppercase", border: "0.5px solid var(--color-borde)", backgroundColor: "transparent", color: "var(--color-texto-muted)", cursor: "pointer", borderRadius: 0 }}>Anular</button>
                         </div>
                       )}
                     </td>
@@ -530,8 +407,8 @@ export default function HistorialVentas() {
               })}
             </tbody>
           </table>
-        )}
-      </div>
+        </div>
+      )}
 
       {editandoVenta && (
         <ModalEditarVenta

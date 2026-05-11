@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react"
 import ModalGasto, { type Gasto } from "./ModalGasto"
+import { useTamanioPantalla } from "@/hooks/useTamanioPantalla"
 
 const CATEGORIA_LABELS: Record<string, string> = {
   INSUMOS:   "Insumos",
@@ -72,6 +73,7 @@ export default function GestionGastos() {
   const [eliminando, setEliminando] = useState<string | null>(null)
   const [procesando, setProcesando] = useState<string | null>(null)
   const [errorEliminar, setErrorEliminar] = useState<string | null>(null)
+  const { esMobile } = useTamanioPantalla()
 
   const fetchGastos = useCallback(async () => {
     setCargando(true)
@@ -193,8 +195,9 @@ export default function GestionGastos() {
       {/* FILTROS */}
       <div style={{
         display: "flex",
-        gap: "20px",
-        alignItems: "flex-end",
+        flexDirection: esMobile ? "column" : "row",
+        gap: esMobile ? "12px" : "20px",
+        alignItems: esMobile ? "stretch" : "flex-end",
         flexWrap: "wrap",
         marginBottom: "20px",
       }}>
@@ -222,7 +225,7 @@ export default function GestionGastos() {
       </div>
 
       {/* TOTALES */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "12px" }}>
+      <div style={{ display: "grid", gridTemplateColumns: esMobile ? "repeat(2, 1fr)" : "repeat(4, 1fr)", gap: "12px" }}>
         {([
           { label: "Total período",  valor: `$${totalPeriodo.toLocaleString("es-AR")}` },
           { label: "Efectivo",       valor: `$${totalEfectivo.toLocaleString("es-AR")}` },
@@ -270,28 +273,58 @@ export default function GestionGastos() {
         </p>
       )}
 
-      {/* TABLA */}
-      <div style={{ backgroundColor: "var(--color-card)", border: "0.5px solid var(--color-borde)", overflowX: "auto" }}>
-        {cargando ? (
-          <p style={{ padding: "40px 24px", textAlign: "center", fontSize: "13px", fontFamily: "'Jost', sans-serif", color: "var(--color-texto-sutil)", margin: 0 }}>
-            Cargando...
-          </p>
-        ) : errorCarga ? (
-          <p style={{ padding: "40px 24px", textAlign: "center", fontSize: "13px", fontFamily: "'Jost', sans-serif", color: "var(--color-acento)", margin: 0 }}>
-            {errorCarga}
-          </p>
-        ) : gastosFiltrados.length === 0 ? (
-          <p style={{ padding: "40px 24px", textAlign: "center", fontSize: "13px", fontFamily: "'Jost', sans-serif", color: "var(--color-texto-sutil)", margin: 0 }}>
-            No hay gastos en este período.
-          </p>
-        ) : (
+      {/* LISTA / TABLA */}
+      {cargando ? (
+        <p style={{ padding: "40px 0", textAlign: "center", fontSize: "13px", fontFamily: "'Jost', sans-serif", color: "var(--color-texto-sutil)", margin: 0 }}>Cargando...</p>
+      ) : errorCarga ? (
+        <p style={{ padding: "40px 0", textAlign: "center", fontSize: "13px", fontFamily: "'Jost', sans-serif", color: "var(--color-acento)", margin: 0 }}>{errorCarga}</p>
+      ) : gastosFiltrados.length === 0 ? (
+        <p style={{ padding: "40px 0", textAlign: "center", fontSize: "13px", fontFamily: "'Jost', sans-serif", color: "var(--color-texto-sutil)", margin: 0 }}>No hay gastos en este período.</p>
+      ) : esMobile ? (
+        <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+          {gastosFiltrados.map((gasto) => {
+            const esEliminando = eliminando === gasto.id
+            const esProcesando = procesando === gasto.id
+            const estiloBoton: React.CSSProperties = { padding: "6px 14px", fontSize: "10px", fontFamily: "'Jost', sans-serif", letterSpacing: "0.1em", textTransform: "uppercase", borderRadius: 0, cursor: "pointer", border: "0.5px solid var(--color-borde)", backgroundColor: "transparent", color: "var(--color-texto-muted)" }
+            return (
+              <div key={gasto.id} style={{ backgroundColor: esEliminando ? "var(--color-superficie)" : "var(--color-card)", border: "0.5px solid var(--color-borde)", padding: "14px 16px" } as React.CSSProperties}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "4px" }}>
+                  <span style={{ fontSize: "11px", fontFamily: "'Jost', sans-serif", color: "var(--color-texto-muted)" }}>{formatFecha(gasto.fecha)}</span>
+                  <span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "18px", color: "var(--color-texto)" }}>${Number(gasto.monto).toLocaleString("es-AR")}</span>
+                </div>
+                <p style={{ fontSize: "14px", fontFamily: "'Cormorant Garamond', serif", color: "var(--color-texto)", margin: "0 0 2px" }}>{gasto.descripcion}</p>
+                {gasto.notas && <p style={{ fontSize: "11px", fontFamily: "'Jost', sans-serif", color: "var(--color-texto-sutil)", margin: "0 0 6px" }}>{gasto.notas}</p>}
+                <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginBottom: "10px" }}>
+                  <span style={{ fontSize: "10px", fontFamily: "'Jost', sans-serif", letterSpacing: "0.06em", color: "var(--color-texto-muted)" }}>{CATEGORIA_LABELS[gasto.categoria] ?? gasto.categoria}</span>
+                  <span style={{ fontSize: "10px", fontFamily: "'Jost', sans-serif", color: "var(--color-texto-muted)" }}>{gasto.metodoPago === "EFECTIVO" ? "Efectivo" : "Transferencia"}</span>
+                </div>
+                {esEliminando ? (
+                  <div style={{ borderTop: "0.5px solid var(--color-superficie)", paddingTop: "10px" }}>
+                    <p style={{ fontSize: "11px", fontFamily: "'Jost', sans-serif", color: "var(--color-acento)", margin: "0 0 8px" }}>¿Eliminar este gasto?</p>
+                    <div style={{ display: "flex", gap: "8px" }}>
+                      <button onClick={() => ejecutarEliminar(gasto.id)} disabled={esProcesando} style={{ ...estiloBoton, border: "0.5px solid var(--color-acento)", color: "var(--color-acento)", opacity: esProcesando ? 0.4 : 1 }}>
+                        {esProcesando ? "Eliminando..." : "Confirmar"}
+                      </button>
+                      <button onClick={() => setEliminando(null)} disabled={esProcesando} style={{ ...estiloBoton, opacity: esProcesando ? 0.4 : 1 }}>Cancelar</button>
+                    </div>
+                  </div>
+                ) : (
+                  <div style={{ display: "flex", gap: "8px", borderTop: "0.5px solid var(--color-superficie)", paddingTop: "10px" }}>
+                    <button onClick={() => abrirEditar(gasto)} style={{ ...estiloBoton, border: "0.5px solid var(--color-texto)", color: "var(--color-texto)" }}>Editar</button>
+                    <button onClick={() => { setErrorEliminar(null); setEliminando(gasto.id) }} style={estiloBoton}>Eliminar</button>
+                  </div>
+                )}
+              </div>
+            )
+          })}
+        </div>
+      ) : (
+        <div style={{ backgroundColor: "var(--color-card)", border: "0.5px solid var(--color-borde)", overflowX: "auto" }}>
           <table style={{ width: "100%", borderCollapse: "collapse" }}>
             <thead>
               <tr style={{ borderBottom: "0.5px solid var(--color-borde)" }}>
                 {["Fecha", "Descripción", "Categoría", "Método", "Monto", ""].map((h) => (
-                  <th key={h} style={{ padding: "12px 16px", textAlign: "left", fontSize: "9px", fontFamily: "'Jost', sans-serif", fontWeight: 500, letterSpacing: "0.15em", textTransform: "uppercase", color: "var(--color-texto-muted)", whiteSpace: "nowrap" }}>
-                    {h}
-                  </th>
+                  <th key={h} style={{ padding: "12px 16px", textAlign: "left", fontSize: "9px", fontFamily: "'Jost', sans-serif", fontWeight: 500, letterSpacing: "0.15em", textTransform: "uppercase", color: "var(--color-texto-muted)", whiteSpace: "nowrap" }}>{h}</th>
                 ))}
               </tr>
             </thead>
@@ -300,80 +333,28 @@ export default function GestionGastos() {
                 const esEliminando = eliminando === gasto.id
                 const esProcesando = procesando === gasto.id
                 return (
-                  <tr
-                    key={gasto.id}
-                    style={{ borderBottom: "0.5px solid var(--color-borde)", backgroundColor: esEliminando ? "var(--color-superficie)" : "transparent" }}
-                  >
-                    <td style={estiloTd}>
-                      <span style={{ fontSize: "12px", fontFamily: "'Jost', sans-serif", color: "var(--color-texto)", whiteSpace: "nowrap" }}>
-                        {formatFecha(gasto.fecha)}
-                      </span>
-                    </td>
+                  <tr key={gasto.id} style={{ borderBottom: "0.5px solid var(--color-borde)", backgroundColor: esEliminando ? "var(--color-superficie)" : "transparent" }}>
+                    <td style={estiloTd}><span style={{ fontSize: "12px", fontFamily: "'Jost', sans-serif", color: "var(--color-texto)", whiteSpace: "nowrap" }}>{formatFecha(gasto.fecha)}</span></td>
                     <td style={{ ...estiloTd, maxWidth: "240px" }}>
-                      <span style={{ fontSize: "13px", fontFamily: "'Cormorant Garamond', serif", color: "var(--color-texto)", display: "block", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={gasto.descripcion}>
-                        {gasto.descripcion}
-                      </span>
-                      {gasto.notas && (
-                        <span style={{ fontSize: "11px", fontFamily: "'Jost', sans-serif", color: "var(--color-texto-sutil)", display: "block", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={gasto.notas}>
-                          {gasto.notas}
-                        </span>
-                      )}
+                      <span style={{ fontSize: "13px", fontFamily: "'Cormorant Garamond', serif", color: "var(--color-texto)", display: "block", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={gasto.descripcion}>{gasto.descripcion}</span>
+                      {gasto.notas && <span style={{ fontSize: "11px", fontFamily: "'Jost', sans-serif", color: "var(--color-texto-sutil)", display: "block", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={gasto.notas}>{gasto.notas}</span>}
                     </td>
-                    <td style={estiloTd}>
-                      <span style={{ fontSize: "10px", fontFamily: "'Jost', sans-serif", letterSpacing: "0.06em", color: "var(--color-texto-muted)" }}>
-                        {CATEGORIA_LABELS[gasto.categoria] ?? gasto.categoria}
-                      </span>
-                    </td>
-                    <td style={estiloTd}>
-                      <span style={{ fontSize: "11px", fontFamily: "'Jost', sans-serif", color: "var(--color-texto-muted)" }}>
-                        {gasto.metodoPago === "EFECTIVO" ? "Efectivo" : "Transferencia"}
-                      </span>
-                    </td>
-                    <td style={estiloTd}>
-                      <span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "17px", fontWeight: 400, color: "var(--color-texto)", whiteSpace: "nowrap" }}>
-                        ${Number(gasto.monto).toLocaleString("es-AR")}
-                      </span>
-                    </td>
+                    <td style={estiloTd}><span style={{ fontSize: "10px", fontFamily: "'Jost', sans-serif", letterSpacing: "0.06em", color: "var(--color-texto-muted)" }}>{CATEGORIA_LABELS[gasto.categoria] ?? gasto.categoria}</span></td>
+                    <td style={estiloTd}><span style={{ fontSize: "11px", fontFamily: "'Jost', sans-serif", color: "var(--color-texto-muted)" }}>{gasto.metodoPago === "EFECTIVO" ? "Efectivo" : "Transferencia"}</span></td>
+                    <td style={estiloTd}><span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "17px", fontWeight: 400, color: "var(--color-texto)", whiteSpace: "nowrap" }}>${Number(gasto.monto).toLocaleString("es-AR")}</span></td>
                     <td style={{ ...estiloTd, whiteSpace: "nowrap" }}>
                       {esEliminando ? (
                         <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                          <span style={{ fontSize: "11px", fontFamily: "'Jost', sans-serif", color: "var(--color-acento)", whiteSpace: "nowrap" }}>
-                            ¿Eliminar?
-                          </span>
-                          {esProcesando ? (
-                            <span style={{ fontSize: "11px", fontFamily: "'Jost', sans-serif", color: "var(--color-texto-muted)", letterSpacing: "0.08em" }}>
-                              Eliminando...
-                            </span>
-                          ) : (
-                            <button
-                              onClick={() => ejecutarEliminar(gasto.id)}
-                              style={{ padding: "4px 10px", fontSize: "10px", fontFamily: "'Jost', sans-serif", letterSpacing: "0.1em", textTransform: "uppercase", border: "0.5px solid var(--color-acento)", backgroundColor: "transparent", color: "var(--color-acento)", cursor: "pointer", borderRadius: 0 }}
-                            >
-                              Confirmar
-                            </button>
+                          <span style={{ fontSize: "11px", fontFamily: "'Jost', sans-serif", color: "var(--color-acento)", whiteSpace: "nowrap" }}>¿Eliminar?</span>
+                          {esProcesando ? <span style={{ fontSize: "11px", fontFamily: "'Jost', sans-serif", color: "var(--color-texto-muted)", letterSpacing: "0.08em" }}>Eliminando...</span> : (
+                            <button onClick={() => ejecutarEliminar(gasto.id)} style={{ padding: "4px 10px", fontSize: "10px", fontFamily: "'Jost', sans-serif", letterSpacing: "0.1em", textTransform: "uppercase", border: "0.5px solid var(--color-acento)", backgroundColor: "transparent", color: "var(--color-acento)", cursor: "pointer", borderRadius: 0 }}>Confirmar</button>
                           )}
-                          <button
-                            onClick={() => setEliminando(null)}
-                            disabled={esProcesando}
-                            style={{ padding: "4px 10px", fontSize: "10px", fontFamily: "'Jost', sans-serif", letterSpacing: "0.1em", textTransform: "uppercase", border: "0.5px solid var(--color-borde)", backgroundColor: "transparent", color: "var(--color-texto-muted)", cursor: esProcesando ? "not-allowed" : "pointer", borderRadius: 0, opacity: esProcesando ? 0.4 : 1 }}
-                          >
-                            Cancelar
-                          </button>
+                          <button onClick={() => setEliminando(null)} disabled={esProcesando} style={{ padding: "4px 10px", fontSize: "10px", fontFamily: "'Jost', sans-serif", letterSpacing: "0.1em", textTransform: "uppercase", border: "0.5px solid var(--color-borde)", backgroundColor: "transparent", color: "var(--color-texto-muted)", cursor: esProcesando ? "not-allowed" : "pointer", borderRadius: 0, opacity: esProcesando ? 0.4 : 1 }}>Cancelar</button>
                         </div>
                       ) : (
                         <div style={{ display: "flex", gap: "6px" }}>
-                          <button
-                            onClick={() => abrirEditar(gasto)}
-                            style={{ padding: "4px 10px", fontSize: "10px", fontFamily: "'Jost', sans-serif", letterSpacing: "0.1em", textTransform: "uppercase", border: "0.5px solid var(--color-texto)", backgroundColor: "transparent", color: "var(--color-texto)", cursor: "pointer", borderRadius: 0 }}
-                          >
-                            Editar
-                          </button>
-                          <button
-                            onClick={() => { setErrorEliminar(null); setEliminando(gasto.id) }}
-                            style={{ padding: "4px 10px", fontSize: "10px", fontFamily: "'Jost', sans-serif", letterSpacing: "0.1em", textTransform: "uppercase", border: "0.5px solid var(--color-borde)", backgroundColor: "transparent", color: "var(--color-texto-muted)", cursor: "pointer", borderRadius: 0 }}
-                          >
-                            Eliminar
-                          </button>
+                          <button onClick={() => abrirEditar(gasto)} style={{ padding: "4px 10px", fontSize: "10px", fontFamily: "'Jost', sans-serif", letterSpacing: "0.1em", textTransform: "uppercase", border: "0.5px solid var(--color-texto)", backgroundColor: "transparent", color: "var(--color-texto)", cursor: "pointer", borderRadius: 0 }}>Editar</button>
+                          <button onClick={() => { setErrorEliminar(null); setEliminando(gasto.id) }} style={{ padding: "4px 10px", fontSize: "10px", fontFamily: "'Jost', sans-serif", letterSpacing: "0.1em", textTransform: "uppercase", border: "0.5px solid var(--color-borde)", backgroundColor: "transparent", color: "var(--color-texto-muted)", cursor: "pointer", borderRadius: 0 }}>Eliminar</button>
                         </div>
                       )}
                     </td>
@@ -382,8 +363,8 @@ export default function GestionGastos() {
               })}
             </tbody>
           </table>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* MODAL */}
       {modalAbierto && (

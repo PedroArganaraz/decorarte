@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect, useCallback } from "react"
+import { useTamanioPantalla } from "@/hooks/useTamanioPantalla"
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, Cell, LabelList, PieChart, Pie,
@@ -202,6 +203,7 @@ function EtiquetaTorta({ cx, cy, midAngle, innerRadius, outerRadius, percent }: 
 }
 
 export default function DashboardReportes() {
+  const { esMobile } = useTamanioPantalla()
   const [mes, setMes] = useState(HOY.getMonth())
   const [anio, setAnio] = useState(ANIO_ACTUAL)
   const [verAnioCompleto, setVerAnioCompleto] = useState(false)
@@ -271,14 +273,20 @@ export default function DashboardReportes() {
           </p>
         </div>
 
-        <div style={{ display: "flex", alignItems: "flex-end", gap: "12px", flexWrap: "wrap" }}>
+        <div style={{
+          display: "flex",
+          flexDirection: esMobile ? "column" : "row",
+          alignItems: esMobile ? "stretch" : "flex-end",
+          gap: esMobile ? "10px" : "12px",
+          width: esMobile ? "100%" : undefined,
+        }}>
           <div>
             <label style={estiloLabel}>Mes</label>
             <select
               value={mes}
               onChange={(e) => { setMes(Number(e.target.value)); setVerAnioCompleto(false) }}
               disabled={verAnioCompleto}
-              style={{ ...estiloSelect, opacity: verAnioCompleto ? 0.4 : 1 }}
+              style={{ ...estiloSelect, opacity: verAnioCompleto ? 0.4 : 1, width: esMobile ? "100%" : undefined }}
             >
               {MESES.map((m, i) => (
                 <option key={i} value={i}>{m}</option>
@@ -291,7 +299,7 @@ export default function DashboardReportes() {
             <select
               value={anio}
               onChange={(e) => setAnio(Number(e.target.value))}
-              style={estiloSelect}
+              style={{ ...estiloSelect, width: esMobile ? "100%" : undefined }}
             >
               {ANIOS.map((a) => (
                 <option key={a} value={a}>{a}</option>
@@ -313,6 +321,7 @@ export default function DashboardReportes() {
               color: verAnioCompleto ? "var(--color-card)" : "var(--color-texto)",
               cursor: "pointer",
               borderRadius: 0,
+              width: esMobile ? "100%" : undefined,
             }}
           >
             {verAnioCompleto ? "Ver mes" : "Ver año completo"}
@@ -345,7 +354,7 @@ export default function DashboardReportes() {
       ) : datos ? (
         <>
           {/* 4 CARDS MÉTRICAS */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "12px" }}>
+          <div style={{ display: "grid", gridTemplateColumns: esMobile ? "repeat(2, 1fr)" : "repeat(4, 1fr)", gap: "12px" }}>
             {[
               { label: "Ventas brutas",    valor: datos.ventas.ingresosBrutos },
               { label: "Costo mercadería", valor: datos.ventas.costoMercaderia },
@@ -702,7 +711,7 @@ export default function DashboardReportes() {
             return (
               <div style={{
                 display: "grid",
-                gridTemplateColumns: hasPie && hasTop ? "1fr 1fr" : "1fr",
+                gridTemplateColumns: !esMobile && hasPie && hasTop ? "1fr 1fr" : "1fr",
                 gap: "24px",
                 alignItems: "stretch",
               }}>
