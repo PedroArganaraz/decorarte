@@ -34,6 +34,7 @@ export interface VentaParaEditar {
   estado: string
   esRegalo: boolean
   notas: string | null
+  montoRecibido?: number | null
   items: ItemVenta[]
 }
 
@@ -99,6 +100,12 @@ export default function ModalEditarVenta({ venta, onCerrar, onGuardada }: Props)
   const [esRegalo, setEsRegalo] = useState(venta.esRegalo)
   const [notas, setNotas] = useState(venta.notas ?? "")
 
+  const [pagoConMayorMonto, setPagoConMayorMonto] = useState(false)
+  const [montoRecibido, setMontoRecibido] = useState("")
+  const [montoRecibidoFocused, setMontoRecibidoFocused] = useState(false)
+  const [metodoPagoVuelto, setMetodoPagoVuelto] = useState("TRANSFERENCIA")
+  const [movimientoVueltoId, setMovimientoVueltoId] = useState<string | null>(null)
+
   const [busqueda, setBusqueda] = useState("")
   const [resultados, setResultados] = useState<ProductoBuscado[]>([])
   const [buscando, setBuscando] = useState(false)
@@ -109,27 +116,48 @@ export default function ModalEditarVenta({ venta, onCerrar, onGuardada }: Props)
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
-    const fetchImagenes = async () => {
+    const fetchDatos = async () => {
       try {
-        const res = await fetch(`/api/ventas/${venta.id}`)
-        const json = await res.json()
-        if (!json.datos) return
-        const imagenesPorProducto = new Map<string, string | null>()
-        for (const item of json.datos.items) {
-          imagenesPorProducto.set(
-            item.productoId,
-            item.producto.imagenes?.[0]?.urlPublica ?? null
+        const [resVenta, resMovimientos] = await Promise.all([
+          fetch(`/api/ventas/${venta.id}`),
+          fetch(`/api/movimientos-caja?ventaId=${venta.id}`),
+        ])
+
+        const jsonVenta = await resVenta.json()
+        if (jsonVenta.datos) {
+          const imagenesPorProducto = new Map<string, string | null>()
+          for (const item of jsonVenta.datos.items) {
+            imagenesPorProducto.set(
+              item.productoId,
+              item.producto.imagenes?.[0]?.urlPublica ?? null
+            )
+          }
+          setCarrito((prev) =>
+            prev.map((c) => ({
+              ...c,
+              imagen: imagenesPorProducto.get(c.productoId) ?? c.imagen,
+            }))
           )
         }
-        setCarrito((prev) =>
-          prev.map((c) => ({
-            ...c,
-            imagen: imagenesPorProducto.get(c.productoId) ?? c.imagen,
-          }))
-        )
+
+        const jsonMov = await resMovimientos.json()
+        if (jsonMov.datos) {
+          const vueltoMov = jsonMov.datos.find((m: { tipo: string; id: string; monto: number; metodoPago: string | null }) => m.tipo === "VUELTO")
+          if (vueltoMov) {
+            setMovimientoVueltoId(vueltoMov.id)
+            setPagoConMayorMonto(true)
+            setMetodoPagoVuelto(vueltoMov.metodoPago ?? "TRANSFERENCIA")
+            if (venta.montoRecibido != null) {
+              setMontoRecibido(String(venta.montoRecibido))
+            } else {
+              const totalOriginal = venta.items.reduce((s, i) => s + Number(i.precioUnitario) * i.cantidad, 0)
+              setMontoRecibido(String(totalOriginal + Number(vueltoMov.monto)))
+            }
+          }
+        }
       } catch { /* silent */ }
     }
-    fetchImagenes()
+    fetchDatos()
   }, [venta.id])
 
   const buscarProductos = useCallback(async (texto: string) => {
@@ -203,6 +231,13 @@ export default function ModalEditarVenta({ venta, onCerrar, onGuardada }: Props)
 
   const totalCarrito = carrito.reduce((s, i) => s + i.precio * i.cantidad, 0)
 
+  const vuelto = (() => {
+    if (!pagoConMayorMonto) return 0
+    const recibido = parseFloat(montoRecibido)
+    if (isNaN(recibido) || recibido <= totalCarrito) return 0
+    return recibido - totalCarrito
+  })()
+
   const guardar = async () => {
     if (carrito.length === 0) { setError("Agregá al menos un producto."); return }
     if (!metodoPago) { setError("Seleccioná el método de pago."); return }
@@ -219,6 +254,7 @@ export default function ModalEditarVenta({ venta, onCerrar, onGuardada }: Props)
           estado: esRegalo ? "REGALO" : estado,
           esRegalo,
           notas: notas.trim() || undefined,
+          montoRecibido: pagoConMayorMonto && vuelto > 0 ? totalCarrito + vuelto : null,
           items: carrito.map((i) => ({
             productoId: i.productoId,
             cantidad: i.cantidad,
@@ -228,6 +264,25 @@ export default function ModalEditarVenta({ venta, onCerrar, onGuardada }: Props)
       })
       const json = await res.json()
       if (!res.ok) throw new Error(json.error ?? "Error al guardar")
+
+      if (pagoConMayorMonto && vuelto > 0) {
+        if (movimientoVueltoId) {
+          await fetch(`/api/movimientos-caja/${movimientoVueltoId}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ monto: vuelto, metodoPago: metodoPagoVuelto }),
+          })
+        } else {
+          await fetch("/api/movimientos-caja", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ tipo: "VUELTO", monto: vuelto, metodoPago: metodoPagoVuelto, descripcion: "Vuelto de venta", ventaId: venta.id }),
+          })
+        }
+      } else if (!pagoConMayorMonto && movimientoVueltoId) {
+        await fetch(`/api/movimientos-caja/${movimientoVueltoId}`, { method: "DELETE" })
+      }
+
       onGuardada(json.datos)
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "Error al guardar")
@@ -529,6 +584,66 @@ export default function ModalEditarVenta({ venta, onCerrar, onGuardada }: Props)
                 style={{ ...estiloInput, resize: "vertical", fontFamily: "'Jost', sans-serif" }}
               />
             </div>
+
+            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+              <input
+                type="checkbox"
+                id="editPagoConMayorMonto"
+                checked={pagoConMayorMonto}
+                onChange={(e) => { setPagoConMayorMonto(e.target.checked); if (!e.target.checked) setMontoRecibido("") }}
+                style={{ width: "14px", height: "14px", cursor: "pointer", accentColor: "var(--color-texto)" }}
+              />
+              <label htmlFor="editPagoConMayorMonto" style={{ fontSize: "11px", fontFamily: "'Jost', sans-serif", color: "var(--color-texto)", cursor: "pointer", userSelect: "none" }}>
+                El cliente pagó con un monto mayor
+              </label>
+            </div>
+
+            {pagoConMayorMonto && (
+              <>
+                <div style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
+                  <label style={estiloLabel}>Monto recibido</label>
+                  <input
+                    type="text"
+                    inputMode="decimal"
+                    autoComplete="off"
+                    value={montoRecibidoFocused ? montoRecibido : (montoRecibido === "" || isNaN(Number(montoRecibido)) ? montoRecibido : Number(montoRecibido).toLocaleString("es-AR"))}
+                    onChange={(e) => setMontoRecibido(e.target.value)}
+                    onFocus={(e) => { setMontoRecibidoFocused(true); e.target.select() }}
+                    onBlur={() => setMontoRecibidoFocused(false)}
+                    placeholder="0"
+                    style={{ ...estiloInput, fontSize: "20px", padding: "12px" }}
+                  />
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
+                  <label style={estiloLabel}>Método del vuelto</label>
+                  <select
+                    value={metodoPagoVuelto}
+                    onChange={(e) => setMetodoPagoVuelto(e.target.value)}
+                    style={estiloInput}
+                  >
+                    <option value="TRANSFERENCIA">Transferencia</option>
+                    <option value="EFECTIVO">Efectivo</option>
+                  </select>
+                </div>
+                {vuelto > 0 && (
+                  <div style={{
+                    backgroundColor: "#e8f5e9",
+                    border: "0.5px solid #a5d6a7",
+                    padding: "12px 16px",
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                  }}>
+                    <span style={{ fontSize: "10px", fontFamily: "'Jost', sans-serif", fontWeight: 500, letterSpacing: "0.12em", textTransform: "uppercase", color: "#2e7d32" }}>
+                      Vuelto
+                    </span>
+                    <span style={{ fontSize: "18px", fontFamily: "'Cormorant Garamond', serif", color: "#1b5e20" }}>
+                      ${vuelto.toLocaleString("es-AR")}
+                    </span>
+                  </div>
+                )}
+              </>
+            )}
           </div>
         </div>
 

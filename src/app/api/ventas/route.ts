@@ -63,12 +63,13 @@ export async function POST(solicitud: NextRequest) {
       )
     }
 
-    const { cliente, metodoPago, estado, esRegalo, notas, items } = await solicitud.json() as {
+    const { cliente, metodoPago, estado, esRegalo, notas, items, montoRecibido } = await solicitud.json() as {
       cliente?: string
       metodoPago?: string
       estado?: string
       esRegalo?: boolean
       notas?: string
+      montoRecibido?: number
       items: { productoId: string; cantidad: number; precioUnitario: number }[]
     }
 
@@ -111,6 +112,7 @@ export async function POST(solicitud: NextRequest) {
           estado: (estado as any) || "PAGADO_Y_ENTREGADO",
           esRegalo: esRegalo ?? false,
           notas: notas || null,
+          montoRecibido: montoRecibido ?? null,
           vendedorId: user.id,
           items: {
             create: items.map((item) => {

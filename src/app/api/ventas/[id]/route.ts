@@ -76,12 +76,13 @@ export async function PATCH(
     }
 
     const { id } = await params
-    const { cliente, metodoPago, estado, esRegalo, notas, items } = await solicitud.json() as {
+    const { cliente, metodoPago, estado, esRegalo, notas, items, montoRecibido } = await solicitud.json() as {
       cliente?: string
       metodoPago?: string
       estado?: string
       esRegalo?: boolean
       notas?: string
+      montoRecibido?: number | null
       items: { productoId: string; cantidad: number; precioUnitario: number }[]
     }
 
@@ -155,6 +156,7 @@ export async function PATCH(
           ...(estado !== undefined && { estado: estado as any }),
           ...(esRegalo !== undefined && { esRegalo }),
           ...(notas !== undefined && { notas: notas || null }),
+          ...(montoRecibido !== undefined && { montoRecibido: montoRecibido ?? null }),
         },
       })
 
@@ -268,6 +270,8 @@ export async function DELETE(
           },
         })
       }
+
+      await tx.movimientoCaja.deleteMany({ where: { ventaId: id } })
 
       await tx.venta.delete({ where: { id } })
     })

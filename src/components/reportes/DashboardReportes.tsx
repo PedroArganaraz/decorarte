@@ -47,7 +47,7 @@ interface Resumen {
     ingresosBrutos: number
     costoMercaderia: number
     gananciaProductos: number
-    desglosePago: { efectivo: number; transferencia: number; sinMetodo: number }
+    desglosePago: { efectivo: number; transferencia: number }
     porCategoria: CategoriaDatos[]
   }
   gastos: {
@@ -58,6 +58,12 @@ interface Resumen {
     porCategoria: { categoria: string; total: number }[]
   }
   gananciaNeta: number
+  movimientos: {
+    total: number
+    vueltos: number
+    efATransTotal: number
+    transAEfTotal: number
+  }
   topProductos: TopProducto[]
   combinacionesFrecuentes: Array<{
     producto1: { id: string; nombre: string }
@@ -436,13 +442,6 @@ export default function DashboardReportes() {
                       <span style={{ ...montoBase, color: "var(--color-texto)" }}>{fmt(datos.ventas.desglosePago.transferencia)}</span>
                     </div>
                   )}
-                  {datos.ventas.desglosePago.sinMetodo > 0 && (
-                    <div style={filaBase}>
-                      <span style={conceptoBase}>Ingresos sin método</span>
-                      <span style={{ ...montoBase, color: "var(--color-texto)" }}>{fmt(datos.ventas.desglosePago.sinMetodo)}</span>
-                    </div>
-                  )}
-
                   {separador}
 
                   {/* Total ingresos */}
@@ -452,6 +451,14 @@ export default function DashboardReportes() {
                   </div>
 
                   {separador}
+
+                  {/* Vueltos dados */}
+                  {datos.movimientos.vueltos > 0 && (
+                    <div style={filaBase}>
+                      <span style={conceptoBase}>Vueltos dados</span>
+                      <span style={{ ...montoBase, color: "var(--color-acento)" }}>−{fmt(datos.movimientos.vueltos)}</span>
+                    </div>
+                  )}
 
                   {/* Egresos */}
                   {datos.gastos.total > 0 && (
@@ -553,9 +560,6 @@ export default function DashboardReportes() {
                 : null,
               datos.ventas.desglosePago.transferencia > 0
                 ? { name: "Transferencia", value: datos.ventas.desglosePago.transferencia, color: COLORES_PAGO["Transferencia"] }
-                : null,
-              datos.ventas.desglosePago.sinMetodo > 0
-                ? { name: "Sin método",    value: datos.ventas.desglosePago.sinMetodo,    color: COLORES_PAGO["Sin método"] }
                 : null,
             ].filter((x): x is NonNullable<typeof x> => x !== null)
 

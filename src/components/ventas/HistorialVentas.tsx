@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react"
 import ModalEditarVenta, { type VentaParaEditar } from "./ModalEditarVenta"
+import ModalMovimientoCaja, { type MovimientoCaja, TIPO_LABELS } from "./ModalMovimientoCaja"
 import { useTamanioPantalla } from "@/hooks/useTamanioPantalla"
 
 interface ItemVenta {
@@ -22,6 +23,7 @@ interface Venta {
   estado: EstadoVenta
   esRegalo: boolean
   notas: string | null
+  montoRecibido: number | null
   items: ItemVenta[]
   vendedor: { nombre: string } | null
 }
@@ -99,6 +101,15 @@ export default function HistorialVentas() {
   const [errorAnular, setErrorAnular] = useState<string | null>(null)
 
   const [editandoVenta, setEditandoVenta] = useState<Venta | null>(null)
+
+  const [movimientos, setMovimientos] = useState<MovimientoCaja[]>([])
+  const [cargandoMov, setCargandoMov] = useState(true)
+  const [modalMovAbierto, setModalMovAbierto] = useState(false)
+  const [editandoMov, setEditandoMov] = useState<MovimientoCaja | null>(null)
+  const [eliminandoMov, setEliminandoMov] = useState<string | null>(null)
+  const [procesandoMov, setProcesandoMov] = useState<string | null>(null)
+  const [errorMov, setErrorMov] = useState<string | null>(null)
+
   const { esMobile } = useTamanioPantalla()
 
   const fetchVentas = useCallback(async () => {
@@ -124,9 +135,45 @@ export default function HistorialVentas() {
     }
   }, [mes, anio, verAnioCompleto])
 
+  const fetchMovimientos = useCallback(async () => {
+    setCargandoMov(true)
+    const desde = verAnioCompleto
+      ? new Date(anio, 0, 1).toISOString()
+      : new Date(anio, mes, 1).toISOString()
+    const hasta = verAnioCompleto
+      ? new Date(anio, 11, 31, 23, 59, 59, 999).toISOString()
+      : new Date(anio, mes + 1, 0, 23, 59, 59, 999).toISOString()
+    try {
+      const res = await fetch(`/api/movimientos-caja?desde=${encodeURIComponent(desde)}&hasta=${encodeURIComponent(hasta)}`)
+      const json = await res.json()
+      setMovimientos(json.datos ?? [])
+    } catch {
+      // silently fail
+    } finally {
+      setCargandoMov(false)
+    }
+  }, [mes, anio, verAnioCompleto])
+
   useEffect(() => {
     fetchVentas()
-  }, [fetchVentas])
+    fetchMovimientos()
+  }, [fetchVentas, fetchMovimientos])
+
+  const ejecutarEliminarMov = async (id: string) => {
+    setProcesandoMov(id)
+    setErrorMov(null)
+    try {
+      const res = await fetch(`/api/movimientos-caja/${id}`, { method: "DELETE" })
+      const json = await res.json()
+      if (!res.ok) throw new Error(json.error ?? "Error al eliminar")
+      setMovimientos((prev) => prev.filter((m) => m.id !== id))
+    } catch (e: unknown) {
+      setErrorMov(e instanceof Error ? e.message : "Error al eliminar")
+    } finally {
+      setProcesandoMov(null)
+      setEliminandoMov(null)
+    }
+  }
 
   const ejecutarAnular = async (id: string) => {
     setProcesando(id)
@@ -136,6 +183,7 @@ export default function HistorialVentas() {
       const json = await res.json()
       if (!res.ok) throw new Error(json.error ?? "Error al anular la venta")
       setVentas((prev) => prev.filter((v) => v.id !== id))
+      setMovimientos((prev) => prev.filter((m) => m.ventaId !== id))
     } catch (e: unknown) {
       setErrorAnular(e instanceof Error ? e.message : "Error al anular")
     } finally {
@@ -408,6 +456,79 @@ export default function HistorialVentas() {
         </div>
       )}
 
+      {/* MOVIMIENTOS DE CAJA */}
+      <div style={{ marginTop: "8px" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
+          <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "20px", fontWeight: 400, letterSpacing: "0.04em", color: "var(--color-texto)", margin: 0 }}>
+            Movimientos de caja
+          </h2>
+          <button
+            onClick={() => { setEditandoMov(null); setModalMovAbierto(true) }}
+            style={{ padding: "8px 16px", fontSize: "10px", fontFamily: "'Jost', sans-serif", fontWeight: 400, letterSpacing: "0.12em", textTransform: "uppercase", backgroundColor: "var(--color-texto)", color: "var(--color-fondo)", border: "none", borderRadius: 0, cursor: "pointer" }}
+          >
+            + Nuevo movimiento
+          </button>
+        </div>
+
+        {errorMov && (
+          <p style={{ fontSize: "11px", fontFamily: "'Jost', sans-serif", color: "var(--color-acento)", padding: "10px 14px", border: "0.5px solid var(--color-acento)", backgroundColor: "#fdf5f3", margin: "0 0 12px" }}>
+            {errorMov}
+          </p>
+        )}
+
+        {cargandoMov ? (
+          <p style={{ padding: "24px 0", textAlign: "center", fontSize: "13px", fontFamily: "'Jost', sans-serif", color: "var(--color-texto-sutil)", margin: 0 }}>Cargando...</p>
+        ) : movimientos.length === 0 ? (
+          <p style={{ padding: "24px 0", textAlign: "center", fontSize: "13px", fontFamily: "'Jost', sans-serif", color: "var(--color-texto-sutil)", margin: 0 }}>No hay movimientos en este período.</p>
+        ) : (
+          <div style={{ backgroundColor: "var(--color-card)", border: "0.5px solid var(--color-borde)", overflowX: "auto" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse" }}>
+              <thead>
+                <tr style={{ borderBottom: "0.5px solid var(--color-borde)" }}>
+                  {["Fecha", "Tipo", "Descripción", "Monto", ""].map((h) => (
+                    <th key={h} style={{ padding: "12px 16px", textAlign: "left", fontSize: "9px", fontFamily: "'Jost', sans-serif", fontWeight: 500, letterSpacing: "0.15em", textTransform: "uppercase", color: "var(--color-texto-muted)", whiteSpace: "nowrap" }}>
+                      {h}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {movimientos.map((mov) => {
+                  const esEliminando = eliminandoMov === mov.id
+                  const esProcesando = procesandoMov === mov.id
+                  return (
+                    <tr key={mov.id} style={{ borderBottom: "0.5px solid var(--color-borde)", backgroundColor: esEliminando ? "var(--color-superficie)" : "transparent" }}>
+                      <td style={estiloTd}><span style={{ fontSize: "12px", fontFamily: "'Jost', sans-serif", color: "var(--color-texto)", whiteSpace: "nowrap" }}>{new Date(mov.fecha).toLocaleDateString("es-AR", { day: "numeric", month: "short", year: "numeric" })}</span></td>
+                      <td style={estiloTd}><span style={{ fontSize: "11px", fontFamily: "'Jost', sans-serif", color: "var(--color-texto-muted)", letterSpacing: "0.04em" }}>{TIPO_LABELS[mov.tipo] ?? mov.tipo}</span></td>
+                      <td style={{ ...estiloTd, maxWidth: "240px" }}><span style={{ fontSize: "12px", fontFamily: "'Jost', sans-serif", color: "var(--color-texto-sutil)", display: "block", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{mov.descripcion ?? "—"}</span></td>
+                      <td style={estiloTd}><span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "17px", fontWeight: 400, color: "var(--color-texto)", whiteSpace: "nowrap" }}>${Number(mov.monto).toLocaleString("es-AR")}</span></td>
+                      <td style={{ ...estiloTd, whiteSpace: "nowrap" }}>
+                        {esEliminando ? (
+                          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                            <span style={{ fontSize: "11px", fontFamily: "'Jost', sans-serif", color: "var(--color-acento)" }}>¿Eliminar?</span>
+                            {esProcesando ? (
+                              <span style={{ fontSize: "11px", fontFamily: "'Jost', sans-serif", color: "var(--color-texto-muted)" }}>Eliminando...</span>
+                            ) : (
+                              <button onClick={() => ejecutarEliminarMov(mov.id)} style={{ padding: "4px 10px", fontSize: "10px", fontFamily: "'Jost', sans-serif", letterSpacing: "0.1em", textTransform: "uppercase", border: "0.5px solid var(--color-acento)", backgroundColor: "transparent", color: "var(--color-acento)", cursor: "pointer", borderRadius: 0 }}>Confirmar</button>
+                            )}
+                            <button onClick={() => setEliminandoMov(null)} disabled={esProcesando} style={{ padding: "4px 10px", fontSize: "10px", fontFamily: "'Jost', sans-serif", letterSpacing: "0.1em", textTransform: "uppercase", border: "0.5px solid var(--color-borde)", backgroundColor: "transparent", color: "var(--color-texto-muted)", cursor: esProcesando ? "not-allowed" : "pointer", borderRadius: 0, opacity: esProcesando ? 0.4 : 1 }}>Cancelar</button>
+                          </div>
+                        ) : (
+                          <div style={{ display: "flex", gap: "6px" }}>
+                            <button onClick={() => { setEditandoMov(mov); setModalMovAbierto(true) }} style={{ padding: "4px 10px", fontSize: "10px", fontFamily: "'Jost', sans-serif", letterSpacing: "0.1em", textTransform: "uppercase", border: "0.5px solid var(--color-texto)", backgroundColor: "transparent", color: "var(--color-texto)", cursor: "pointer", borderRadius: 0 }}>Editar</button>
+                            <button onClick={() => { setErrorMov(null); setEliminandoMov(mov.id) }} style={{ padding: "4px 10px", fontSize: "10px", fontFamily: "'Jost', sans-serif", letterSpacing: "0.1em", textTransform: "uppercase", border: "0.5px solid var(--color-borde)", backgroundColor: "transparent", color: "var(--color-texto-muted)", cursor: "pointer", borderRadius: 0 }}>Eliminar</button>
+                          </div>
+                        )}
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
       {editandoVenta && (
         <ModalEditarVenta
           venta={editandoVenta as VentaParaEditar}
@@ -421,6 +542,22 @@ export default function HistorialVentas() {
               )
             )
             setEditandoVenta(null)
+          }}
+        />
+      )}
+
+      {modalMovAbierto && (
+        <ModalMovimientoCaja
+          movimiento={editandoMov}
+          onCerrar={() => { setModalMovAbierto(false); setEditandoMov(null) }}
+          onGuardado={(guardado) => {
+            if (editandoMov) {
+              setMovimientos((prev) => prev.map((m) => m.id === guardado.id ? guardado : m))
+            } else {
+              setMovimientos((prev) => [guardado, ...prev])
+            }
+            setModalMovAbierto(false)
+            setEditandoMov(null)
           }}
         />
       )}

@@ -28,7 +28,7 @@ export async function GET(solicitud: NextRequest) {
         }
       : {}
 
-    const [ventas, gastos, productosSinStock, productosConStock] = await Promise.all([
+    const [ventas, gastos, productosSinStock, productosConStock, movimientosCaja] = await Promise.all([
       prisma.venta.findMany({
         where: filtroPeriodo,
         include: {
@@ -59,6 +59,9 @@ export async function GET(solicitud: NextRequest) {
           costo: true,
           categoria: { select: { nombre: true } },
         },
+      }),
+      prisma.movimientoCaja.findMany({
+        where: filtroPeriodo,
       }),
     ])
 
@@ -91,16 +94,11 @@ export async function GET(solicitud: NextRequest) {
         productoMap[prodId].montoTotal += item.precioTotal
       }
 
+      const totalVenta = venta.items.reduce((s, i) => s + i.precioTotal, 0)
       if (venta.metodoPago === "EFECTIVO") {
-        efectivoVentas += ventas
-          .filter((v) => v.id === venta.id)
-          .flatMap((v) => v.items)
-          .reduce((s, i) => s + i.precioTotal, 0)
+        efectivoVentas += venta.montoRecibido != null ? Number(venta.montoRecibido) : totalVenta
       } else if (venta.metodoPago === "TRANSFERENCIA") {
-        transferenciaVentas += ventas
-          .filter((v) => v.id === venta.id)
-          .flatMap((v) => v.items)
-          .reduce((s, i) => s + i.precioTotal, 0)
+        transferenciaVentas += totalVenta
       }
     }
 
@@ -121,6 +119,37 @@ export async function GET(solicitud: NextRequest) {
         gastosPorCategoria[gasto.categoria] = (gastosPorCategoria[gasto.categoria] ?? 0) + gasto.monto
       }
     }
+
+    // Movimientos de caja — ajustes sobre balances de efectivo y transferencia
+    let ajusteEfectivo = 0
+    let ajusteTransferencia = 0
+    let vueltos = 0
+    let efATransTotal = 0
+    let transAEfTotal = 0
+
+    for (const mov of movimientosCaja) {
+      const monto = Number(mov.monto)
+      if (mov.tipo === "VUELTO") {
+        vueltos += monto
+        if (mov.metodoPago === "TRANSFERENCIA") {
+          ajusteTransferencia -= monto
+        } else if (mov.metodoPago === "EFECTIVO") {
+          ajusteEfectivo -= monto
+        }
+        // metodoPago null → sin ajuste (datos sin método registrado)
+      } else if (mov.tipo === "EF_A_TRANS") {
+        ajusteEfectivo -= monto
+        ajusteTransferencia += monto
+        efATransTotal += monto
+      } else if (mov.tipo === "TRANS_A_EF") {
+        ajusteTransferencia -= monto
+        ajusteEfectivo += monto
+        transAEfTotal += monto
+      }
+    }
+
+    efectivoVentas += ajusteEfectivo
+    transferenciaVentas += ajusteTransferencia
 
     // Combinaciones frecuentes (pares de productos comprados en la misma venta)
     const parMap: Record<string, {
@@ -167,7 +196,6 @@ export async function GET(solicitud: NextRequest) {
         desglosePago: {
           efectivo: Math.round(efectivoVentas * 100) / 100,
           transferencia: Math.round(transferenciaVentas * 100) / 100,
-          sinMetodo: Math.round((ingresosBrutos - efectivoVentas - transferenciaVentas) * 100) / 100,
         },
         porCategoria: Object.entries(ventasPorCategoria).map(([nombre, datos]) => ({
           categoria: nombre,
@@ -189,6 +217,12 @@ export async function GET(solicitud: NextRequest) {
         })),
       },
       gananciaNeta: Math.round(gananciaNeta * 100) / 100,
+      movimientos: {
+        total: movimientosCaja.length,
+        vueltos: Math.round(vueltos * 100) / 100,
+        efATransTotal: Math.round(efATransTotal * 100) / 100,
+        transAEfTotal: Math.round(transAEfTotal * 100) / 100,
+      },
       productosSinStock: productosSinStock,
       inventario: (() => {
         const porCat: Record<string, { unidades: number; capital: number }> = {}

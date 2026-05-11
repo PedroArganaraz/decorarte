@@ -44,6 +44,10 @@ export default function FormularioVenta() {
   const [esRegalo, setEsRegalo] = useState(false)
   const [notas, setNotas] = useState("")
 
+  const [pagoConMayorMonto, setPagoConMayorMonto] = useState(false)
+  const [montoRecibido, setMontoRecibido] = useState("")
+  const [metodoPagoVuelto, setMetodoPagoVuelto] = useState("TRANSFERENCIA")
+
   const [enviando, setEnviando] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [exito, setExito] = useState(false)
@@ -130,6 +134,13 @@ export default function FormularioVenta() {
 
   const totalCarrito = carrito.reduce((s, i) => s + i.precio * i.cantidad, 0)
 
+  const vuelto = (() => {
+    if (!pagoConMayorMonto || esRegalo) return 0
+    const recibido = parseFloat(montoRecibido.replace(/\./g, "").replace(",", "."))
+    if (isNaN(recibido) || recibido <= totalCarrito) return 0
+    return recibido - totalCarrito
+  })()
+
   const limpiarFormulario = () => {
     setCarrito([])
     setCliente("")
@@ -139,6 +150,9 @@ export default function FormularioVenta() {
     setNotas("")
     setBusqueda("")
     setResultados([])
+    setPagoConMayorMonto(false)
+    setMontoRecibido("")
+    setMetodoPagoVuelto("TRANSFERENCIA")
   }
 
   const enviar = async () => {
@@ -164,6 +178,7 @@ export default function FormularioVenta() {
           estado: esRegalo ? "REGALO" : estado,
           esRegalo,
           notas: notas.trim() || undefined,
+          ...(pagoConMayorMonto && !esRegalo && vuelto > 0 && { montoRecibido: totalCarrito + vuelto }),
           items: carrito.map((i) => ({
             productoId: i.productoId,
             cantidad: i.cantidad,
@@ -177,6 +192,21 @@ export default function FormularioVenta() {
       if (!res.ok) {
         setError(json.error ?? "Error al registrar la venta.")
         return
+      }
+
+      // Registrar movimiento de vuelto si corresponde
+      if (vuelto > 0 && json.datos?.id) {
+        await fetch("/api/movimientos-caja", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            tipo: "VUELTO",
+            monto: vuelto,
+            metodoPago: metodoPagoVuelto,
+            ventaId: json.datos.id,
+            descripcion: `Vuelto venta${cliente.trim() ? ` — ${cliente.trim()}` : ""}`,
+          }),
+        })
       }
 
       setExito(true)
@@ -640,6 +670,72 @@ export default function FormularioVenta() {
             Es regalo (total muestra $0)
           </label>
         </div>
+
+        {/* Vuelto */}
+        {!esRegalo && (
+          <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+              <input
+                type="checkbox"
+                id="pagoConMayorMonto"
+                checked={pagoConMayorMonto}
+                onChange={(e) => { setPagoConMayorMonto(e.target.checked); setMontoRecibido("") }}
+                style={{ width: "14px", height: "14px", cursor: "pointer", accentColor: "var(--color-texto)" }}
+              />
+              <label
+                htmlFor="pagoConMayorMonto"
+                style={{ fontSize: "11px", fontFamily: "'Jost', sans-serif", color: "var(--color-texto)", cursor: "pointer", userSelect: "none" }}
+              >
+                El cliente pagó con un monto mayor
+              </label>
+            </div>
+            {pagoConMayorMonto && (
+              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                <label style={estiloLabel}>Monto recibido</label>
+                <input
+                  type="text"
+                  inputMode="decimal"
+                  autoComplete="off"
+                  value={montoRecibido}
+                  onChange={(e) => setMontoRecibido(e.target.value)}
+                  placeholder="0"
+                  style={{
+                    ...estiloInput,
+                    fontSize: "20px",
+                    padding: "12px",
+                    textAlign: "center",
+                  }}
+                />
+                <label style={estiloLabel}>Método del vuelto</label>
+                <select
+                  value={metodoPagoVuelto}
+                  onChange={(e) => setMetodoPagoVuelto(e.target.value)}
+                  style={estiloInput}
+                >
+                  <option value="TRANSFERENCIA">Transferencia</option>
+                  <option value="EFECTIVO">Efectivo</option>
+                </select>
+                {vuelto > 0 && (
+                  <div style={{
+                    padding: "12px 16px",
+                    backgroundColor: "#f0faf4",
+                    border: "0.5px solid #4a7c59",
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "baseline",
+                  }}>
+                    <span style={{ fontSize: "11px", fontFamily: "'Jost', sans-serif", fontWeight: 500, letterSpacing: "0.1em", textTransform: "uppercase", color: "#4a7c59" }}>
+                      Vuelto a dar
+                    </span>
+                    <span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "22px", fontWeight: 400, color: "#4a7c59" }}>
+                      ${vuelto.toLocaleString("es-AR")}
+                    </span>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Notas */}
         <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
