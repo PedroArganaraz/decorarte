@@ -45,14 +45,29 @@ const heroEstatico = (
       Piezas que resaltan tu esencia
     </h2>
     <p style={{
-      fontSize: "16px",
+      fontSize: "clamp(14px, 3.5vw, 18px)",
       fontWeight: 300,
       letterSpacing: "0.05em",
       color: "var(--color-texto-muted)",
-      marginBottom: "32px",
       lineHeight: 1.8,
+      maxWidth: "600px",
+      margin: "0 auto 0",
+      wordBreak: "normal",
+      overflowWrap: "break-word",
     }}>
-      Accesorios que te acompañen en tu día a día,<br />
+      Accesorios que te acompañen en tu día a día,
+    </p>
+    <p style={{
+      fontSize: "clamp(14px, 3.5vw, 18px)",
+      fontWeight: 300,
+      letterSpacing: "0.05em",
+      color: "var(--color-texto-muted)",
+      lineHeight: 1.8,
+      maxWidth: "600px",
+      margin: "0 auto 32px",
+      wordBreak: "normal",
+      overflowWrap: "break-word",
+    }}>
       reflejando tu estilo personal y tu energía
     </p>
     <Link
@@ -169,14 +184,29 @@ export default function HeroCarrusel({ imagenes, intervalo = 3 }: Props) {
           Piezas que resaltan tu esencia
         </h2>
         <p style={{
-          fontSize: "18px",
+          fontSize: "clamp(14px, 3.5vw, 18px)",
           fontWeight: 300,
           letterSpacing: "0.05em",
           color: "rgba(255, 255, 255, 0.9)",
-          marginBottom: "36px",
           lineHeight: 1.8,
+          maxWidth: "600px",
+          margin: "0 auto 0",
+          wordBreak: "normal",
+          overflowWrap: "break-word",
         }}>
-          Accesorios que te acompañen en tu día a día,<br />
+          Accesorios que te acompañen en tu
+        </p>
+        <p style={{
+          fontSize: "clamp(14px, 3.5vw, 18px)",
+          fontWeight: 300,
+          letterSpacing: "0.05em",
+          color: "rgba(255, 255, 255, 0.9)",
+          lineHeight: 1.8,
+          maxWidth: "600px",
+          margin: "0 auto 36px",
+          wordBreak: "normal",
+          overflowWrap: "break-word",
+        }}>
           reflejando tu estilo personal y tu energía
         </p>
         <Link
