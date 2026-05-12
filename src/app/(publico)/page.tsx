@@ -2,10 +2,20 @@ import { prisma } from "@/lib/prisma"
 import TarjetaProducto from "@/components/productos/TarjetaProducto"
 import NavCategorias from "@/components/catalogo/NavCategorias"
 import Link from "next/link"
+import HeroCarrusel from "@/components/hero/HeroCarrusel"
 
 export const revalidate = 1800
 
 export default async function PaginaInicio() {
+  const [imagenesHero, configHero] = await Promise.all([
+    prisma.imagenHero.findMany({
+      where: { activa: true },
+      orderBy: { orden: "asc" },
+      select: { id: true, urlPublica: true, posicion: true },
+    }),
+    prisma.configHero.findUnique({ where: { id: 1 } }),
+  ])
+
   const destacados = await prisma.producto.findMany({
     where: { activo: true, destacado: true },
     take: 4,
@@ -65,64 +75,7 @@ export default async function PaginaInicio() {
       <NavCategorias />
 
       {/* HERO */}
-      <section style={{
-        backgroundColor: "var(--color-superficie)",
-        padding: "80px 24px",
-        textAlign: "center",
-        borderBottom: "0.5px solid var(--color-borde)",
-      }}>
-        <p style={{
-          fontSize: "11px",
-          fontWeight: 400,
-          letterSpacing: "0.2em",
-          textTransform: "uppercase",
-          color: "var(--color-acento)",
-          marginBottom: "16px",
-        }}>
-          Nueva colección
-        </p>
-        <h2 style={{
-          fontFamily: "'Cormorant Garamond', serif",
-          fontSize: "clamp(32px, 5vw, 52px)",
-          fontWeight: 300,
-          letterSpacing: "0.05em",
-          color: "var(--color-texto)",
-          lineHeight: 1.1,
-          marginBottom: "20px",
-          maxWidth: "600px",
-          margin: "0 auto 20px",
-        }}>
-          Piezas que resaltan tu esencia
-        </h2>
-        <p style={{
-          fontSize: "13px",
-          fontWeight: 300,
-          letterSpacing: "0.05em",
-          color: "var(--color-texto-muted)",
-          marginBottom: "32px",
-          lineHeight: 1.8,
-        }}>
-          Accesorios que te acompañen en tu día a día,<br />
-          reflejando tu estilo personal y tu energía
-        </p>
-        <Link
-          href="/catalogo"
-          style={{
-            display: "inline-block",
-            padding: "14px 40px",
-            fontSize: "11px",
-            fontFamily: "'Jost', sans-serif",
-            fontWeight: 400,
-            letterSpacing: "0.15em",
-            textTransform: "uppercase",
-            backgroundColor: "var(--color-texto)",
-            color: "var(--color-fondo)",
-            textDecoration: "none",
-          }}
-        >
-          Ver colección
-        </Link>
-      </section>
+      <HeroCarrusel imagenes={imagenesHero} intervalo={configHero?.intervalo ?? 3} />
 
       {/* DESTACADOS */}
       {destacados.length > 0 && (

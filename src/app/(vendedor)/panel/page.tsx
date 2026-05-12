@@ -1,3 +1,4 @@
+import Link from "next/link"
 import { crearClienteServidor } from "@/lib/supabase/servidor"
 import { prisma } from "@/lib/prisma"
 
@@ -50,24 +51,47 @@ export default async function PaginaPanel() {
 
   return (
     <div>
-      <h1 style={{
-        fontFamily: "'Cormorant Garamond', serif",
-        fontSize: "28px",
-        fontWeight: 300,
-        letterSpacing: "0.05em",
-        color: "var(--color-texto)",
-        marginBottom: "8px",
-      }}>
-        Bienvenida
-      </h1>
-      <p style={{
-        fontSize: "12px",
-        color: "var(--color-texto-muted)",
-        letterSpacing: "0.05em",
+      <div style={{
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "flex-start",
         marginBottom: "32px",
       }}>
-        {user?.email}
-      </p>
+        <div>
+          <h1 style={{
+            fontFamily: "'Cormorant Garamond', serif",
+            fontSize: "28px",
+            fontWeight: 300,
+            letterSpacing: "0.05em",
+            color: "var(--color-texto)",
+            marginBottom: "8px",
+          }}>
+            Bienvenida
+          </h1>
+          <p style={{
+            fontSize: "12px",
+            color: "var(--color-texto-muted)",
+            letterSpacing: "0.05em",
+          }}>
+            {user?.email}
+          </p>
+        </div>
+        <Link href="/hero" style={{
+          padding: "10px 20px",
+          fontSize: "10px",
+          fontFamily: "'Jost', sans-serif",
+          fontWeight: 400,
+          letterSpacing: "0.12em",
+          textTransform: "uppercase",
+          backgroundColor: "var(--color-texto)",
+          color: "var(--color-fondo)",
+          border: "none",
+          textDecoration: "none",
+          whiteSpace: "nowrap",
+        }}>
+          Editar carrusel
+        </Link>
+      </div>
 
       <div style={{
         display: "grid",

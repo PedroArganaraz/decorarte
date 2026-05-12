@@ -225,3 +225,22 @@ enum CategoriaGasto {
 
   @@map("categoria_gasto")
 }
+
+model ImagenHero {
+  id          String   @id @default(cuid())
+  urlPublica  String   @map("url_publica")
+  pathInterno String   @map("path_interno")
+  orden       Int      @default(0)
+  posicion    Int      @default(50)
+  activa      Boolean  @default(true)
+  creadoEn    DateTime @default(now()) @map("creado_en")
+
+  @@map("imagenes_hero")
+}
+
+model ConfigHero {
+  id        Int @id @default(1)
+  intervalo Int @default(3)
+
+  @@map("config_hero")
+}
