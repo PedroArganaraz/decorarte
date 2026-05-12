@@ -105,7 +105,7 @@ export default function HeroCarrusel({ imagenes, intervalo = 3 }: Props) {
   return (
     <section style={{
       position: "relative",
-      minHeight: "520px",
+      minHeight: "clamp(400px, 80vh, 520px)",
       borderBottom: "0.5px solid var(--color-borde)",
       overflow: "hidden",
       display: "flex",
@@ -257,7 +257,7 @@ export default function HeroCarrusel({ imagenes, intervalo = 3 }: Props) {
             left: "50%",
             transform: "translateX(-50%)",
             display: "flex",
-            gap: "8px",
+            gap: "clamp(4px, 1.5vw, 8px)",
             zIndex: 2,
           }}>
             {imagenes.map((_, i) => (
@@ -266,8 +266,8 @@ export default function HeroCarrusel({ imagenes, intervalo = 3 }: Props) {
                 onClick={() => setSlideActual(i)}
                 aria-label={`Ir a imagen ${i + 1}`}
                 style={{
-                  width: i === slideActual ? "22px" : "7px",
-                  height: "7px",
+                  width: i === slideActual ? "clamp(14px, 3.5vw, 22px)" : "clamp(5px, 1.5vw, 7px)",
+                  height: "clamp(5px, 1.5vw, 7px)",
                   backgroundColor: i === slideActual ? "#ffffff" : "rgba(255, 255, 255, 0.45)",
                   border: "none",
                   cursor: "pointer",

@@ -276,14 +276,14 @@ export default async function PaginaPanel() {
                 ))}
               </tbody>
               <tfoot>
-                <tr style={{ borderTop: "0.5px solid var(--color-borde)", backgroundColor: "var(--color-superficie)" }}>
-                  <td style={{ padding: "11px 16px", fontSize: "9px", fontFamily: "'Jost', sans-serif", fontWeight: 500, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--color-texto-muted)" }}>
+                <tr style={{ borderTop: "0.5px solid var(--color-borde)", backgroundColor: "var(--color-background-secondary)" }}>
+                  <td style={{ padding: "11px 16px", fontSize: "9px", fontFamily: "'Jost', sans-serif", fontWeight: 600, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--color-texto-muted)" }}>
                     Total
                   </td>
-                  <td style={{ padding: "11px 16px", textAlign: "right", fontSize: "13px", fontFamily: "'Jost', sans-serif", fontWeight: 500, color: "var(--color-texto-muted)" }}>
+                  <td style={{ padding: "11px 16px", textAlign: "right", fontSize: "13px", fontFamily: "'Jost', sans-serif", fontWeight: 600, color: "var(--color-texto-muted)" }}>
                     {totalUnidades}
                   </td>
-                  <td style={{ padding: "11px 16px", textAlign: "right", fontSize: "18px", fontFamily: "'Cormorant Garamond', serif", fontWeight: 400, color: "var(--color-texto)" }}>
+                  <td style={{ padding: "11px 16px", textAlign: "right", fontSize: "15px", fontFamily: "'Jost', sans-serif", fontWeight: 600, color: "var(--color-texto)" }}>
                     {fmt(totalCapital)}
                   </td>
                 </tr>
