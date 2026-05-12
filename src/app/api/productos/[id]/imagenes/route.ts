@@ -104,6 +104,35 @@ export async function POST(
   }
 }
 
+export async function PATCH(
+  solicitud: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const supabase = await crearClienteServidor()
+    const { data: { user } } = await supabase.auth.getUser()
+
+    if (!user) {
+      return NextResponse.json<RespuestaAPI<null>>({ error: "No autorizado" }, { status: 401 })
+    }
+
+    const { id: productoId } = await params
+    const { imagenId } = await solicitud.json() as { imagenId?: string }
+
+    if (!imagenId) {
+      return NextResponse.json<RespuestaAPI<null>>({ error: "Falta el ID de la imagen" }, { status: 400 })
+    }
+
+    await prisma.imagenProducto.updateMany({ where: { productoId }, data: { esPrincipal: false } })
+    const imagen = await prisma.imagenProducto.update({ where: { id: imagenId }, data: { esPrincipal: true } })
+
+    return NextResponse.json<RespuestaAPI<typeof imagen>>({ datos: imagen })
+  } catch (error) {
+    console.error("Error al marcar imagen principal:", error)
+    return NextResponse.json<RespuestaAPI<null>>({ error: "Error al actualizar la imagen" }, { status: 500 })
+  }
+}
+
 export async function DELETE(
   solicitud: NextRequest,
   { params }: { params: Promise<{ id: string }> }

@@ -14,6 +14,8 @@ export default function SubidorImagenes({ productoId, imagenesActuales }: Props)
   const [imagenes, setImagenes] = useState<ImagenProducto[]>(imagenesActuales)
   const [subiendo, setSubiendo] = useState(false)
   const [eliminando, setEliminando] = useState<string | null>(null)
+  const [draggingId, setDraggingId] = useState<string | null>(null)
+  const [dragOverId, setDragOverId] = useState<string | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   const router = useRouter()
 
@@ -71,13 +73,9 @@ export default function SubidorImagenes({ productoId, imagenesActuales }: Props)
 
   const marcarPrincipal = async (imagenId: string) => {
     const res = await fetch(`/api/productos/${productoId}/imagenes`, {
-      method: "POST",
-      body: (() => {
-        const fd = new FormData()
-        fd.append("imagenId", imagenId)
-        fd.append("accion", "marcarPrincipal")
-        return fd
-      })(),
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ imagenId }),
     })
 
     if (res.ok) {
@@ -87,6 +85,49 @@ export default function SubidorImagenes({ productoId, imagenesActuales }: Props)
       toast.success("Imagen principal actualizada")
       router.refresh()
     }
+  }
+
+  const reordenarImagenes = async (origenId: string, destinoId: string) => {
+    const lista = [...imagenes]
+    const origenIdx = lista.findIndex((img) => img.id === origenId)
+    const destinoIdx = lista.findIndex((img) => img.id === destinoId)
+    const [movida] = lista.splice(origenIdx, 1)
+    lista.splice(destinoIdx, 0, movida)
+    const actualizadas = lista.map((img, idx) => ({ ...img, orden: idx }))
+    setImagenes(actualizadas)
+    await fetch(`/api/productos/${productoId}/imagenes/orden`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ imagenes: actualizadas.map((img) => ({ id: img.id, orden: img.orden })) }),
+    })
+    router.refresh()
+  }
+
+  const onDragStart = (e: React.DragEvent, id: string) => {
+    setDraggingId(id)
+    e.dataTransfer.effectAllowed = "move"
+  }
+
+  const onDragOver = (e: React.DragEvent, id: string) => {
+    e.preventDefault()
+    e.dataTransfer.dropEffect = "move"
+    if (id !== draggingId) setDragOverId(id)
+  }
+
+  const onDragLeave = (e: React.DragEvent) => {
+    if (!e.currentTarget.contains(e.relatedTarget as Node)) setDragOverId(null)
+  }
+
+  const onDrop = (e: React.DragEvent, id: string) => {
+    e.preventDefault()
+    if (draggingId && draggingId !== id) reordenarImagenes(draggingId, id)
+    setDraggingId(null)
+    setDragOverId(null)
+  }
+
+  const onDragEnd = () => {
+    setDraggingId(null)
+    setDragOverId(null)
   }
 
   const manejarDrop = (e: React.DragEvent) => {
@@ -120,11 +161,22 @@ export default function SubidorImagenes({ productoId, imagenesActuales }: Props)
           {imagenes.map((img) => (
             <div
               key={img.id}
+              draggable
+              onDragStart={(e) => onDragStart(e, img.id)}
+              onDragOver={(e) => onDragOver(e, img.id)}
+              onDragLeave={onDragLeave}
+              onDrop={(e) => onDrop(e, img.id)}
+              onDragEnd={onDragEnd}
               style={{
                 position: "relative",
-                border: img.esPrincipal
+                border: dragOverId === img.id
+                  ? "2px dashed var(--color-texto)"
+                  : img.esPrincipal
                   ? "2px solid var(--color-texto)"
                   : "0.5px solid var(--color-borde)",
+                opacity: draggingId === img.id ? 0.35 : 1,
+                cursor: "grab",
+                transition: "opacity 0.15s",
               }}
             >
               <img
