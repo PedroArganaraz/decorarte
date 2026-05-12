@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
+import { revalidatePath } from "next/cache"
 import { prisma } from "@/lib/prisma"
 import { crearClienteServidor, crearClienteAdmin } from "@/lib/supabase/servidor"
 import type { RespuestaAPI } from "@/tipos"
@@ -85,6 +86,7 @@ export async function POST(solicitud: NextRequest) {
       },
     })
 
+    revalidatePath("/")
     return NextResponse.json<RespuestaAPI<typeof imagen>>(
       { datos: imagen, mensaje: "Imagen subida correctamente" },
       { status: 201 }

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
+import { revalidatePath } from "next/cache"
 import { prisma } from "@/lib/prisma"
 import { crearClienteServidor } from "@/lib/supabase/servidor"
 import type { RespuestaAPI } from "@/tipos"
@@ -24,6 +25,7 @@ export async function PATCH(solicitud: NextRequest) {
       )
     )
 
+    revalidatePath("/")
     return NextResponse.json<RespuestaAPI<null>>({ datos: null })
   } catch (error) {
     console.error("Error al reordenar imágenes hero:", error)

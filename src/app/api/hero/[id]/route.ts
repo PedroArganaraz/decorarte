@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
+import { revalidatePath } from "next/cache"
 import { prisma } from "@/lib/prisma"
 import { crearClienteServidor, crearClienteAdmin } from "@/lib/supabase/servidor"
 import type { RespuestaAPI } from "@/tipos"
@@ -27,6 +28,7 @@ export async function PATCH(
       data: { posicion },
     })
 
+    revalidatePath("/")
     return NextResponse.json<RespuestaAPI<typeof imagen>>({ datos: imagen })
   } catch (error) {
     console.error("Error al actualizar posición:", error)
@@ -58,6 +60,7 @@ export async function DELETE(
     await supabaseAdmin.storage.from("productos").remove([imagen.pathInterno])
     await prisma.imagenHero.delete({ where: { id } })
 
+    revalidatePath("/")
     return NextResponse.json<RespuestaAPI<null>>({ mensaje: "Imagen eliminada correctamente" })
   } catch (error) {
     console.error("Error al eliminar imagen hero:", error)

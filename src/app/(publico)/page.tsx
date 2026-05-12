@@ -13,7 +13,7 @@ export default async function PaginaInicio() {
       orderBy: { orden: "asc" },
       select: { id: true, urlPublica: true, posicion: true },
     }),
-    prisma.configHero.findUnique({ where: { id: 1 } }),
+    prisma.configHero.findUnique({ where: { id: 1 } }).catch(() => null),
   ])
 
   const destacados = await prisma.producto.findMany({
