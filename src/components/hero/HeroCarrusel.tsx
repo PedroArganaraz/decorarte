@@ -136,6 +136,7 @@ export default function HeroCarrusel({ imagenes, intervalo = 3 }: Props) {
           alt=""
           fill
           priority={slideActual === 0}
+          unoptimized
           sizes="100vw"
           aria-hidden="true"
           style={{
