@@ -13,21 +13,28 @@ export async function GET(solicitud: NextRequest) {
     const desde = searchParams.get("desde")
     const hasta = searchParams.get("hasta")
     const ventaId = searchParams.get("ventaId")
+    const page = Math.max(1, parseInt(searchParams.get("page") ?? "1", 10) || 1)
+    const limit = Math.max(1, parseInt(searchParams.get("limit") ?? "10", 10) || 10)
+    const skip = (page - 1) * limit
 
-    const movimientos = await prisma.movimientoCaja.findMany({
-      where: {
-        ...(ventaId && { ventaId }),
-        ...(desde || hasta ? {
-          fecha: {
-            ...(desde && { gte: new Date(desde) }),
-            ...(hasta && { lte: new Date(hasta) }),
-          },
-        } : {}),
-      },
-      orderBy: { creadoEn: "desc" },
-    })
+    const where = {
+      ...(ventaId && { ventaId }),
+      ...(desde || hasta ? {
+        fecha: {
+          ...(desde && { gte: new Date(desde) }),
+          ...(hasta && { lte: new Date(hasta) }),
+        },
+      } : {}),
+    }
 
-    return NextResponse.json<RespuestaAPI<typeof movimientos>>({ datos: movimientos })
+    const [movimientos, total] = await Promise.all([
+      prisma.movimientoCaja.findMany({ where, skip, take: limit, orderBy: { creadoEn: "desc" } }),
+      prisma.movimientoCaja.count({ where }),
+    ])
+
+    const totalPaginas = Math.max(1, Math.ceil(total / limit))
+
+    return NextResponse.json({ datos: movimientos, total, pagina: page, totalPaginas })
   } catch (error) {
     console.error("Error al obtener movimientos de caja:", error)
     return NextResponse.json<RespuestaAPI<null>>({ error: "Error al obtener movimientos" }, { status: 500 })

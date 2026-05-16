@@ -19,29 +19,54 @@ export async function GET(solicitud: NextRequest) {
     const desde = searchParams.get("desde")
     const hasta = searchParams.get("hasta")
     const cliente = searchParams.get("cliente")
+    const page = Math.max(1, parseInt(searchParams.get("page") ?? "1", 10) || 1)
+    const limit = Math.max(1, parseInt(searchParams.get("limit") ?? "20", 10) || 20)
+    const skip = (page - 1) * limit
 
-    const ventas = await prisma.venta.findMany({
-      where: {
-        ...(desde || hasta ? {
-          fecha: {
-            ...(desde && { gte: new Date(desde) }),
-            ...(hasta && { lte: new Date(hasta) }),
-          },
-        } : {}),
-        ...(cliente && { cliente: { contains: cliente, mode: "insensitive" } }),
-      },
-      include: {
-        items: {
-          include: {
-            producto: { select: { id: true, nombre: true, slug: true } },
-          },
+    const where = {
+      ...(desde || hasta ? {
+        fecha: {
+          ...(desde && { gte: new Date(desde) }),
+          ...(hasta && { lte: new Date(hasta) }),
         },
-        vendedor: { select: { nombre: true } },
-      },
-      orderBy: { fecha: "desc" },
-    })
+      } : {}),
+      ...(cliente && { cliente: { contains: cliente, mode: "insensitive" } }),
+    }
 
-    return NextResponse.json<RespuestaAPI<typeof ventas>>({ datos: ventas })
+    const [ventas, total, sumaTotal, sumaEfectivo, sumaTransferencia] = await Promise.all([
+      prisma.venta.findMany({
+        where,
+        skip,
+        take: limit,
+        include: {
+          items: {
+            include: {
+              producto: { select: { id: true, nombre: true, slug: true } },
+            },
+          },
+          vendedor: { select: { nombre: true } },
+        },
+        orderBy: { fecha: "desc" },
+      }),
+      prisma.venta.count({ where }),
+      prisma.itemVenta.aggregate({ _sum: { precioTotal: true }, where: { venta: where } }),
+      prisma.itemVenta.aggregate({ _sum: { precioTotal: true }, where: { venta: { ...where, metodoPago: "EFECTIVO" } } }),
+      prisma.itemVenta.aggregate({ _sum: { precioTotal: true }, where: { venta: { ...where, metodoPago: "TRANSFERENCIA" } } }),
+    ])
+
+    const totalPaginas = Math.max(1, Math.ceil(total / limit))
+
+    return NextResponse.json({
+      datos: ventas,
+      total,
+      pagina: page,
+      totalPaginas,
+      metricas: {
+        totalPeriodo: Number(sumaTotal._sum.precioTotal ?? 0),
+        totalEfectivo: Number(sumaEfectivo._sum.precioTotal ?? 0),
+        totalTransferencia: Number(sumaTransferencia._sum.precioTotal ?? 0),
+      },
+    })
   } catch (error) {
     console.error("Error al obtener ventas:", error)
     return NextResponse.json<RespuestaAPI<null>>(

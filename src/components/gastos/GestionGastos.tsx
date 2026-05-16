@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react"
 import ModalGasto, { type Gasto } from "./ModalGasto"
 import { useTamanioPantalla } from "@/hooks/useTamanioPantalla"
+import { SkeletonCard, SkeletonTable, SkeletonCardMobile } from "@/components/ui/skeleton"
 
 const CATEGORIA_LABELS: Record<string, string> = {
   INSUMOS:   "Insumos",
@@ -243,21 +244,25 @@ export default function GestionGastos() {
 
       {/* TOTALES */}
       <div style={{ display: "grid", gridTemplateColumns: esMobile ? "repeat(2, 1fr)" : "repeat(4, 1fr)", gap: "12px" }}>
-        {([
-          { label: "Total período",  valor: `$${totalPeriodo.toLocaleString("es-AR")}` },
-          { label: "Efectivo",       valor: `$${totalEfectivo.toLocaleString("es-AR")}` },
-          { label: "Transferencia",  valor: `$${totalTransferencia.toLocaleString("es-AR")}` },
-          { label: "Gastos",         valor: String(gastosFiltrados.length) },
-        ] as const).map(({ label, valor }) => (
-          <div key={label} style={{ backgroundColor: "var(--color-card)", border: "0.5px solid var(--color-borde)", padding: "16px 20px" }}>
-            <p style={{ fontSize: "9px", fontFamily: "'Jost', sans-serif", fontWeight: 500, letterSpacing: "0.15em", textTransform: "uppercase", color: "var(--color-texto-muted)", margin: "0 0 8px" }}>
-              {label}
-            </p>
-            <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "24px", fontWeight: 400, color: "var(--color-texto)", margin: 0 }}>
-              {valor}
-            </p>
-          </div>
-        ))}
+        {cargando ? (
+          [0, 1, 2, 3].map((i) => <SkeletonCard key={i} />)
+        ) : (
+          ([
+            { label: "Total período",  valor: `$${totalPeriodo.toLocaleString("es-AR")}` },
+            { label: "Efectivo",       valor: `$${totalEfectivo.toLocaleString("es-AR")}` },
+            { label: "Transferencia",  valor: `$${totalTransferencia.toLocaleString("es-AR")}` },
+            { label: "Gastos",         valor: String(gastosFiltrados.length) },
+          ] as const).map(({ label, valor }) => (
+            <div key={label} style={{ backgroundColor: "var(--color-card)", border: "0.5px solid var(--color-borde)", padding: "16px 20px" }}>
+              <p style={{ fontSize: "9px", fontFamily: "'Jost', sans-serif", fontWeight: 500, letterSpacing: "0.15em", textTransform: "uppercase", color: "var(--color-texto-muted)", margin: "0 0 8px" }}>
+                {label}
+              </p>
+              <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "24px", fontWeight: 400, color: "var(--color-texto)", margin: 0 }}>
+                {valor}
+              </p>
+            </div>
+          ))
+        )}
       </div>
 
       {/* DESGLOSE POR CATEGORÍA */}
@@ -296,7 +301,9 @@ export default function GestionGastos() {
 
       {/* LISTA / TABLA */}
       {cargando ? (
-        <p style={{ padding: "40px 0", textAlign: "center", fontSize: "13px", fontFamily: "'Jost', sans-serif", color: "var(--color-texto-sutil)", margin: 0 }}>Cargando...</p>
+        esMobile
+          ? <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>{[0,1,2,3,4].map((i) => <SkeletonCardMobile key={i} />)}</div>
+          : <SkeletonTable cols={[45, 65, 30, 30, 20, 0]} filas={5} />
       ) : errorCarga ? (
         <p style={{ padding: "40px 0", textAlign: "center", fontSize: "13px", fontFamily: "'Jost', sans-serif", color: "var(--color-acento)", margin: 0 }}>{errorCarga}</p>
       ) : gastosFiltrados.length === 0 ? (

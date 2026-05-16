@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react"
 import ModalEditarVenta, { type VentaParaEditar } from "./ModalEditarVenta"
 import ModalMovimientoCaja, { type MovimientoCaja, TIPO_LABELS } from "./ModalMovimientoCaja"
 import { useTamanioPantalla } from "@/hooks/useTamanioPantalla"
+import { SkeletonCard, SkeletonTable, SkeletonCardMobile } from "@/components/ui/skeleton"
 
 interface ItemVenta {
   id: string
@@ -88,6 +89,35 @@ const estiloTd: React.CSSProperties = {
   verticalAlign: "middle",
 }
 
+const estiloBtnPaginacion: React.CSSProperties = {
+  padding: "8px 16px",
+  fontSize: "11px",
+  fontFamily: "'Jost', sans-serif",
+  fontWeight: 400,
+  letterSpacing: "0.1em",
+  textTransform: "uppercase",
+  backgroundColor: "transparent",
+  color: "var(--color-texto)",
+  border: "0.5px solid var(--color-texto)",
+  borderRadius: 0,
+  cursor: "pointer",
+}
+
+const estiloBtnPaginacionDeshabilitado: React.CSSProperties = {
+  padding: "8px 16px",
+  fontSize: "11px",
+  fontFamily: "'Jost', sans-serif",
+  fontWeight: 400,
+  letterSpacing: "0.1em",
+  textTransform: "uppercase",
+  backgroundColor: "transparent",
+  color: "var(--color-texto-muted)",
+  border: "0.5px solid var(--color-borde)",
+  borderRadius: 0,
+  cursor: "not-allowed",
+  opacity: 0.45,
+}
+
 export default function HistorialVentas() {
   const [mes, setMes] = useState(HOY.getMonth())
   const [anio, setAnio] = useState(ANIO_ACTUAL)
@@ -95,6 +125,10 @@ export default function HistorialVentas() {
   const [ventas, setVentas] = useState<Venta[]>([])
   const [cargando, setCargando] = useState(true)
   const [errorCarga, setErrorCarga] = useState<string | null>(null)
+  const [pagina, setPagina] = useState(1)
+  const [totalVentas, setTotalVentas] = useState(0)
+  const [totalPaginasVentas, setTotalPaginasVentas] = useState(1)
+  const [metricas, setMetricas] = useState({ totalPeriodo: 0, totalEfectivo: 0, totalTransferencia: 0 })
 
   const [anulando, setAnulando] = useState<string | null>(null)
   const [procesando, setProcesando] = useState<string | null>(null)
@@ -104,6 +138,9 @@ export default function HistorialVentas() {
 
   const [movimientos, setMovimientos] = useState<MovimientoCaja[]>([])
   const [cargandoMov, setCargandoMov] = useState(true)
+  const [paginaMov, setPaginaMov] = useState(1)
+  const [totalMov, setTotalMov] = useState(0)
+  const [totalPaginasMov, setTotalPaginasMov] = useState(1)
   const [modalMovAbierto, setModalMovAbierto] = useState(false)
   const [editandoMov, setEditandoMov] = useState<MovimientoCaja | null>(null)
   const [eliminandoMov, setEliminandoMov] = useState<string | null>(null)
@@ -123,17 +160,24 @@ export default function HistorialVentas() {
       : new Date(anio, mes + 1, 0, 23, 59, 59, 999).toISOString()
     try {
       const res = await fetch(
-        `/api/ventas?desde=${encodeURIComponent(desde)}&hasta=${encodeURIComponent(hasta)}`
+        `/api/ventas?desde=${encodeURIComponent(desde)}&hasta=${encodeURIComponent(hasta)}&page=${pagina}&limit=20`
       )
       const json = await res.json()
       if (!res.ok) throw new Error(json.error ?? "Error al cargar ventas")
       setVentas(json.datos ?? [])
+      setTotalVentas(json.total ?? 0)
+      setTotalPaginasVentas(json.totalPaginas ?? 1)
+      setMetricas({
+        totalPeriodo: json.metricas?.totalPeriodo ?? 0,
+        totalEfectivo: json.metricas?.totalEfectivo ?? 0,
+        totalTransferencia: json.metricas?.totalTransferencia ?? 0,
+      })
     } catch (e: unknown) {
       setErrorCarga(e instanceof Error ? e.message : "Error al cargar ventas")
     } finally {
       setCargando(false)
     }
-  }, [mes, anio, verAnioCompleto])
+  }, [mes, anio, verAnioCompleto, pagina])
 
   const fetchMovimientos = useCallback(async () => {
     setCargandoMov(true)
@@ -144,20 +188,20 @@ export default function HistorialVentas() {
       ? new Date(anio, 11, 31, 23, 59, 59, 999).toISOString()
       : new Date(anio, mes + 1, 0, 23, 59, 59, 999).toISOString()
     try {
-      const res = await fetch(`/api/movimientos-caja?desde=${encodeURIComponent(desde)}&hasta=${encodeURIComponent(hasta)}`)
+      const res = await fetch(`/api/movimientos-caja?desde=${encodeURIComponent(desde)}&hasta=${encodeURIComponent(hasta)}&page=${paginaMov}&limit=10`)
       const json = await res.json()
       setMovimientos(json.datos ?? [])
+      setTotalMov(json.total ?? 0)
+      setTotalPaginasMov(json.totalPaginas ?? 1)
     } catch {
       // silently fail
     } finally {
       setCargandoMov(false)
     }
-  }, [mes, anio, verAnioCompleto])
+  }, [mes, anio, verAnioCompleto, paginaMov])
 
-  useEffect(() => {
-    fetchVentas()
-    fetchMovimientos()
-  }, [fetchVentas, fetchMovimientos])
+  useEffect(() => { fetchVentas() }, [fetchVentas])
+  useEffect(() => { fetchMovimientos() }, [fetchMovimientos])
 
   const ejecutarEliminarMov = async (id: string) => {
     setProcesandoMov(id)
@@ -193,16 +237,6 @@ export default function HistorialVentas() {
 
   const ventasFiltradas = ventas
 
-  let totalPeriodo = 0
-  let totalEfectivo = 0
-  let totalTransferencia = 0
-  for (const v of ventasFiltradas) {
-    const t = sumarVenta(v)
-    totalPeriodo += t
-    if (v.metodoPago === "EFECTIVO") totalEfectivo += t
-    else if (v.metodoPago === "TRANSFERENCIA") totalTransferencia += t
-  }
-
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
 
@@ -233,7 +267,7 @@ export default function HistorialVentas() {
             <label style={estiloLabel}>Mes</label>
             <select
               value={mes}
-              onChange={(e) => { setMes(Number(e.target.value)); setVerAnioCompleto(false) }}
+              onChange={(e) => { setMes(Number(e.target.value)); setVerAnioCompleto(false); setPagina(1); setPaginaMov(1) }}
               disabled={verAnioCompleto}
               style={{ ...estiloSelect, width: esMobile ? "100%" : undefined, opacity: verAnioCompleto ? 0.4 : 1 }}
             >
@@ -244,14 +278,14 @@ export default function HistorialVentas() {
           </div>
           <div>
             <label style={estiloLabel}>Año</label>
-            <select value={anio} onChange={(e) => setAnio(Number(e.target.value))} style={{ ...estiloSelect, width: esMobile ? "100%" : undefined }}>
+            <select value={anio} onChange={(e) => { setAnio(Number(e.target.value)); setPagina(1); setPaginaMov(1) }} style={{ ...estiloSelect, width: esMobile ? "100%" : undefined }}>
               {ANIOS.map((a) => (
                 <option key={a} value={a}>{a}</option>
               ))}
             </select>
           </div>
           <button
-            onClick={() => setVerAnioCompleto((v) => !v)}
+            onClick={() => { setVerAnioCompleto((v) => !v); setPagina(1); setPaginaMov(1) }}
             style={{
               padding: "8px 14px",
               fontSize: "10px",
@@ -299,39 +333,43 @@ export default function HistorialVentas() {
         gridTemplateColumns: esMobile ? "repeat(2, 1fr)" : "repeat(4, 1fr)",
         gap: "12px",
       }}>
-        {([
-          { label: "Total período", valor: `$${totalPeriodo.toLocaleString("es-AR")}` },
-          { label: "Efectivo", valor: `$${totalEfectivo.toLocaleString("es-AR")}` },
-          { label: "Transferencia", valor: `$${totalTransferencia.toLocaleString("es-AR")}` },
-          { label: "Transacciones", valor: String(ventasFiltradas.length) },
-        ] as const).map(({ label, valor }) => (
-          <div key={label} style={{
-            backgroundColor: "var(--color-card)",
-            border: "0.5px solid var(--color-borde)",
-            padding: "16px 20px",
-          }}>
-            <p style={{
-              fontSize: "9px",
-              fontFamily: "'Jost', sans-serif",
-              fontWeight: 500,
-              letterSpacing: "0.15em",
-              textTransform: "uppercase",
-              color: "var(--color-texto-muted)",
-              margin: "0 0 8px",
+        {cargando ? (
+          [0, 1, 2, 3].map((i) => <SkeletonCard key={i} />)
+        ) : (
+          ([
+            { label: "Total período", valor: `$${metricas.totalPeriodo.toLocaleString("es-AR")}` },
+            { label: "Efectivo", valor: `$${metricas.totalEfectivo.toLocaleString("es-AR")}` },
+            { label: "Transferencia", valor: `$${metricas.totalTransferencia.toLocaleString("es-AR")}` },
+            { label: "Transacciones", valor: String(totalVentas) },
+          ] as const).map(({ label, valor }) => (
+            <div key={label} style={{
+              backgroundColor: "var(--color-card)",
+              border: "0.5px solid var(--color-borde)",
+              padding: "16px 20px",
             }}>
-              {label}
-            </p>
-            <p style={{
-              fontFamily: "'Cormorant Garamond', serif",
-              fontSize: "24px",
-              fontWeight: 400,
-              color: "var(--color-texto)",
-              margin: 0,
-            }}>
-              {valor}
-            </p>
-          </div>
-        ))}
+              <p style={{
+                fontSize: "9px",
+                fontFamily: "'Jost', sans-serif",
+                fontWeight: 500,
+                letterSpacing: "0.15em",
+                textTransform: "uppercase",
+                color: "var(--color-texto-muted)",
+                margin: "0 0 8px",
+              }}>
+                {label}
+              </p>
+              <p style={{
+                fontFamily: "'Cormorant Garamond', serif",
+                fontSize: "24px",
+                fontWeight: 400,
+                color: "var(--color-texto)",
+                margin: 0,
+              }}>
+                {valor}
+              </p>
+            </div>
+          ))
+        )}
       </div>
 
       {/* ERROR ANULAR */}
@@ -351,7 +389,9 @@ export default function HistorialVentas() {
 
       {/* LISTA / TABLA */}
       {cargando ? (
-        <p style={{ padding: "40px 0", textAlign: "center", fontSize: "13px", fontFamily: "'Jost', sans-serif", color: "var(--color-texto-sutil)", margin: 0 }}>Cargando...</p>
+        esMobile
+          ? <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>{[0,1,2,3,4].map((i) => <SkeletonCardMobile key={i} />)}</div>
+          : <SkeletonTable cols={[55, 30, 70, 30, 35, 20, 0]} filas={5} />
       ) : errorCarga ? (
         <p style={{ padding: "40px 0", textAlign: "center", fontSize: "13px", fontFamily: "'Jost', sans-serif", color: "var(--color-acento)", margin: 0 }}>{errorCarga}</p>
       ) : ventasFiltradas.length === 0 ? (
@@ -456,6 +496,26 @@ export default function HistorialVentas() {
         </div>
       )}
 
+      {/* PAGINACIÓN VENTAS */}
+      {!cargando && !errorCarga && totalVentas > 0 && (
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "12px" }}>
+          {pagina <= 1 ? (
+            <span style={estiloBtnPaginacionDeshabilitado}>← Anterior</span>
+          ) : (
+            <button onClick={() => setPagina((p) => p - 1)} style={estiloBtnPaginacion}>← Anterior</button>
+          )}
+          <span style={{ fontSize: "11px", fontFamily: "'Jost', sans-serif", color: "var(--color-texto-muted)", letterSpacing: "0.06em" }}>
+            Página {pagina} de {totalPaginasVentas}
+            <span style={{ color: "var(--color-texto-sutil)", marginLeft: "8px" }}>({totalVentas} {totalVentas === 1 ? "venta" : "ventas"})</span>
+          </span>
+          {pagina >= totalPaginasVentas ? (
+            <span style={estiloBtnPaginacionDeshabilitado}>Siguiente →</span>
+          ) : (
+            <button onClick={() => setPagina((p) => p + 1)} style={estiloBtnPaginacion}>Siguiente →</button>
+          )}
+        </div>
+      )}
+
       {/* MOVIMIENTOS DE CAJA */}
       <div style={{ marginTop: "8px" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
@@ -477,7 +537,7 @@ export default function HistorialVentas() {
         )}
 
         {cargandoMov ? (
-          <p style={{ padding: "24px 0", textAlign: "center", fontSize: "13px", fontFamily: "'Jost', sans-serif", color: "var(--color-texto-sutil)", margin: 0 }}>Cargando...</p>
+          <SkeletonTable cols={[45, 30, 65, 25, 0]} filas={3} />
         ) : movimientos.length === 0 ? (
           <p style={{ padding: "24px 0", textAlign: "center", fontSize: "13px", fontFamily: "'Jost', sans-serif", color: "var(--color-texto-sutil)", margin: 0 }}>No hay movimientos en este período.</p>
         ) : (
@@ -525,6 +585,26 @@ export default function HistorialVentas() {
                 })}
               </tbody>
             </table>
+          </div>
+        )}
+
+        {/* PAGINACIÓN MOVIMIENTOS */}
+        {!cargandoMov && totalMov > 0 && (
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "12px", marginTop: "12px" }}>
+            {paginaMov <= 1 ? (
+              <span style={estiloBtnPaginacionDeshabilitado}>← Anterior</span>
+            ) : (
+              <button onClick={() => setPaginaMov((p) => p - 1)} style={estiloBtnPaginacion}>← Anterior</button>
+            )}
+            <span style={{ fontSize: "11px", fontFamily: "'Jost', sans-serif", color: "var(--color-texto-muted)", letterSpacing: "0.06em" }}>
+              Página {paginaMov} de {totalPaginasMov}
+              <span style={{ color: "var(--color-texto-sutil)", marginLeft: "8px" }}>({totalMov} {totalMov === 1 ? "movimiento" : "movimientos"})</span>
+            </span>
+            {paginaMov >= totalPaginasMov ? (
+              <span style={estiloBtnPaginacionDeshabilitado}>Siguiente →</span>
+            ) : (
+              <button onClick={() => setPaginaMov((p) => p + 1)} style={estiloBtnPaginacion}>Siguiente →</button>
+            )}
           </div>
         )}
       </div>

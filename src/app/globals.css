@@ -66,3 +66,14 @@ select option:hover {
   background-color: var(--color-superficie);
   color: var(--color-texto);
 }
+
+@keyframes skeleton-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.skeleton-block {
+  background-color: var(--color-superficie);
+  border-radius: 2px;
+  animation: skeleton-pulse 1.5s ease-in-out infinite;
+}
