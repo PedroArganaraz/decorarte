@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
+import { Prisma } from "@prisma/client"
 import { prisma } from "@/lib/prisma"
 import { crearClienteServidor } from "@/lib/supabase/servidor"
 import type { RespuestaAPI } from "@/tipos"
@@ -23,14 +24,14 @@ export async function GET(solicitud: NextRequest) {
     const limit = Math.max(1, parseInt(searchParams.get("limit") ?? "20", 10) || 20)
     const skip = (page - 1) * limit
 
-    const where = {
+    const where: Prisma.VentaWhereInput = {
       ...(desde || hasta ? {
         fecha: {
           ...(desde && { gte: new Date(desde) }),
           ...(hasta && { lte: new Date(hasta) }),
         },
       } : {}),
-      ...(cliente && { cliente: { contains: cliente, mode: "insensitive" } }),
+      ...(cliente && { cliente: { contains: cliente, mode: Prisma.QueryMode.insensitive } }),
     }
 
     const [ventas, total, sumaTotal, sumaEfectivo, sumaTransferencia] = await Promise.all([
