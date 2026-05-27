@@ -161,7 +161,7 @@ export default function NavCategoriasCliente({
               <Link
                 key={mat.id}
                 href={`/catalogo?categoria=${categoriaAbierta.slug}&material=${mat.id}`}
-                style={estiloMaterial(mat.id === materialActivo)}
+                style={estiloMaterial(mat.id === materialActivo && categoriaAbierta.slug === categoriaActiva)}
               >
                 {mat.nombre}
               </Link>
