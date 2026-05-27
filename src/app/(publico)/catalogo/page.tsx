@@ -4,7 +4,7 @@ import TarjetaProducto from "@/components/productos/TarjetaProducto"
 import NavCategorias from "@/components/catalogo/NavCategorias"
 import Link from "next/link"
 
-export const revalidate = 1800
+export const revalidate = 60
 
 interface Props {
   searchParams: Promise<{
