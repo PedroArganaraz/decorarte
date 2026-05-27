@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useRef } from "react"
 import Link from "next/link"
 
 interface Material {
@@ -28,20 +28,57 @@ export default function NavCategoriasCliente({
   materialActivo,
   todosActivo,
 }: Props) {
-  const [openId, setOpenId] = useState<string | null>(null)
+  // displayId: qué categoría está visible en el submenú (incluye durante la salida)
+  // isExiting: true mientras se reproduce la animación de cierre
+  const [displayId, setDisplayId] = useState<string | null>(null)
+  const [isExiting, setIsExiting] = useState(false)
+  const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const exitTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  const categoriaAbierta = categorias.find((c) => c.id === openId)
+  const categoriaSubMenu = categorias.find((c) => c.id === displayId)
+
+  function cancelarCierre() {
+    if (closeTimerRef.current) clearTimeout(closeTimerRef.current)
+  }
+
+  function cancelarSalida() {
+    if (exitTimerRef.current) clearTimeout(exitTimerRef.current)
+    setIsExiting(false)
+  }
+
+  function abrirCategoria(id: string | null) {
+    cancelarCierre()
+    cancelarSalida()
+    setIsExiting(false)
+    setDisplayId(id)
+  }
+
+  function programarCierre() {
+    closeTimerRef.current = setTimeout(() => {
+      // Inicia animación de salida; desmonta después de que termina
+      setIsExiting(true)
+      exitTimerRef.current = setTimeout(() => {
+        setDisplayId(null)
+        setIsExiting(false)
+      }, 250)
+    }, 150)
+  }
 
   function handleMouseEnter(cat: CategoriaConMateriales) {
-    setOpenId(cat.materiales.length > 0 ? cat.id : null)
+    abrirCategoria(cat.materiales.length > 0 ? cat.id : null)
   }
 
   function handleClickCat(cat: CategoriaConMateriales, e: React.MouseEvent) {
     if (cat.materiales.length === 0) return
     if (window.matchMedia("(pointer: coarse)").matches) {
       e.preventDefault()
-      setOpenId(openId === cat.id ? null : cat.id)
+      abrirCategoria(displayId === cat.id && !isExiting ? null : cat.id)
     }
+  }
+
+  function handleSubMenuEnter() {
+    cancelarCierre()
+    cancelarSalida()
   }
 
   const estiloLink = (activo: boolean): React.CSSProperties => ({
@@ -51,7 +88,7 @@ export default function NavCategoriasCliente({
     letterSpacing: "0.12em",
     textTransform: "uppercase",
     textDecoration: "none",
-    color: activo ? "var(--color-texto)" : "var(--color-texto-muted)",
+    color: "var(--color-texto)",
     borderBottom: activo ? "2px solid var(--color-texto)" : "2px solid transparent",
     whiteSpace: "nowrap",
     marginBottom: "-0.5px",
@@ -61,13 +98,13 @@ export default function NavCategoriasCliente({
   })
 
   const estiloMaterial = (activo: boolean): React.CSSProperties => ({
-    padding: "10px 16px",
+    padding: "10px 24px",
     fontSize: "10px",
     fontWeight: activo ? 500 : 400,
     letterSpacing: "0.12em",
     textTransform: "uppercase",
     textDecoration: "none",
-    color: activo ? "var(--color-texto)" : "var(--color-texto-muted)",
+    color: "var(--color-texto)",
     borderBottom: activo ? "2px solid var(--color-texto)" : "2px solid transparent",
     whiteSpace: "nowrap",
     marginBottom: "-0.5px",
@@ -75,100 +112,118 @@ export default function NavCategoriasCliente({
   })
 
   return (
-    <div
-      style={{
-        borderBottom: "0.5px solid var(--color-borde)",
-        backgroundColor: "var(--color-fondo)",
-        position: "sticky",
-        top: "57px",
-        zIndex: 10,
-      }}
-      onMouseLeave={() => setOpenId(null)}
-    >
-      {/* Fila principal de categorías */}
+    <>
+      <style>{`
+        @keyframes submenu-in {
+          from { opacity: 0; transform: translateY(-8px); }
+          to   { opacity: 1; transform: translateY(0);    }
+        }
+        @keyframes submenu-out {
+          from { opacity: 1; transform: translateY(0);    }
+          to   { opacity: 0; transform: translateY(-8px); }
+        }
+      `}</style>
+
       <div
         style={{
-          maxWidth: "1200px",
-          margin: "0 auto",
-          padding: "0 24px",
-          display: "flex",
-          overflowX: "auto",
-          scrollbarWidth: "none",
+          borderBottom: "0.5px solid var(--color-borde)",
+          backgroundColor: "var(--color-fondo)",
+          position: "sticky",
+          top: "57px",
+          zIndex: 10,
         }}
+        onMouseLeave={programarCierre}
       >
-        <Link
-          href="/catalogo"
-          style={estiloLink(!!todosActivo)}
-          onMouseEnter={() => setOpenId(null)}
-        >
-          Todos
-        </Link>
-
-        {categorias.map((cat) => {
-          const estaActiva = categoriaActiva === cat.slug
-          const tieneSubmenu = cat.materiales.length > 0
-          return (
-            <Link
-              key={cat.id}
-              href={`/catalogo?categoria=${cat.slug}`}
-              style={estiloLink(estaActiva)}
-              onMouseEnter={() => handleMouseEnter(cat)}
-              onClick={(e) => handleClickCat(cat, e)}
-            >
-              {cat.nombre}
-              {tieneSubmenu && (
-                <svg
-                  width="10"
-                  height="10"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  style={{
-                    opacity: 0.55,
-                    transform: openId === cat.id ? "rotate(180deg)" : "rotate(0deg)",
-                    transition: "transform 0.15s ease",
-                    flexShrink: 0,
-                  }}
-                >
-                  <polyline points="6 9 12 15 18 9" />
-                </svg>
-              )}
-            </Link>
-          )
-        })}
-      </div>
-
-      {/* Submenú de materiales */}
-      {categoriaAbierta && categoriaAbierta.materiales.length > 0 && (
+        {/* Fila principal de categorías */}
         <div
           style={{
-            borderTop: "0.5px solid var(--color-borde)",
-            backgroundColor: "var(--color-fondo)",
+            maxWidth: "1200px",
+            margin: "0 auto",
+            padding: "0 24px",
+            display: "flex",
+            overflowX: "auto",
+            scrollbarWidth: "none",
           }}
         >
+          <Link
+            href="/catalogo"
+            style={estiloLink(!!todosActivo)}
+            onMouseEnter={() => abrirCategoria(null)}
+          >
+            Todos
+          </Link>
+
+          {categorias.map((cat) => {
+            const estaActiva = categoriaActiva === cat.slug
+            const tieneSubmenu = cat.materiales.length > 0
+            const submenuAbierto = displayId === cat.id && !isExiting
+            return (
+              <Link
+                key={cat.id}
+                href={`/catalogo?categoria=${cat.slug}`}
+                style={estiloLink(estaActiva)}
+                onMouseEnter={() => handleMouseEnter(cat)}
+                onClick={(e) => handleClickCat(cat, e)}
+              >
+                {cat.nombre}
+                {tieneSubmenu && (
+                  <svg
+                    width="10"
+                    height="10"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    style={{
+                      opacity: 0.45,
+                      transform: submenuAbierto ? "rotate(180deg)" : "rotate(0deg)",
+                      transition: "transform 0.2s ease",
+                      flexShrink: 0,
+                    }}
+                  >
+                    <polyline points="6 9 12 15 18 9" />
+                  </svg>
+                )}
+              </Link>
+            )
+          })}
+        </div>
+
+        {/* Submenú de materiales */}
+        {categoriaSubMenu && categoriaSubMenu.materiales.length > 0 && (
           <div
             style={{
-              maxWidth: "1200px",
-              margin: "0 auto",
-              padding: "0 24px",
-              display: "flex",
-              overflowX: "auto",
-              scrollbarWidth: "none",
+              borderTop: "0.5px solid var(--color-borde)",
+              backgroundColor: "var(--color-fondo)",
+              animation: `${isExiting ? "submenu-out" : "submenu-in"} 250ms ease forwards`,
             }}
+            onMouseEnter={handleSubMenuEnter}
           >
-            {categoriaAbierta.materiales.map((mat) => (
-              <Link
-                key={mat.id}
-                href={`/catalogo?categoria=${categoriaAbierta.slug}&material=${mat.id}`}
-                style={estiloMaterial(mat.id === materialActivo && categoriaAbierta.slug === categoriaActiva)}
-              >
-                {mat.nombre}
-              </Link>
-            ))}
+            <div
+              style={{
+                maxWidth: "1200px",
+                margin: "0 auto",
+                padding: "0 24px",
+                display: "flex",
+                overflowX: "auto",
+                scrollbarWidth: "none",
+              }}
+            >
+              {categoriaSubMenu.materiales.map((mat) => (
+                <Link
+                  key={mat.id}
+                  href={`/catalogo?categoria=${categoriaSubMenu.slug}&material=${mat.id}`}
+                  style={estiloMaterial(
+                    mat.id === materialActivo && categoriaSubMenu.slug === categoriaActiva
+                  )}
+                >
+                  {mat.nombre}
+                </Link>
+              ))}
+            </div>
           </div>
-        </div>
-      )}
-    </div>
+        )}
+      </div>
+    </>
   )
 }
