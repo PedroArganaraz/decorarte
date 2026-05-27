@@ -1,3 +1,4 @@
+import { Prisma } from "@prisma/client"
 import { prisma } from "@/lib/prisma"
 import TarjetaProducto from "@/components/productos/TarjetaProducto"
 import NavCategorias from "@/components/catalogo/NavCategorias"
@@ -8,7 +9,7 @@ export const revalidate = 1800
 interface Props {
   searchParams: Promise<{
     categoria?: string
-    material?: string
+    material?: string  // ID del material (no nombre)
     busqueda?: string
   }>
 }
@@ -16,17 +17,35 @@ interface Props {
 export default async function PaginaCatalogo({ searchParams }: Props) {
   const { categoria, material, busqueda } = await searchParams
 
-  const categorias = await prisma.categoria.findMany({
-    where: { activa: true },
-    orderBy: { orden: "asc" },
-  })
+  const [categorias, materialData] = await Promise.all([
+    prisma.categoria.findMany({
+      where: { activa: true },
+      orderBy: { orden: "asc" },
+    }),
+    material
+      ? prisma.material.findUnique({ where: { id: material }, select: { nombre: true } })
+      : Promise.resolve(null),
+  ])
+
+  // Filtra por materialId (relación) O por el campo string legacy, por si hay productos
+  // que no tienen materialId cargado pero sí el campo de texto.
+  const filtroMaterial: Prisma.ProductoWhereInput = material
+    ? {
+        OR: [
+          { materialId: material },
+          ...(materialData
+            ? [{ material: { contains: materialData.nombre, mode: Prisma.QueryMode.insensitive } }]
+            : []),
+        ],
+      }
+    : {}
 
   const productos = await prisma.producto.findMany({
     where: {
       activo: true,
       ...(categoria && { categoria: { slug: categoria } }),
-      ...(material && { material }),
-      ...(busqueda && { nombre: { contains: busqueda, mode: "insensitive" } }),
+      ...filtroMaterial,
+      ...(busqueda && { nombre: { contains: busqueda, mode: Prisma.QueryMode.insensitive } }),
     },
     orderBy: { creadoEn: "desc" },
     select: {
@@ -57,7 +76,7 @@ export default async function PaginaCatalogo({ searchParams }: Props) {
 
   return (
     <div>
-      <NavCategorias categoriaActiva={categoria} todosActivo={!categoria} />
+      <NavCategorias categoriaActiva={categoria} materialActivo={material} todosActivo={!categoria} />
 
       {/* CONTENIDO */}
       <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "24px 24px 64px" }}>

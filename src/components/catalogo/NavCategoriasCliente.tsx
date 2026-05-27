@@ -1,0 +1,174 @@
+"use client"
+
+import { useState } from "react"
+import Link from "next/link"
+
+interface Material {
+  id: string
+  nombre: string
+}
+
+interface CategoriaConMateriales {
+  id: string
+  nombre: string
+  slug: string
+  materiales: Material[]
+}
+
+interface Props {
+  categorias: CategoriaConMateriales[]
+  categoriaActiva?: string
+  materialActivo?: string
+  todosActivo?: boolean
+}
+
+export default function NavCategoriasCliente({
+  categorias,
+  categoriaActiva,
+  materialActivo,
+  todosActivo,
+}: Props) {
+  const [openId, setOpenId] = useState<string | null>(null)
+
+  const categoriaAbierta = categorias.find((c) => c.id === openId)
+
+  function handleMouseEnter(cat: CategoriaConMateriales) {
+    setOpenId(cat.materiales.length > 0 ? cat.id : null)
+  }
+
+  function handleClickCat(cat: CategoriaConMateriales, e: React.MouseEvent) {
+    if (cat.materiales.length === 0) return
+    if (window.matchMedia("(pointer: coarse)").matches) {
+      e.preventDefault()
+      setOpenId(openId === cat.id ? null : cat.id)
+    }
+  }
+
+  const estiloLink = (activo: boolean): React.CSSProperties => ({
+    padding: "12px 20px",
+    fontSize: "11px",
+    fontWeight: activo ? 500 : 400,
+    letterSpacing: "0.12em",
+    textTransform: "uppercase",
+    textDecoration: "none",
+    color: activo ? "var(--color-texto)" : "var(--color-texto-muted)",
+    borderBottom: activo ? "2px solid var(--color-texto)" : "2px solid transparent",
+    whiteSpace: "nowrap",
+    marginBottom: "-0.5px",
+    display: "inline-flex",
+    alignItems: "center",
+    gap: "3px",
+  })
+
+  const estiloMaterial = (activo: boolean): React.CSSProperties => ({
+    padding: "10px 16px",
+    fontSize: "10px",
+    fontWeight: activo ? 500 : 400,
+    letterSpacing: "0.12em",
+    textTransform: "uppercase",
+    textDecoration: "none",
+    color: activo ? "var(--color-texto)" : "var(--color-texto-muted)",
+    borderBottom: activo ? "2px solid var(--color-texto)" : "2px solid transparent",
+    whiteSpace: "nowrap",
+    marginBottom: "-0.5px",
+    display: "inline-block",
+  })
+
+  return (
+    <div
+      style={{
+        borderBottom: "0.5px solid var(--color-borde)",
+        backgroundColor: "var(--color-fondo)",
+        position: "sticky",
+        top: "57px",
+        zIndex: 10,
+      }}
+      onMouseLeave={() => setOpenId(null)}
+    >
+      {/* Fila principal de categorías */}
+      <div
+        style={{
+          maxWidth: "1200px",
+          margin: "0 auto",
+          padding: "0 24px",
+          display: "flex",
+          overflowX: "auto",
+          scrollbarWidth: "none",
+        }}
+      >
+        <Link
+          href="/catalogo"
+          style={estiloLink(!!todosActivo)}
+          onMouseEnter={() => setOpenId(null)}
+        >
+          Todos
+        </Link>
+
+        {categorias.map((cat) => {
+          const estaActiva = categoriaActiva === cat.slug
+          const tieneSubmenu = cat.materiales.length > 0
+          return (
+            <Link
+              key={cat.id}
+              href={`/catalogo?categoria=${cat.slug}`}
+              style={estiloLink(estaActiva)}
+              onMouseEnter={() => handleMouseEnter(cat)}
+              onClick={(e) => handleClickCat(cat, e)}
+            >
+              {cat.nombre}
+              {tieneSubmenu && (
+                <svg
+                  width="10"
+                  height="10"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  style={{
+                    opacity: 0.55,
+                    transform: openId === cat.id ? "rotate(180deg)" : "rotate(0deg)",
+                    transition: "transform 0.15s ease",
+                    flexShrink: 0,
+                  }}
+                >
+                  <polyline points="6 9 12 15 18 9" />
+                </svg>
+              )}
+            </Link>
+          )
+        })}
+      </div>
+
+      {/* Submenú de materiales */}
+      {categoriaAbierta && categoriaAbierta.materiales.length > 0 && (
+        <div
+          style={{
+            borderTop: "0.5px solid var(--color-borde)",
+            backgroundColor: "var(--color-fondo)",
+          }}
+        >
+          <div
+            style={{
+              maxWidth: "1200px",
+              margin: "0 auto",
+              padding: "0 24px",
+              display: "flex",
+              overflowX: "auto",
+              scrollbarWidth: "none",
+            }}
+          >
+            {categoriaAbierta.materiales.map((mat) => (
+              <Link
+                key={mat.id}
+                href={`/catalogo?categoria=${categoriaAbierta.slug}&material=${mat.id}`}
+                style={estiloMaterial(mat.id === materialActivo)}
+              >
+                {mat.nombre}
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
