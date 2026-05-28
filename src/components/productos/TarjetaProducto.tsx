@@ -16,14 +16,15 @@ interface Props {
     imagenes: { urlPublica: string; altText: string | null; esPrincipal: boolean }[]
     categoria: { nombre: string; slug: string }
   }
+  from?: string
 }
 
-export default function TarjetaProducto({ producto }: Props) {
+export default function TarjetaProducto({ producto, from }: Props) {
   const imagenPrincipal = producto.imagenes.find((img) => img.esPrincipal)
     ?? producto.imagenes[0]
 
   return (
-    <Link href={`/producto/${producto.slug}`} style={{ textDecoration: "none" }}>
+    <Link href={`/producto/${producto.slug}${from ? `?from=${encodeURIComponent(from)}` : ""}`} style={{ textDecoration: "none" }}>
       <article style={{
         backgroundColor: "var(--color-card)",
         border: "0.5px solid var(--color-borde)",

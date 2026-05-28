@@ -74,6 +74,13 @@ export default async function PaginaCatalogo({ searchParams }: Props) {
     },
   })
 
+  const fromParams = new URLSearchParams()
+  if (categoria) fromParams.set("categoria", categoria)
+  if (material) fromParams.set("material", material)
+  if (busqueda) fromParams.set("busqueda", busqueda)
+  if (orden) fromParams.set("orden", orden)
+  const fromUrl = `/catalogo${fromParams.size > 0 ? `?${fromParams.toString()}` : ""}`
+
   const productosSerializados = productos.map((p: typeof productos[number]) => ({
     ...p,
     precio: Number(p.precio),
@@ -164,7 +171,7 @@ export default async function PaginaCatalogo({ searchParams }: Props) {
             gap: "20px",
           }}>
             {productosSerializados.map((producto: typeof productosSerializados[number]) => (
-              <TarjetaProducto key={producto.id} producto={producto} />
+              <TarjetaProducto key={producto.id} producto={producto} from={fromUrl} />
             ))}
           </div>
         )}

@@ -9,10 +9,19 @@ export const revalidate = 1800
 
 interface Props {
   params: Promise<{ slug: string }>
+  searchParams: Promise<{ from?: string }>
 }
 
-export default async function PaginaProducto({ params }: Props) {
+export default async function PaginaProducto({ params, searchParams }: Props) {
   const { slug } = await params
+  const { from } = await searchParams
+
+  const fromDecoded = from ? decodeURIComponent(from) : null
+  const fromSearchParams = fromDecoded
+    ? new URL(fromDecoded, "http://localhost").searchParams
+    : null
+  const fromMaterial = fromSearchParams?.get("material") ?? null
+  const fromCategoria = fromSearchParams?.get("categoria") ?? null
 
   const producto = await prisma.producto.findUnique({
     where: { slug, activo: true },
@@ -111,7 +120,7 @@ export default async function PaginaProducto({ params }: Props) {
           marginBottom: "40px",
         }}>
           <Link
-            href={`/catalogo?categoria=${producto.categoria.slug}`}
+            href={from ?? `/catalogo?categoria=${producto.categoria.slug}`}
             style={{
               fontSize: "11px",
               letterSpacing: "0.08em",
@@ -126,7 +135,7 @@ export default async function PaginaProducto({ params }: Props) {
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
               <path d="M19 12H5M12 5l-7 7 7 7"/>
             </svg>
-            {producto.categoria.nombre}
+            {fromMaterial ?? (fromCategoria ? producto.categoria.nombre : (from ? "Catálogo" : producto.categoria.nombre))}
           </Link>
           <span style={{ color: "var(--color-texto-sutil)", fontSize: "11px" }}>›</span>
           <span style={{
