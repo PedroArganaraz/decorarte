@@ -9,12 +9,14 @@ interface Props {
     nombre?: string
     categoriaId?: string
     soloActivos?: string
+    material?: string
+    orden?: string
     page?: string
   }>
 }
 
 export default async function PaginaProductos({ searchParams }: Props) {
-  const { nombre, categoriaId, soloActivos, page } = await searchParams
+  const { nombre, categoriaId, soloActivos, material, orden, page } = await searchParams
 
   const pageNum = Math.max(1, parseInt(page ?? "1", 10) || 1)
 
@@ -22,12 +24,18 @@ export default async function PaginaProductos({ searchParams }: Props) {
     ...(nombre && { nombre: { contains: nombre, mode: "insensitive" as const } }),
     ...(categoriaId && { categoriaId }),
     ...(soloActivos === "1" && { activo: true }),
+    ...(material && { material: { contains: material, mode: "insensitive" as const } }),
   }
 
-  const [productos, total, categorias] = await Promise.all([
+  const orderBy =
+    orden === "precio_asc" ? { precio: "asc" as const } :
+    orden === "precio_desc" ? { precio: "desc" as const } :
+    { stock: "asc" as const }
+
+  const [productos, total, categorias, materialesRaw] = await Promise.all([
     prisma.producto.findMany({
       where: filtro,
-      orderBy: { stock: "asc" },
+      orderBy,
       skip: (pageNum - 1) * LIMIT,
       take: LIMIT,
       include: {
@@ -46,7 +54,17 @@ export default async function PaginaProductos({ searchParams }: Props) {
       where: { activa: true },
       orderBy: { orden: "asc" },
     }),
+    prisma.producto.findMany({
+      where: { material: { not: null } },
+      select: { material: true },
+      distinct: ["material"],
+    }),
   ])
+
+  const materialesDisponibles = materialesRaw
+    .map((p) => p.material)
+    .filter((m): m is string => typeof m === "string" && m.trim() !== "")
+    .sort()
 
   const totalPaginas = Math.max(1, Math.ceil(total / LIMIT))
 
@@ -55,6 +73,8 @@ export default async function PaginaProductos({ searchParams }: Props) {
     if (nombre) params.set("nombre", nombre)
     if (categoriaId) params.set("categoriaId", categoriaId)
     if (soloActivos) params.set("soloActivos", soloActivos)
+    if (material) params.set("material", material)
+    if (orden) params.set("orden", orden)
     if (pag > 1) params.set("page", String(pag))
     const qs = params.toString()
     return `/panel/productos${qs ? `?${qs}` : ""}`
@@ -126,7 +146,7 @@ export default async function PaginaProductos({ searchParams }: Props) {
         </Link>
       </div>
 
-      <FiltrosProductos categorias={categorias} />
+      <FiltrosProductos categorias={categorias} materiales={materialesDisponibles} />
 
       <div style={{
         backgroundColor: "var(--color-card)",

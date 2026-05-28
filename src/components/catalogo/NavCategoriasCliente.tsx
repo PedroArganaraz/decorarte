@@ -212,9 +212,9 @@ export default function NavCategoriasCliente({
               {categoriaSubMenu.materiales.map((mat) => (
                 <Link
                   key={mat.id}
-                  href={`/catalogo?categoria=${categoriaSubMenu.slug}&material=${mat.id}`}
+                  href={`/catalogo?categoria=${categoriaSubMenu.slug}&material=${encodeURIComponent(mat.nombre)}`}
                   style={estiloMaterial(
-                    mat.id === materialActivo && categoriaSubMenu.slug === categoriaActiva
+                    mat.nombre.toLowerCase() === materialActivo?.toLowerCase() && categoriaSubMenu.slug === categoriaActiva
                   )}
                 >
                   {mat.nombre}

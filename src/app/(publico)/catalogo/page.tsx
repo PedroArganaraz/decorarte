@@ -2,43 +2,48 @@ import { Prisma } from "@prisma/client"
 import { prisma } from "@/lib/prisma"
 import TarjetaProducto from "@/components/productos/TarjetaProducto"
 import NavCategorias from "@/components/catalogo/NavCategorias"
+import FiltrosCatalogo from "@/components/catalogo/FiltrosCatalogo"
 import Link from "next/link"
+import { Suspense } from "react"
 
 export const revalidate = 60
 
 interface Props {
   searchParams: Promise<{
     categoria?: string
-    material?: string  // ID del material (no nombre)
+    material?: string
     busqueda?: string
+    orden?: string
   }>
 }
 
 export default async function PaginaCatalogo({ searchParams }: Props) {
-  const { categoria, material, busqueda } = await searchParams
+  const { categoria, material, busqueda, orden } = await searchParams
 
-  const [categorias, materialData] = await Promise.all([
+  const filtroMaterial: Prisma.ProductoWhereInput = material
+    ? { material: { contains: material, mode: Prisma.QueryMode.insensitive } }
+    : {}
+
+  const [categorias, materialesRaw] = await Promise.all([
     prisma.categoria.findMany({
       where: { activa: true },
       orderBy: { orden: "asc" },
     }),
-    material
-      ? prisma.material.findUnique({ where: { id: material }, select: { nombre: true } })
-      : Promise.resolve(null),
+    prisma.producto.findMany({
+      where: {
+        activo: true,
+        ...(categoria && { categoria: { slug: categoria } }),
+        material: { not: null },
+      },
+      select: { material: true },
+      distinct: ["material"],
+    }),
   ])
 
-  // Filtra por materialId (relación) O por el campo string legacy, por si hay productos
-  // que no tienen materialId cargado pero sí el campo de texto.
-  const filtroMaterial: Prisma.ProductoWhereInput = material
-    ? {
-        OR: [
-          { materialId: material },
-          ...(materialData
-            ? [{ material: { contains: materialData.nombre, mode: Prisma.QueryMode.insensitive } }]
-            : []),
-        ],
-      }
-    : {}
+  const materialesDisponibles = materialesRaw
+    .map((p) => p.material)
+    .filter((m): m is string => typeof m === "string" && m.trim() !== "")
+    .sort()
 
   const productos = await prisma.producto.findMany({
     where: {
@@ -47,7 +52,10 @@ export default async function PaginaCatalogo({ searchParams }: Props) {
       ...filtroMaterial,
       ...(busqueda && { nombre: { contains: busqueda, mode: Prisma.QueryMode.insensitive } }),
     },
-    orderBy: { creadoEn: "desc" },
+    orderBy:
+      orden === "precio_asc" ? { precio: "asc" } :
+      orden === "precio_desc" ? { precio: "desc" } :
+      { creadoEn: "desc" },
     select: {
       id: true,
       nombre: true,
@@ -116,6 +124,14 @@ export default async function PaginaCatalogo({ searchParams }: Props) {
             {productosSerializados.length} {productosSerializados.length === 1 ? "pieza" : "piezas"}
           </p>
         </div>
+
+        <Suspense>
+          <FiltrosCatalogo
+            materiales={materialesDisponibles}
+            materialActivo={material}
+            ordenActivo={orden}
+          />
+        </Suspense>
 
         {/* GRILLA */}
         {productosSerializados.length === 0 ? (

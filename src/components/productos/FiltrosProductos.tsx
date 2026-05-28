@@ -9,37 +9,55 @@ const STORAGE_KEY = "filtros-productos"
 
 interface Props {
   categorias: Categoria[]
+  materiales: string[]
 }
 
-export default function FiltrosProductos({ categorias }: Props) {
+export default function FiltrosProductos({ categorias, materiales }: Props) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [nombre, setNombre] = useState(searchParams.get("nombre") ?? "")
   const [categoriaId, setCategoriaId] = useState(searchParams.get("categoriaId") ?? "")
   const [soloActivos, setSoloActivos] = useState(searchParams.get("soloActivos") === "1")
+  const [material, setMaterial] = useState(searchParams.get("material") ?? "")
+  const [orden, setOrden] = useState(searchParams.get("orden") ?? "")
   const { esMobile } = useTamanioPantalla()
   const inicializado = useRef(false)
 
   // Restaurar desde localStorage al montar si la URL no tiene parámetros.
-  // inicializado se activa con setTimeout(0) para que los efectos de auto-apply
-  // no se disparen con los setState del restore (se dispararían antes del tick).
   useEffect(() => {
-    const tieneParams = searchParams.get("nombre") || searchParams.get("categoriaId") || searchParams.get("soloActivos")
+    const tieneParams =
+      searchParams.get("nombre") ||
+      searchParams.get("categoriaId") ||
+      searchParams.get("soloActivos") ||
+      searchParams.get("material") ||
+      searchParams.get("orden")
     if (!tieneParams) {
       try {
         const guardados = localStorage.getItem(STORAGE_KEY)
         if (guardados) {
-          const parsed = JSON.parse(guardados) as { nombre?: string; categoriaId?: string; soloActivos?: boolean }
+          const parsed = JSON.parse(guardados) as {
+            nombre?: string
+            categoriaId?: string
+            soloActivos?: boolean
+            material?: string
+            orden?: string
+          }
           const n = parsed.nombre ?? ""
           const c = parsed.categoriaId ?? ""
           const s = parsed.soloActivos ?? false
+          const m = parsed.material ?? ""
+          const o = parsed.orden ?? ""
           setNombre(n)
           setCategoriaId(c)
           setSoloActivos(s)
+          setMaterial(m)
+          setOrden(o)
           const params = new URLSearchParams()
           if (n) params.set("nombre", n)
           if (c) params.set("categoriaId", c)
           if (s) params.set("soloActivos", "1")
+          if (m) params.set("material", m)
+          if (o) params.set("orden", o)
           const qs = params.toString()
           if (qs) router.push(`/panel/productos?${qs}`)
         }
@@ -48,13 +66,16 @@ export default function FiltrosProductos({ categorias }: Props) {
     setTimeout(() => { inicializado.current = true }, 0)
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Guardar en localStorage al cambiar cualquier filtro (solo tras inicialización)
+  // Guardar en localStorage al cambiar cualquier filtro
   useEffect(() => {
     if (!inicializado.current) return
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({ nombre, categoriaId, soloActivos }))
+      localStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify({ nombre, categoriaId, soloActivos, material, orden })
+      )
     } catch {}
-  }, [nombre, categoriaId, soloActivos])
+  }, [nombre, categoriaId, soloActivos, material, orden])
 
   // Auto-apply: texto con debounce 300ms
   useEffect(() => {
@@ -64,26 +85,32 @@ export default function FiltrosProductos({ categorias }: Props) {
       if (nombre) params.set("nombre", nombre)
       if (categoriaId) params.set("categoriaId", categoriaId)
       if (soloActivos) params.set("soloActivos", "1")
+      if (material) params.set("material", material)
+      if (orden) params.set("orden", orden)
       router.push(`/panel/productos?${params.toString()}`)
     }, 300)
     return () => clearTimeout(timer)
   }, [nombre]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Auto-apply: categoría y checkbox de forma inmediata
+  // Auto-apply: selects de forma inmediata
   useEffect(() => {
     if (!inicializado.current) return
     const params = new URLSearchParams()
     if (nombre) params.set("nombre", nombre)
     if (categoriaId) params.set("categoriaId", categoriaId)
     if (soloActivos) params.set("soloActivos", "1")
+    if (material) params.set("material", material)
+    if (orden) params.set("orden", orden)
     router.push(`/panel/productos?${params.toString()}`)
-  }, [categoriaId, soloActivos]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [categoriaId, soloActivos, material, orden]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const limpiar = () => {
     try { localStorage.removeItem(STORAGE_KEY) } catch {}
     setNombre("")
     setCategoriaId("")
     setSoloActivos(false)
+    setMaterial("")
+    setOrden("")
     router.push("/panel/productos")
   }
 
@@ -100,11 +127,22 @@ export default function FiltrosProductos({ categorias }: Props) {
   } as React.CSSProperties
 
   return (
+    <div style={{ marginBottom: "20px" }}>
+    <p style={{
+      fontSize: "10px",
+      fontFamily: "'Jost', sans-serif",
+      fontWeight: 500,
+      letterSpacing: "0.12em",
+      textTransform: "uppercase",
+      color: "var(--color-texto-muted)",
+      marginBottom: "10px",
+    }}>
+      Filtros
+    </p>
     <div style={{
       display: "flex",
       gap: "10px",
       alignItems: esMobile ? "stretch" : "center",
-      marginBottom: "20px",
       flexDirection: esMobile ? "column" : "row",
       flexWrap: "wrap",
     }}>
@@ -130,6 +168,29 @@ export default function FiltrosProductos({ categorias }: Props) {
         ))}
       </select>
 
+      {materiales.length > 0 && (
+        <select
+          value={material}
+          onChange={(e) => setMaterial(e.target.value)}
+          style={{ ...estiloInput, minWidth: "150px", width: esMobile ? "100%" : "auto" }}
+        >
+          <option value="">Material</option>
+          {materiales.map((m) => (
+            <option key={m} value={m}>{m}</option>
+          ))}
+        </select>
+      )}
+
+      <select
+        value={orden}
+        onChange={(e) => setOrden(e.target.value)}
+        style={{ ...estiloInput, minWidth: "130px", width: esMobile ? "100%" : "auto" }}
+      >
+        <option value="">Precio</option>
+        <option value="precio_asc">Menor precio</option>
+        <option value="precio_desc">Mayor precio</option>
+      </select>
+
       <label style={{
         display: "flex",
         alignItems: "center",
@@ -150,26 +211,25 @@ export default function FiltrosProductos({ categorias }: Props) {
         Solo activos
       </label>
 
-      {(nombre || categoriaId || soloActivos) && (
-        <button
-          onClick={limpiar}
-          style={{
-            padding: "8px 16px",
-            fontSize: "11px",
-            fontFamily: "'Jost', sans-serif",
-            fontWeight: 400,
-            letterSpacing: "0.12em",
-            textTransform: "uppercase",
-            backgroundColor: "transparent",
-            color: "var(--color-texto)",
-            border: "0.5px solid var(--color-texto)",
-            borderRadius: 0,
-            cursor: "pointer",
-          }}
-        >
-          Limpiar
-        </button>
-      )}
+      <button
+        onClick={limpiar}
+        style={{
+          padding: "8px 16px",
+          fontSize: "11px",
+          fontFamily: "'Jost', sans-serif",
+          fontWeight: 400,
+          letterSpacing: "0.12em",
+          textTransform: "uppercase",
+          backgroundColor: "transparent",
+          color: "var(--color-texto)",
+          border: "0.5px solid var(--color-texto)",
+          borderRadius: 0,
+          cursor: "pointer",
+        }}
+      >
+        Limpiar
+      </button>
+    </div>
     </div>
   )
 }
