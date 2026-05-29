@@ -111,7 +111,7 @@ export default async function PaginaInicio() {
                 paddingBottom: "2px",
               }}
             >
-              Ver todos
+              Ver todo
             </Link>
           </div>
           <div style={{

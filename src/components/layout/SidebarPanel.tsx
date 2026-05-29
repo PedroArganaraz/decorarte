@@ -168,10 +168,11 @@ export default function SidebarPanel({
 
       {/* CERRAR SESIÓN */}
       <div style={{
-        padding: colapsado ? "16px 0" : "20px 24px 0",
+        padding: colapsado ? "16px 0" : "20px 24px",
         borderTop: "0.5px solid var(--color-borde)",
         display: "flex",
         justifyContent: colapsado ? "center" : "stretch",
+        flexShrink: 0,
       }}>
         {colapsado ? (
           <button

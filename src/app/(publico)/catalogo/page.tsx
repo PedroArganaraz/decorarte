@@ -97,9 +97,9 @@ export default async function PaginaCatalogo({ searchParams }: Props) {
 
       {/* CONTENIDO */}
       <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "24px 24px 64px" }}>
-        <Link href="/" style={{
-          fontSize: "11px",
-          letterSpacing: "0.08em",
+        <Link href="/" className="link-volver" style={{
+          fontSize: "13px",
+          letterSpacing: "0.1em",
           textTransform: "uppercase",
           color: "var(--color-texto-muted)",
           textDecoration: "none",
@@ -163,7 +163,7 @@ export default async function PaginaCatalogo({ searchParams }: Props) {
               borderBottom: "0.5px solid var(--color-texto)",
               paddingBottom: "2px",
             }}>
-              Ver todos
+              Ver todo
             </Link>
           </div>
         ) : (

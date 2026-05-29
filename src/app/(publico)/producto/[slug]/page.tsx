@@ -121,9 +121,10 @@ export default async function PaginaProducto({ params, searchParams }: Props) {
         }}>
           <Link
             href={from ?? `/catalogo?categoria=${producto.categoria.slug}`}
+            className="link-volver"
             style={{
-              fontSize: "11px",
-              letterSpacing: "0.08em",
+              fontSize: "13px",
+              letterSpacing: "0.1em",
               textTransform: "uppercase",
               color: "var(--color-texto-muted)",
               textDecoration: "none",
@@ -137,10 +138,10 @@ export default async function PaginaProducto({ params, searchParams }: Props) {
             </svg>
             {fromMaterial ?? (fromCategoria ? producto.categoria.nombre : (from ? "Catálogo" : producto.categoria.nombre))}
           </Link>
-          <span style={{ color: "var(--color-texto-sutil)", fontSize: "11px" }}>›</span>
+          <span style={{ color: "var(--color-texto-sutil)", fontSize: "13px" }}>›</span>
           <span style={{
-            fontSize: "11px",
-            letterSpacing: "0.08em",
+            fontSize: "13px",
+            letterSpacing: "0.1em",
             textTransform: "uppercase",
             color: "var(--color-texto)",
           }}>
@@ -162,9 +163,9 @@ export default async function PaginaProducto({ params, searchParams }: Props) {
           <div>
             <div style={{ marginBottom: "8px" }}>
               <span style={{
-                fontSize: "10px",
+                fontSize: "12px",
                 fontWeight: 400,
-                letterSpacing: "0.15em",
+                letterSpacing: "0.12em",
                 textTransform: "uppercase",
                 color: "var(--color-texto-muted)",
               }}>
@@ -174,9 +175,9 @@ export default async function PaginaProducto({ params, searchParams }: Props) {
                 <>
                   <span style={{ color: "var(--color-borde)", margin: "0 8px" }}>·</span>
                   <span style={{
-                    fontSize: "10px",
+                    fontSize: "12px",
                     fontWeight: 400,
-                    letterSpacing: "0.15em",
+                    letterSpacing: "0.12em",
                     textTransform: "uppercase",
                     color: "var(--color-acento)",
                   }}>

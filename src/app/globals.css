@@ -77,3 +77,7 @@ select option:hover {
   border-radius: 2px;
   animation: skeleton-pulse 1.5s ease-in-out infinite;
 }
+
+.link-volver:hover {
+  text-decoration: underline;
+}
