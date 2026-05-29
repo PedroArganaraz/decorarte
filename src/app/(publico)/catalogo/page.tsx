@@ -40,10 +40,12 @@ export default async function PaginaCatalogo({ searchParams }: Props) {
     }),
   ])
 
-  const materialesDisponibles = materialesRaw
-    .map((p) => p.material)
-    .filter((m): m is string => typeof m === "string" && m.trim() !== "")
-    .sort()
+  const materialesDisponibles = [...new Set(
+    materialesRaw
+      .map((p) => p.material)
+      .filter((m): m is string => typeof m === "string" && m.trim() !== "")
+      .map((m) => m.charAt(0).toUpperCase() + m.slice(1).toLowerCase())
+  )].sort()
 
   const productos = await prisma.producto.findMany({
     where: {

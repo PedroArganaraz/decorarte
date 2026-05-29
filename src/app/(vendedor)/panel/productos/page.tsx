@@ -55,16 +55,18 @@ export default async function PaginaProductos({ searchParams }: Props) {
       orderBy: { orden: "asc" },
     }),
     prisma.producto.findMany({
-      where: { material: { not: null } },
+      where: { activo: true, material: { not: null } },
       select: { material: true },
       distinct: ["material"],
     }),
   ])
 
-  const materialesDisponibles = materialesRaw
-    .map((p) => p.material)
-    .filter((m): m is string => typeof m === "string" && m.trim() !== "")
-    .sort()
+  const materialesDisponibles = [...new Set(
+    materialesRaw
+      .map((p) => p.material)
+      .filter((m): m is string => typeof m === "string" && m.trim() !== "")
+      .map((m) => m.charAt(0).toUpperCase() + m.slice(1).toLowerCase())
+  )].sort()
 
   const totalPaginas = Math.max(1, Math.ceil(total / LIMIT))
 

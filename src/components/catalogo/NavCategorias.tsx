@@ -44,6 +44,7 @@ const getCategoriasConMateriales = unstable_cache(
           )
         ).filter((m): m is typeof cat.materiales[number] => m !== null)
 
+        materialesFiltrados.sort((a, b) => a.nombre.localeCompare(b.nombre, "es"))
         return { ...cat, materiales: materialesFiltrados }
       })
     )

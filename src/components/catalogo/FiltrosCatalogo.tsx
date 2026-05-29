@@ -31,6 +31,10 @@ export default function FiltrosCatalogo({ materiales, materialActivo, ordenActiv
     router.push(`/catalogo?${params.toString()}`)
   }
 
+  const materialActivoNorm = materialActivo
+    ? materialActivo.charAt(0).toUpperCase() + materialActivo.slice(1).toLowerCase()
+    : ""
+
   const hayFiltros = !!(materialActivo || ordenActivo)
 
   const estiloSelect = {
@@ -52,7 +56,7 @@ export default function FiltrosCatalogo({ materiales, materialActivo, ordenActiv
     <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", marginBottom: "20px" }}>
       {materiales.length > 0 && (
         <select
-          value={materialActivo ?? ""}
+          value={materialActivoNorm}
           onChange={(e) => navegar("material", e.target.value)}
           style={estiloSelect}
         >
