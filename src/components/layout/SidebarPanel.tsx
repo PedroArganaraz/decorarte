@@ -51,12 +51,13 @@ export default function SidebarPanel({
   return (
     <aside style={{
       width: "100%",
-      height: "100vh",
+      height: "100dvh",
       backgroundColor: "var(--color-card)",
       borderRight: "0.5px solid var(--color-borde)",
       display: "flex",
       flexDirection: "column",
       flexShrink: 0,
+      overflow: "hidden",
     }}>
 
       {/* HEADER: logo + botón colapsar */}
@@ -173,6 +174,7 @@ export default function SidebarPanel({
         display: "flex",
         justifyContent: colapsado ? "center" : "stretch",
         flexShrink: 0,
+        marginTop: "auto",
       }}>
         {colapsado ? (
           <button
