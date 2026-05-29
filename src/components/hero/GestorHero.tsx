@@ -203,12 +203,18 @@ export default function GestorHero({ imagenesIniciales }: Props) {
       {/* Header */}
       <div style={{ marginBottom: "32px" }}>
         <Link href="/panel" style={{
-          fontSize: "11px",
+          fontSize: "13px",
           fontFamily: "'Jost', sans-serif",
+          fontWeight: 400,
           letterSpacing: "0.1em",
-          color: "var(--color-texto-muted)",
+          textTransform: "uppercase",
+          color: "var(--color-texto)",
           textDecoration: "none",
-          display: "inline-block",
+          display: "inline-flex",
+          alignItems: "center",
+          gap: "6px",
+          padding: "8px 16px",
+          border: "0.5px solid var(--color-borde)",
           marginBottom: "16px",
         }}>
           ← Volver

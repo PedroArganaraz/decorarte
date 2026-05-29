@@ -67,7 +67,7 @@ export default function LayoutPanel({ children }: { children: React.ReactNode })
         <SidebarPanel
           onCerrar={() => setSidebarAbierto(false)}
           colapsado={!esMobile && colapsadoReal}
-          onToggleColapso={toggleColapso}
+          onToggleColapso={esMobile ? () => setSidebarAbierto(false) : toggleColapso}
         />
       </div>
 

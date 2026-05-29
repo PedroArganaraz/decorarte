@@ -116,6 +116,7 @@ export default function SidebarPanel({
             justifyContent: "center",
             borderRadius: 0,
             flex: colapsado ? 1 : undefined,
+            touchAction: "manipulation",
           }}
         >
           {colapsado
