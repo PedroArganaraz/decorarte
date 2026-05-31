@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
+import EditorNotas from "@/components/notas/EditorNotas"
 
 interface Props {
   nota?: {
@@ -98,12 +99,9 @@ export default function FormularioNota({ nota }: Props) {
 
         <div>
           <label style={estiloLabel}>Descripción</label>
-          <textarea
-            value={form.descripcion}
-            onChange={(e) => setForm((prev) => ({ ...prev, descripcion: e.target.value }))}
-            rows={12}
-            placeholder="Escribí el contenido de la nota..."
-            style={{ ...estiloInput, resize: "vertical" }}
+          <EditorNotas
+            contenido={form.descripcion}
+            onChange={(html) => setForm((prev) => ({ ...prev, descripcion: html }))}
           />
         </div>
       </div>

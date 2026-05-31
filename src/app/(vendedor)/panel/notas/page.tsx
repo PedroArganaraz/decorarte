@@ -2,6 +2,10 @@ import { prisma } from "@/lib/prisma"
 import Link from "next/link"
 import EliminarNotaCard from "@/components/notas/EliminarNotaCard"
 
+function stripHtml(html: string): string {
+  return html.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim()
+}
+
 function fechaRelativa(fecha: Date): string {
   const diff = Date.now() - fecha.getTime()
   const minutos = Math.floor(diff / 60000)
@@ -138,7 +142,7 @@ export default async function PaginaNotas() {
                     WebkitLineClamp: 3,
                     WebkitBoxOrient: "vertical",
                   }}>
-                    {nota.descripcion}
+                    {stripHtml(nota.descripcion).slice(0, 120)}
                   </p>
                 )}
 
