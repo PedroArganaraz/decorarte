@@ -24,6 +24,7 @@ interface Props {
     talle: string | null
     color: string | null
     categoriaId: string
+    creadoEn?: string
   }
 }
 
@@ -45,6 +46,7 @@ export default function FormularioProducto({ categorias, accionesExtra, producto
     talle: producto?.talle ?? "",
     color: producto?.color ?? "",
     categoriaId: producto?.categoriaId ?? "",
+    creadoEn: producto?.creadoEn ?? new Date().toISOString().split("T")[0],
   })
 
   const [cargando, setCargando] = useState(false)
@@ -105,6 +107,7 @@ export default function FormularioProducto({ categorias, accionesExtra, producto
       talle: form.talle || null,
       color: form.color || null,
       categoriaId: form.categoriaId,
+      creadoEn: form.creadoEn ? new Date(form.creadoEn + "T12:00:00.000Z").toISOString() : undefined,
     }
 
     const url = esEdicion ? `/api/productos/${producto.id}` : "/api/productos"
@@ -259,6 +262,17 @@ export default function FormularioProducto({ categorias, accionesExtra, producto
               onChange={(e) => actualizar("color", e.target.value)}
               placeholder="Ej: Dorado, Plateado, Negro"
               style={estiloInput}
+            />
+          </div>
+
+          <div>
+            <label style={estiloLabel}>Fecha de ingreso</label>
+            <input
+              type="date"
+              value={form.creadoEn}
+              onChange={(e) => actualizar("creadoEn", e.target.value)}
+              onClick={(e) => (e.currentTarget as HTMLInputElement).showPicker?.()}
+              style={{ ...estiloInput, cursor: "pointer" }}
             />
           </div>
         </div>

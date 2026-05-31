@@ -46,6 +46,7 @@ export default async function PaginaEditarProducto({
     talle: producto.talle,
     color: producto.color,
     categoriaId: producto.categoriaId,
+    creadoEn: producto.creadoEn.toISOString().split("T")[0],
   }
 
   return (
