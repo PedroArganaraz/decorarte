@@ -198,8 +198,8 @@ export default async function PaginaProductos({ searchParams }: Props) {
                 <tr key={producto.id} style={{ borderBottom: "0.5px solid var(--color-superficie)" }}>
                   <td style={{ padding: "12px 16px" }}>
                     <div style={{
-                      width: "64px",
-                      height: "64px",
+                      width: "80px",
+                      height: "80px",
                       backgroundColor: "var(--color-superficie)",
                       backgroundImage: producto.imagenes[0] ? `url(${producto.imagenes[0].urlPublica})` : "none",
                       backgroundSize: "cover",
