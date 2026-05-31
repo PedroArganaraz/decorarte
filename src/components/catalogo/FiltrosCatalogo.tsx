@@ -75,8 +75,8 @@ export default function FiltrosCatalogo({ materiales, materialActivo, ordenActiv
         style={estiloSelect}
       >
         <option value="">Precio</option>
-        <option value="precio_asc">Menor precio</option>
-        <option value="precio_desc">Mayor precio</option>
+        <option value="precio_asc">De menor a mayor</option>
+        <option value="precio_desc">De mayor a menor</option>
       </select>
 
       {hayFiltros && (

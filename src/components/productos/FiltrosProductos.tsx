@@ -187,8 +187,8 @@ export default function FiltrosProductos({ categorias, materiales }: Props) {
         style={{ ...estiloInput, minWidth: "130px", width: esMobile ? "100%" : "auto" }}
       >
         <option value="">Precio</option>
-        <option value="precio_asc">Menor precio</option>
-        <option value="precio_desc">Mayor precio</option>
+        <option value="precio_asc">De menor a mayor</option>
+        <option value="precio_desc">De mayor a menor</option>
       </select>
 
       <label style={{

@@ -68,11 +68,15 @@ export default function NavCategoriasCliente({
     abrirCategoria(cat.materiales.length > 0 ? cat.id : null)
   }
 
-  function handleClickCat(cat: CategoriaConMateriales, e: React.MouseEvent) {
-    if (cat.materiales.length === 0) return
-    if (window.matchMedia("(pointer: coarse)").matches) {
-      e.preventDefault()
-      abrirCategoria(displayId === cat.id && !isExiting ? null : cat.id)
+  function toggleSubmenu(catId: string) {
+    if (displayId === catId && !isExiting) {
+      setIsExiting(true)
+      exitTimerRef.current = setTimeout(() => {
+        setDisplayId(null)
+        setIsExiting(false)
+      }, 250)
+    } else {
+      abrirCategoria(catId)
     }
   }
 
@@ -157,16 +161,46 @@ export default function NavCategoriasCliente({
             const estaActiva = categoriaActiva === cat.slug
             const tieneSubmenu = cat.materiales.length > 0
             const submenuAbierto = displayId === cat.id && !isExiting
+
+            if (!tieneSubmenu) {
+              return (
+                <Link
+                  key={cat.id}
+                  href={`/catalogo?categoria=${cat.slug}`}
+                  style={estiloLink(estaActiva)}
+                  onMouseEnter={() => handleMouseEnter(cat)}
+                >
+                  {cat.nombre}
+                </Link>
+              )
+            }
+
             return (
-              <Link
+              <div
                 key={cat.id}
-                href={`/catalogo?categoria=${cat.slug}`}
-                style={estiloLink(estaActiva)}
+                style={{ display: "inline-flex", alignItems: "stretch" }}
                 onMouseEnter={() => handleMouseEnter(cat)}
-                onClick={(e) => handleClickCat(cat, e)}
               >
-                {cat.nombre}
-                {tieneSubmenu && (
+                <Link
+                  href={`/catalogo?categoria=${cat.slug}`}
+                  style={{ ...estiloLink(estaActiva), paddingRight: "4px" }}
+                >
+                  {cat.nombre}
+                </Link>
+                <button
+                  onClick={() => toggleSubmenu(cat.id)}
+                  style={{
+                    background: "none",
+                    border: "none",
+                    borderBottom: estaActiva ? "2px solid var(--color-texto)" : "2px solid transparent",
+                    marginBottom: "-0.5px",
+                    cursor: "pointer",
+                    padding: "12px 12px 12px 4px",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    color: "var(--color-texto)",
+                  }}
+                >
                   <svg
                     width="10"
                     height="10"
@@ -183,8 +217,8 @@ export default function NavCategoriasCliente({
                   >
                     <polyline points="6 9 12 15 18 9" />
                   </svg>
-                )}
-              </Link>
+                </button>
+              </div>
             )
           })}
         </div>
