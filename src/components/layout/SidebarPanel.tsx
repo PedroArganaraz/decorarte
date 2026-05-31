@@ -12,6 +12,7 @@ import {
   Receipt,
   ShoppingBag,
   BarChart2,
+  FileText,
   LogOut,
   Minus,
 } from "lucide-react"
@@ -26,6 +27,7 @@ const navegacion: { label: string; href: string; Icono: LucideIcon }[] = [
   { label: "Categorías",  href: "/panel/categorias",  Icono: Tag },
   { label: "Materiales",  href: "/panel/materiales",  Icono: Layers },
   { label: "Reportes",    href: "/reportes",           Icono: BarChart2 },
+  { label: "Notas",       href: "/panel/notas",        Icono: FileText },
 ]
 
 interface Props {

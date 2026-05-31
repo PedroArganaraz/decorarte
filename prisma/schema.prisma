@@ -244,3 +244,13 @@ model ConfigHero {
 
   @@map("config_hero")
 }
+
+model Nota {
+  id             Int      @id @default(autoincrement())
+  titulo         String
+  descripcion    String?
+  creado_en      DateTime @default(now())
+  actualizado_en DateTime @updatedAt
+
+  @@map("notas")
+}
