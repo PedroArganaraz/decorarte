@@ -78,17 +78,21 @@ export default function FiltrosCatalogo({ materiales, materialActivo, ordenActiv
 
   return (
     <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", marginBottom: "20px" }}>
-      <input
-        type="text"
-        value={busqueda}
-        onChange={(e) => setBusqueda(e.target.value)}
-        placeholder="Buscar por nombre..."
-        style={{
-          ...estiloSelect,
-          cursor: "text",
-          minWidth: "200px",
-        }}
-      />
+      <div style={{ flex: "1 1 200px", minWidth: 0 }}>
+        <input
+          type="text"
+          value={busqueda}
+          onChange={(e) => setBusqueda(e.target.value)}
+          placeholder="Buscar por nombre..."
+          style={{
+            ...estiloSelect,
+            cursor: "text",
+            width: "100%",
+            minWidth: 0,
+            boxSizing: "border-box",
+          }}
+        />
+      </div>
 
       {materiales.length > 0 && (
         <select

@@ -1,5 +1,6 @@
 import type { Metadata } from "next"
 import { Toaster } from "sonner"
+import { Analytics } from "@vercel/analytics/react"
 import "./globals.css"
 
 export const metadata: Metadata = {
@@ -21,6 +22,7 @@ export default function LayoutRaiz({
       <body>
         {children}
         <Toaster position="bottom-center" />
+        <Analytics />
       </body>
     </html>
   )

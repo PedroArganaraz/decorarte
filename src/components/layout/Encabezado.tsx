@@ -2,14 +2,20 @@
 
 import Link from "next/link"
 import { useState, useEffect } from "react"
-import { useTamanioPantalla } from "@/hooks/useTamanioPantalla"
 import IconoCarrito from "@/components/carrito/IconoCarrito"
 import { crearClienteNavegador } from "@/lib/supabase/cliente"
 
 export default function Encabezado() {
-  const { esMobile } = useTamanioPantalla()
+  const [esMobile, setEsMobile] = useState(false)
   const [menuAbierto, setMenuAbierto] = useState(false)
   const [tieneSesion, setTieneSesion] = useState(false)
+
+  useEffect(() => {
+    const checkMobile = () => setEsMobile(window.innerWidth < 768)
+    checkMobile()
+    window.addEventListener("resize", checkMobile)
+    return () => window.removeEventListener("resize", checkMobile)
+  }, [])
 
   useEffect(() => {
     const supabase = crearClienteNavegador()
