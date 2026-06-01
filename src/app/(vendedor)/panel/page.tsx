@@ -1,6 +1,7 @@
 import Link from "next/link"
 import { crearClienteServidor } from "@/lib/supabase/servidor"
 import { prisma } from "@/lib/prisma"
+import DropdownCarrusel from "@/components/panel/DropdownCarrusel"
 
 export default async function PaginaPanel() {
   const supabase = await crearClienteServidor()
@@ -76,21 +77,7 @@ export default async function PaginaPanel() {
             {user?.email}
           </p>
         </div>
-        <Link href="/hero" style={{
-          padding: "10px 20px",
-          fontSize: "10px",
-          fontFamily: "'Jost', sans-serif",
-          fontWeight: 400,
-          letterSpacing: "0.12em",
-          textTransform: "uppercase",
-          backgroundColor: "var(--color-texto)",
-          color: "var(--color-fondo)",
-          border: "none",
-          textDecoration: "none",
-          whiteSpace: "nowrap",
-        }}>
-          Editar carrusel
-        </Link>
+        <DropdownCarrusel />
       </div>
 
       <div style={{

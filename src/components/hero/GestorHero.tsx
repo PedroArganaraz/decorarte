@@ -13,14 +13,36 @@ interface ImagenHero {
   posicion: number
   activa: boolean
   creadoEn: string
+  vista: string
 }
 
 interface Props {
-  imagenesIniciales: ImagenHero[]
+  imagenesDesktopIniciales: ImagenHero[]
+  imagenesMobileIniciales: ImagenHero[]
+  vistaInicial?: "desktop" | "mobile"
 }
 
-export default function GestorHero({ imagenesIniciales }: Props) {
-  const [imagenes, setImagenes] = useState<ImagenHero[]>(imagenesIniciales)
+type Vista = "desktop" | "mobile"
+
+export default function GestorHero({
+  imagenesDesktopIniciales,
+  imagenesMobileIniciales,
+  vistaInicial = "desktop",
+}: Props) {
+  const [vistaActual, setVistaActual] = useState<Vista>(vistaInicial)
+  const [imagenesDesktop, setImagenesDesktop] = useState<ImagenHero[]>(imagenesDesktopIniciales)
+  const [imagenesMobile, setImagenesMobile] = useState<ImagenHero[]>(imagenesMobileIniciales)
+
+  const imagenes = vistaActual === "desktop" ? imagenesDesktop : imagenesMobile
+
+  function actualizarImagenes(updater: (prev: ImagenHero[]) => ImagenHero[]) {
+    if (vistaActual === "desktop") {
+      setImagenesDesktop(updater)
+    } else {
+      setImagenesMobile(updater)
+    }
+  }
+
   const [subiendo, setSubiendo] = useState(false)
   const [eliminando, setEliminando] = useState<string | null>(null)
   const [confirmarEliminar, setConfirmarEliminar] = useState<string | null>(null)
@@ -35,6 +57,12 @@ export default function GestorHero({ imagenesIniciales }: Props) {
   const dragStartPosicion = useRef(50)
   const router = useRouter()
 
+  // Resetear slide al cambiar de vista
+  useEffect(() => {
+    setSlideActual(0)
+    setConfirmarEliminar(null)
+  }, [vistaActual])
+
   useEffect(() => {
     const guardado = localStorage.getItem("hero-intervalo")
     if (guardado) setIntervalo(Number(guardado))
@@ -46,7 +74,7 @@ export default function GestorHero({ imagenesIniciales }: Props) {
       setSlideActual((prev) => (prev + 1) % imagenes.length)
     }, intervalo * 1000)
     return () => clearInterval(timer)
-  }, [imagenes.length, intervalo])
+  }, [imagenes.length, intervalo, vistaActual])
 
   const cambiarIntervalo = async (segundos: number) => {
     setIntervalo(segundos)
@@ -72,13 +100,14 @@ export default function GestorHero({ imagenesIniciales }: Props) {
   const subirArchivo = async (archivo: File) => {
     const formData = new FormData()
     formData.append("archivo", archivo)
+    formData.append("vista", vistaActual)
     const res = await fetch("/api/hero", { method: "POST", body: formData })
     const data = await res.json()
     if (!res.ok) {
       toast.error(data.error || "Error al subir la imagen")
       return
     }
-    setImagenes((prev) => [...prev, data.datos])
+    actualizarImagenes((prev) => [...prev, data.datos])
     toast.success("Imagen subida correctamente")
     router.refresh()
   }
@@ -102,7 +131,7 @@ export default function GestorHero({ imagenesIniciales }: Props) {
       setEliminando(null)
       return
     }
-    setImagenes((prev) => prev.filter((img) => img.id !== id))
+    actualizarImagenes((prev) => prev.filter((img) => img.id !== id))
     setConfirmarEliminar(null)
     toast.success("Imagen eliminada")
     router.refresh()
@@ -116,7 +145,7 @@ export default function GestorHero({ imagenesIniciales }: Props) {
     const [movida] = lista.splice(origenIdx, 1)
     lista.splice(destinoIdx, 0, movida)
     const actualizadas = lista.map((img, idx) => ({ ...img, orden: idx }))
-    setImagenes(actualizadas)
+    actualizarImagenes(() => actualizadas)
     await fetch("/api/hero/orden", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -149,7 +178,7 @@ export default function GestorHero({ imagenesIniciales }: Props) {
   }
 
   const actualizarPosicion = (id: string, posicion: number) => {
-    setImagenes((prev) =>
+    actualizarImagenes((prev) =>
       prev.map((img) => (img.id === id ? { ...img, posicion } : img))
     )
   }
@@ -197,6 +226,11 @@ export default function GestorHero({ imagenesIniciales }: Props) {
     manejarArchivos(e.dataTransfer.files)
   }
 
+  // Aspect ratio y label según vista
+  const esDesktop = vistaActual === "desktop"
+  const previewRatio = esDesktop ? "16/6" : "9/16"
+  const previewMaxWidth = esDesktop ? "100%" : "280px"
+
   return (
     <div style={{ padding: "32px", minHeight: "100vh", backgroundColor: "var(--color-fondo)" }}>
 
@@ -238,6 +272,36 @@ export default function GestorHero({ imagenesIniciales }: Props) {
         </p>
       </div>
 
+      {/* Tabs */}
+      <div style={{
+        display: "flex",
+        borderBottom: "0.5px solid var(--color-borde)",
+        marginBottom: "24px",
+      }}>
+        {(["desktop", "mobile"] as Vista[]).map((v) => (
+          <button
+            key={v}
+            onClick={() => setVistaActual(v)}
+            style={{
+              padding: "10px 24px",
+              fontSize: "11px",
+              fontFamily: "'Jost', sans-serif",
+              fontWeight: vistaActual === v ? 500 : 400,
+              letterSpacing: "0.12em",
+              textTransform: "uppercase",
+              backgroundColor: "transparent",
+              color: vistaActual === v ? "var(--color-texto)" : "var(--color-texto-muted)",
+              border: "none",
+              borderBottom: vistaActual === v ? "2px solid var(--color-texto)" : "2px solid transparent",
+              cursor: "pointer",
+              marginBottom: "-0.5px",
+            }}
+          >
+            {v === "desktop" ? "Vista Web" : "Vista Celular"}
+          </button>
+        ))}
+      </div>
+
       {/* Upload zone */}
       <div style={{
         backgroundColor: "var(--color-card)",
@@ -252,7 +316,7 @@ export default function GestorHero({ imagenesIniciales }: Props) {
           color: "var(--color-texto)",
           marginBottom: "20px",
         }}>
-          Agregar imagen
+          Agregar imagen — {esDesktop ? "Vista Web" : "Vista Celular"}
         </h2>
         <div
           onDrop={manejarDropZona}
@@ -288,12 +352,12 @@ export default function GestorHero({ imagenesIniciales }: Props) {
             color: "var(--color-texto-sutil)",
             letterSpacing: "0.05em",
           }}>
-            JPG, PNG, WebP o AVIF — máx. 5MB por imagen
+            {esDesktop ? "Imágenes landscape recomendadas" : "Imágenes portrait recomendadas"} — JPG, PNG, WebP o AVIF — máx. 5MB
           </p>
         </div>
       </div>
 
-      {/* Configuración */}
+      {/* Configuración (compartida entre vistas) */}
       <div style={{
         backgroundColor: "var(--color-card)",
         border: "0.5px solid var(--color-borde)",
@@ -348,7 +412,7 @@ export default function GestorHero({ imagenesIniciales }: Props) {
             color: "var(--color-texto)",
             marginBottom: "20px",
           }}>
-            Imágenes del carrusel
+            Imágenes del carrusel — {esDesktop ? "Vista Web" : "Vista Celular"}
           </h2>
           <div style={{
             display: "grid",
@@ -394,7 +458,7 @@ export default function GestorHero({ imagenesIniciales }: Props) {
                   alt={`Hero ${idx + 1}`}
                   style={{
                     width: "100%",
-                    aspectRatio: "16/9",
+                    aspectRatio: esDesktop ? "16/9" : "3/4",
                     objectFit: "cover",
                     objectPosition: `center ${img.posicion}%`,
                     display: "block",
@@ -479,11 +543,13 @@ export default function GestorHero({ imagenesIniciales }: Props) {
           color: "var(--color-texto)",
           marginBottom: "20px",
         }}>
-          Vista previa
+          Vista previa — {esDesktop ? "Vista Web" : "Vista Celular"}
         </h2>
         {imagenes.length === 0 ? (
           <div style={{
-            aspectRatio: "16/6",
+            aspectRatio: previewRatio,
+            maxWidth: previewMaxWidth,
+            margin: "0 auto",
             backgroundColor: "var(--color-superficie)",
             border: "0.5px dashed var(--color-borde)",
             display: "flex",
@@ -501,11 +567,11 @@ export default function GestorHero({ imagenesIniciales }: Props) {
             </p>
           </div>
         ) : (
-          <div>
+          <div style={{ maxWidth: previewMaxWidth, margin: "0 auto" }}>
             <div
               style={{
                 position: "relative",
-                aspectRatio: "16/6",
+                aspectRatio: previewRatio,
                 overflow: "hidden",
                 cursor: arrastrando ? "grabbing" : "grab",
                 userSelect: "none",

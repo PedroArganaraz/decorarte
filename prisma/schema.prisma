@@ -233,6 +233,7 @@ model ImagenHero {
   orden       Int      @default(0)
   posicion    Int      @default(50)
   activa      Boolean  @default(true)
+  vista       String   @default("desktop")
   creadoEn    DateTime @default(now()) @map("creado_en")
 
   @@map("imagenes_hero")

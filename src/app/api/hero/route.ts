@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma"
 import { crearClienteServidor, crearClienteAdmin } from "@/lib/supabase/servidor"
 import type { RespuestaAPI } from "@/tipos"
 
-export async function GET() {
+export async function GET(solicitud: NextRequest) {
   try {
     const supabase = await crearClienteServidor()
     const { data: { user } } = await supabase.auth.getUser()
@@ -13,8 +13,14 @@ export async function GET() {
       return NextResponse.json<RespuestaAPI<null>>({ error: "No autorizado" }, { status: 401 })
     }
 
+    const { searchParams } = new URL(solicitud.url)
+    const vista = searchParams.get("vista") // "desktop" | "mobile" | null
+
     const imagenes = await prisma.imagenHero.findMany({
-      where: { activa: true },
+      where: {
+        activa: true,
+        ...(vista && { vista }),
+      },
       orderBy: { orden: "asc" },
     })
 
@@ -36,6 +42,7 @@ export async function POST(solicitud: NextRequest) {
 
     const formData = await solicitud.formData()
     const archivo = formData.get("archivo") as File
+    const vista = (formData.get("vista") as string) || "desktop"
 
     if (!archivo) {
       return NextResponse.json<RespuestaAPI<null>>({ error: "No se envió ningún archivo" }, { status: 400 })
@@ -57,7 +64,7 @@ export async function POST(solicitud: NextRequest) {
       )
     }
 
-    const cantidadImagenes = await prisma.imagenHero.count({ where: { activa: true } })
+    const cantidadImagenes = await prisma.imagenHero.count({ where: { activa: true, vista } })
 
     const extension = archivo.name.split(".").pop()
     const pathInterno = `hero/${Date.now()}.${extension}`
@@ -83,6 +90,7 @@ export async function POST(solicitud: NextRequest) {
         pathInterno,
         orden: cantidadImagenes,
         activa: true,
+        vista,
       },
     })
 

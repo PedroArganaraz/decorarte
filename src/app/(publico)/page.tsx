@@ -7,14 +7,23 @@ import HeroCarrusel from "@/components/hero/HeroCarrusel"
 export const revalidate = 1800
 
 export default async function PaginaInicio() {
-  const [imagenesHero, configHero] = await Promise.all([
+  const [imagenesDesktop, imagenesMobile, configHero] = await Promise.all([
     prisma.imagenHero.findMany({
-      where: { activa: true },
+      where: { activa: true, vista: "desktop" },
+      orderBy: { orden: "asc" },
+      select: { id: true, urlPublica: true, posicion: true },
+    }),
+    prisma.imagenHero.findMany({
+      where: { activa: true, vista: "mobile" },
       orderBy: { orden: "asc" },
       select: { id: true, urlPublica: true, posicion: true },
     }),
     prisma.configHero.findUnique({ where: { id: 1 } }).catch(() => null),
   ])
+
+  // Si no hay imágenes mobile, usar las de desktop como fallback
+  const imagenesMobileFinal = imagenesMobile.length > 0 ? imagenesMobile : imagenesDesktop
+  const intervalo = configHero?.intervalo ?? 3
 
   const destacados = await prisma.producto.findMany({
     where: { activo: true, destacado: true },
@@ -75,7 +84,16 @@ export default async function PaginaInicio() {
       <NavCategorias />
 
       {/* HERO */}
-      <HeroCarrusel imagenes={imagenesHero} intervalo={configHero?.intervalo ?? 3} />
+      <style>{`
+        @media (min-width: 768px) { .hero-mobile { display: none; } }
+        @media (max-width: 767px) { .hero-desktop { display: none; } }
+      `}</style>
+      <div className="hero-desktop">
+        <HeroCarrusel imagenes={imagenesDesktop} intervalo={intervalo} />
+      </div>
+      <div className="hero-mobile">
+        <HeroCarrusel imagenes={imagenesMobileFinal} intervalo={intervalo} />
+      </div>
 
       {/* DESTACADOS */}
       {destacados.length > 0 && (
