@@ -94,30 +94,32 @@ export default function FiltrosCatalogo({ materiales, materialActivo, ordenActiv
         />
       </div>
 
-      {materiales.length > 0 && (
-        <select
-          value={materialActivoNorm}
-          onChange={(e) => navegar("material", e.target.value)}
-          style={estiloSelect}
-        >
-          <option value="">Material</option>
-          {materiales.map((m) => (
-            <option key={m} value={m}>
-              {m}
-            </option>
-          ))}
-        </select>
-      )}
+      <div style={{ display: "flex", width: "100%", gap: "10px" }}>
+        {materiales.length > 0 && (
+          <select
+            value={materialActivoNorm}
+            onChange={(e) => navegar("material", e.target.value)}
+            style={{ ...estiloSelect, flex: 1, minWidth: 0 }}
+          >
+            <option value="">Material</option>
+            {materiales.map((m) => (
+              <option key={m} value={m}>
+                {m}
+              </option>
+            ))}
+          </select>
+        )}
 
-      <select
-        value={ordenActivo ?? ""}
-        onChange={(e) => navegar("orden", e.target.value)}
-        style={estiloSelect}
-      >
-        <option value="">Precio</option>
-        <option value="precio_asc">De menor a mayor</option>
-        <option value="precio_desc">De mayor a menor</option>
-      </select>
+        <select
+          value={ordenActivo ?? ""}
+          onChange={(e) => navegar("orden", e.target.value)}
+          style={{ ...estiloSelect, flex: 1, minWidth: 0 }}
+        >
+          <option value="">Precio</option>
+          <option value="precio_asc">De menor a mayor</option>
+          <option value="precio_desc">De mayor a menor</option>
+        </select>
+      </div>
 
       {hayFiltros && (
         <button
