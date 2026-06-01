@@ -139,6 +139,7 @@ export default async function PaginaCatalogo({ searchParams }: Props) {
             materiales={materialesDisponibles}
             materialActivo={material}
             ordenActivo={orden}
+            busquedaActiva={busqueda}
           />
         </Suspense>
 

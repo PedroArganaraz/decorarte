@@ -20,6 +20,8 @@ export default function FiltrosProductos({ categorias, materiales }: Props) {
   const [soloActivos, setSoloActivos] = useState(searchParams.get("soloActivos") === "1")
   const [material, setMaterial] = useState(searchParams.get("material") ?? "")
   const [orden, setOrden] = useState(searchParams.get("orden") ?? "")
+  const [fechaDesde, setFechaDesde] = useState(searchParams.get("fechaDesde") ?? "")
+  const [fechaHasta, setFechaHasta] = useState(searchParams.get("fechaHasta") ?? "")
   const { esMobile } = useTamanioPantalla()
   const inicializado = useRef(false)
 
@@ -30,7 +32,9 @@ export default function FiltrosProductos({ categorias, materiales }: Props) {
       searchParams.get("categoriaId") ||
       searchParams.get("soloActivos") ||
       searchParams.get("material") ||
-      searchParams.get("orden")
+      searchParams.get("orden") ||
+      searchParams.get("fechaDesde") ||
+      searchParams.get("fechaHasta")
     if (!tieneParams) {
       try {
         const guardados = localStorage.getItem(STORAGE_KEY)
@@ -41,23 +45,31 @@ export default function FiltrosProductos({ categorias, materiales }: Props) {
             soloActivos?: boolean
             material?: string
             orden?: string
+            fechaDesde?: string
+            fechaHasta?: string
           }
           const n = parsed.nombre ?? ""
           const c = parsed.categoriaId ?? ""
           const s = parsed.soloActivos ?? false
           const m = parsed.material ?? ""
           const o = parsed.orden ?? ""
+          const fd = parsed.fechaDesde ?? ""
+          const fh = parsed.fechaHasta ?? ""
           setNombre(n)
           setCategoriaId(c)
           setSoloActivos(s)
           setMaterial(m)
           setOrden(o)
+          setFechaDesde(fd)
+          setFechaHasta(fh)
           const params = new URLSearchParams()
           if (n) params.set("nombre", n)
           if (c) params.set("categoriaId", c)
           if (s) params.set("soloActivos", "1")
           if (m) params.set("material", m)
           if (o) params.set("orden", o)
+          if (fd) params.set("fechaDesde", fd)
+          if (fh) params.set("fechaHasta", fh)
           const qs = params.toString()
           if (qs) router.push(`/panel/productos?${qs}`)
         }
@@ -72,22 +84,28 @@ export default function FiltrosProductos({ categorias, materiales }: Props) {
     try {
       localStorage.setItem(
         STORAGE_KEY,
-        JSON.stringify({ nombre, categoriaId, soloActivos, material, orden })
+        JSON.stringify({ nombre, categoriaId, soloActivos, material, orden, fechaDesde, fechaHasta })
       )
     } catch {}
-  }, [nombre, categoriaId, soloActivos, material, orden])
+  }, [nombre, categoriaId, soloActivos, material, orden, fechaDesde, fechaHasta])
+
+  function buildParams() {
+    const params = new URLSearchParams()
+    if (nombre) params.set("nombre", nombre)
+    if (categoriaId) params.set("categoriaId", categoriaId)
+    if (soloActivos) params.set("soloActivos", "1")
+    if (material) params.set("material", material)
+    if (orden) params.set("orden", orden)
+    if (fechaDesde) params.set("fechaDesde", fechaDesde)
+    if (fechaHasta) params.set("fechaHasta", fechaHasta)
+    return params
+  }
 
   // Auto-apply: texto con debounce 300ms
   useEffect(() => {
     if (!inicializado.current) return
     const timer = setTimeout(() => {
-      const params = new URLSearchParams()
-      if (nombre) params.set("nombre", nombre)
-      if (categoriaId) params.set("categoriaId", categoriaId)
-      if (soloActivos) params.set("soloActivos", "1")
-      if (material) params.set("material", material)
-      if (orden) params.set("orden", orden)
-      router.push(`/panel/productos?${params.toString()}`)
+      router.push(`/panel/productos?${buildParams().toString()}`)
     }, 300)
     return () => clearTimeout(timer)
   }, [nombre]) // eslint-disable-line react-hooks/exhaustive-deps
@@ -95,14 +113,22 @@ export default function FiltrosProductos({ categorias, materiales }: Props) {
   // Auto-apply: selects de forma inmediata
   useEffect(() => {
     if (!inicializado.current) return
+    router.push(`/panel/productos?${buildParams().toString()}`)
+  }, [categoriaId, soloActivos, material, orden]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Fechas: aplicar con los valores nuevos explícitos para evitar estado stale
+  const aplicarFechaFiltro = (nuevoDesde: string, nuevoHasta: string) => {
+    if (!inicializado.current) return
     const params = new URLSearchParams()
     if (nombre) params.set("nombre", nombre)
     if (categoriaId) params.set("categoriaId", categoriaId)
     if (soloActivos) params.set("soloActivos", "1")
     if (material) params.set("material", material)
     if (orden) params.set("orden", orden)
+    if (nuevoDesde) params.set("fechaDesde", nuevoDesde)
+    if (nuevoHasta) params.set("fechaHasta", nuevoHasta)
     router.push(`/panel/productos?${params.toString()}`)
-  }, [categoriaId, soloActivos, material, orden]) // eslint-disable-line react-hooks/exhaustive-deps
+  }
 
   const limpiar = () => {
     try { localStorage.removeItem(STORAGE_KEY) } catch {}
@@ -111,6 +137,8 @@ export default function FiltrosProductos({ categorias, materiales }: Props) {
     setSoloActivos(false)
     setMaterial("")
     setOrden("")
+    setFechaDesde("")
+    setFechaHasta("")
     router.push("/panel/productos")
   }
 
@@ -128,6 +156,9 @@ export default function FiltrosProductos({ categorias, materiales }: Props) {
 
   return (
     <div style={{ marginBottom: "20px" }}>
+    <style>{`
+      .fecha-filtro-vacia::-webkit-datetime-edit-fields-wrapper { visibility: hidden; }
+    `}</style>
     <p style={{
       fontSize: "10px",
       fontFamily: "'Jost', sans-serif",
@@ -190,6 +221,66 @@ export default function FiltrosProductos({ categorias, materiales }: Props) {
         <option value="precio_asc">De menor a mayor</option>
         <option value="precio_desc">De mayor a menor</option>
       </select>
+
+      <div style={{ position: "relative", width: esMobile ? "100%" : "auto" }}>
+        <input
+          type="date"
+          value={fechaDesde}
+          onChange={(e) => {
+            const v = e.target.value
+            setFechaDesde(v)
+            aplicarFechaFiltro(v, fechaHasta)
+          }}
+          onClick={(e) => (e.currentTarget as HTMLInputElement).showPicker?.()}
+          className={!fechaDesde ? "fecha-filtro-vacia" : undefined}
+          style={{ ...estiloInput, width: "100%", cursor: "pointer" }}
+        />
+        {!fechaDesde && (
+          <span style={{
+            position: "absolute",
+            left: "12px",
+            top: "50%",
+            transform: "translateY(-50%)",
+            fontSize: "13px",
+            fontFamily: "'Jost', sans-serif",
+            fontWeight: 300,
+            color: "var(--color-texto-muted)",
+            pointerEvents: "none",
+          }}>
+            Fecha desde
+          </span>
+        )}
+      </div>
+
+      <div style={{ position: "relative", width: esMobile ? "100%" : "auto" }}>
+        <input
+          type="date"
+          value={fechaHasta}
+          onChange={(e) => {
+            const v = e.target.value
+            setFechaHasta(v)
+            aplicarFechaFiltro(fechaDesde, v)
+          }}
+          onClick={(e) => (e.currentTarget as HTMLInputElement).showPicker?.()}
+          className={!fechaHasta ? "fecha-filtro-vacia" : undefined}
+          style={{ ...estiloInput, width: "100%", cursor: "pointer" }}
+        />
+        {!fechaHasta && (
+          <span style={{
+            position: "absolute",
+            left: "12px",
+            top: "50%",
+            transform: "translateY(-50%)",
+            fontSize: "13px",
+            fontFamily: "'Jost', sans-serif",
+            fontWeight: 300,
+            color: "var(--color-texto-muted)",
+            pointerEvents: "none",
+          }}>
+            Fecha hasta
+          </span>
+        )}
+      </div>
 
       <label style={{
         display: "flex",

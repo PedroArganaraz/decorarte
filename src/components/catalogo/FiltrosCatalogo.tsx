@@ -1,16 +1,38 @@
 "use client"
 
+import { useState, useEffect, useRef } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 
 interface Props {
   materiales: string[]
   materialActivo?: string
   ordenActivo?: string
+  busquedaActiva?: string
 }
 
-export default function FiltrosCatalogo({ materiales, materialActivo, ordenActivo }: Props) {
+export default function FiltrosCatalogo({ materiales, materialActivo, ordenActivo, busquedaActiva }: Props) {
   const router = useRouter()
   const searchParams = useSearchParams()
+  const [busqueda, setBusqueda] = useState(busquedaActiva ?? "")
+  const montado = useRef(false)
+
+  useEffect(() => {
+    if (!montado.current) {
+      montado.current = true
+      return
+    }
+    const timer = setTimeout(() => {
+      const params = new URLSearchParams(searchParams.toString())
+      if (busqueda) {
+        params.set("busqueda", busqueda)
+      } else {
+        params.delete("busqueda")
+      }
+      params.delete("page")
+      router.replace(`/catalogo?${params.toString()}`)
+    }, 300)
+    return () => clearTimeout(timer)
+  }, [busqueda])
 
   function navegar(clave: string, valor: string) {
     const params = new URLSearchParams(searchParams.toString())
@@ -24,9 +46,11 @@ export default function FiltrosCatalogo({ materiales, materialActivo, ordenActiv
   }
 
   function limpiar() {
+    setBusqueda("")
     const params = new URLSearchParams(searchParams.toString())
     params.delete("material")
     params.delete("orden")
+    params.delete("busqueda")
     params.delete("page")
     router.push(`/catalogo?${params.toString()}`)
   }
@@ -35,7 +59,7 @@ export default function FiltrosCatalogo({ materiales, materialActivo, ordenActiv
     ? materialActivo.charAt(0).toUpperCase() + materialActivo.slice(1).toLowerCase()
     : ""
 
-  const hayFiltros = !!(materialActivo || ordenActivo)
+  const hayFiltros = !!(materialActivo || ordenActivo || busqueda)
 
   const estiloSelect = {
     padding: "8px 12px",
@@ -54,6 +78,18 @@ export default function FiltrosCatalogo({ materiales, materialActivo, ordenActiv
 
   return (
     <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", marginBottom: "20px" }}>
+      <input
+        type="text"
+        value={busqueda}
+        onChange={(e) => setBusqueda(e.target.value)}
+        placeholder="Buscar por nombre..."
+        style={{
+          ...estiloSelect,
+          cursor: "text",
+          minWidth: "200px",
+        }}
+      />
+
       {materiales.length > 0 && (
         <select
           value={materialActivoNorm}

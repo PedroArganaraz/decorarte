@@ -11,12 +11,14 @@ interface Props {
     soloActivos?: string
     material?: string
     orden?: string
+    fechaDesde?: string
+    fechaHasta?: string
     page?: string
   }>
 }
 
 export default async function PaginaProductos({ searchParams }: Props) {
-  const { nombre, categoriaId, soloActivos, material, orden, page } = await searchParams
+  const { nombre, categoriaId, soloActivos, material, orden, fechaDesde, fechaHasta, page } = await searchParams
 
   const pageNum = Math.max(1, parseInt(page ?? "1", 10) || 1)
 
@@ -25,6 +27,12 @@ export default async function PaginaProductos({ searchParams }: Props) {
     ...(categoriaId && { categoriaId }),
     ...(soloActivos === "1" && { activo: true }),
     ...(material && { material: { contains: material, mode: "insensitive" as const } }),
+    ...((fechaDesde || fechaHasta) && {
+      creadoEn: {
+        ...(fechaDesde && { gte: new Date(fechaDesde + "T00:00:00.000Z") }),
+        ...(fechaHasta && { lte: new Date(fechaHasta + "T23:59:59.999Z") }),
+      },
+    }),
   }
 
   const orderBy =
