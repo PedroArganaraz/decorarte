@@ -274,7 +274,7 @@ export default function SelectorCombinados({ productoId, combinadosIniciales }: 
                 onChange={(e) => setMaterialFiltro(e.target.value)}
                 style={{ ...estiloInput, minWidth: "120px" }}
               >
-                <option value="">Material</option>
+                <option value="">Todos los materiales</option>
                 {materiales.map((m) => (
                   <option key={m} value={m}>{m}</option>
                 ))}
@@ -349,7 +349,7 @@ export default function SelectorCombinados({ productoId, combinadosIniciales }: 
                           letterSpacing: "0.05em",
                         }}>
                           {p.categoria.nombre}
-                          {p.material && ` · ${p.material}`}
+                          {p.material && ` — ${p.material}`}
                         </p>
                       </div>
                       <div style={{

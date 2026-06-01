@@ -11,6 +11,7 @@ export async function GET(solicitud: NextRequest) {
     const categoriaSlug = searchParams.get("categoria")
     const soloDestacados = searchParams.get("destacados") === "true"
     const busqueda = searchParams.get("busqueda")
+    const material = searchParams.get("material")
 
     const productos = await prisma.producto.findMany({
       where: {
@@ -18,6 +19,7 @@ export async function GET(solicitud: NextRequest) {
         ...(categoriaSlug && { categoria: { slug: categoriaSlug } }),
         ...(soloDestacados && { destacado: true }),
         ...(busqueda && { nombre: { contains: busqueda, mode: "insensitive" } }),
+        ...(material && { material: { equals: material, mode: "insensitive" } }),
       },
       select: {
         id: true,
@@ -28,13 +30,14 @@ export async function GET(solicitud: NextRequest) {
         stock: true,
         activo: true,
         destacado: true,
+        material: true,
         imagenes: {
           select: { urlPublica: true, altText: true, esPrincipal: true },
           orderBy: { orden: "asc" },
         },
         categoria: { select: { nombre: true, slug: true } },
       },
-      orderBy: { creadoEn: "desc" },
+      orderBy: [{ categoria: { nombre: "asc" } }, { nombre: "asc" }],
     })
 
     return NextResponse.json<RespuestaAPI<ProductoResumen[]>>({ datos: productos })
