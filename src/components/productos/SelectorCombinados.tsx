@@ -35,6 +35,8 @@ export default function SelectorCombinados({ productoId, combinadosIniciales }: 
   const [busqueda, setBusqueda] = useState("")
   const [categorias, setCategorias] = useState<{ id: string; nombre: string; slug: string }[]>([])
   const [categoriaFiltro, setCategoriaFiltro] = useState("")
+  const [materialFiltro, setMaterialFiltro] = useState("")
+  const [materiales, setMateriales] = useState<string[]>([])
 
   useEffect(() => {
     fetch("/api/categorias")
@@ -42,22 +44,30 @@ export default function SelectorCombinados({ productoId, combinadosIniciales }: 
       .then((d) => setCategorias(d.datos ?? []))
   }, [])
 
+  useEffect(() => {
+    fetch("/api/materiales")
+      .then((r) => r.json())
+      .then((d) => setMateriales((d.datos ?? []).map((m: { nombre: string }) => m.nombre)))
+  }, [])
+
   const buscarProductos = async () => {
     setCargando(true)
     const params = new URLSearchParams()
     if (busqueda) params.set("busqueda", busqueda)
     if (categoriaFiltro) params.set("categoria", categoriaFiltro)
+    if (materialFiltro) params.set("material", materialFiltro)
 
     const res = await fetch(`/api/productos?${params.toString()}`)
     const data = await res.json()
     const todosMenosEste = (data.datos ?? []).filter(
       (p: ProductoOpcion) => p.id !== productoId
     )
-    setProductos(todosMenosEste.map((p: ProductoOpcion & { precioAnterior?: number }) => ({
+    const prods = todosMenosEste.map((p: ProductoOpcion & { precioAnterior?: number }) => ({
       ...p,
       precio: Number(p.precio),
       precioAnterior: p.precioAnterior ? Number(p.precioAnterior) : null,
-    })))
+    }))
+    setProductos(prods)
     setCargando(false)
   }
 
@@ -81,6 +91,11 @@ export default function SelectorCombinados({ productoId, combinadosIniciales }: 
     if (!modalAbierto) return
     buscarProductos()
   }, [categoriaFiltro]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    if (!modalAbierto) return
+    buscarProductos()
+  }, [materialFiltro]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const toggleSeleccion = (producto: ProductoOpcion) => {
     setSeleccionTemp((prev) => {
@@ -242,7 +257,7 @@ export default function SelectorCombinados({ productoId, combinadosIniciales }: 
                 onChange={(e) => setBusqueda(e.target.value)}
                 onKeyDown={(e) => { if (e.key === "Enter") e.preventDefault() }}
                 placeholder="Buscar por nombre..."
-                style={{ ...estiloInput, flex: 1, minWidth: "160px" }}
+                style={{ ...estiloInput, minWidth: "140px", flex: "1 1 140px" }}
               />
               <select
                 value={categoriaFiltro}
@@ -252,6 +267,16 @@ export default function SelectorCombinados({ productoId, combinadosIniciales }: 
                 <option value="">Todas las categorías</option>
                 {categorias.map((cat) => (
                   <option key={cat.id} value={cat.slug}>{cat.nombre}</option>
+                ))}
+              </select>
+              <select
+                value={materialFiltro}
+                onChange={(e) => setMaterialFiltro(e.target.value)}
+                style={{ ...estiloInput, minWidth: "120px" }}
+              >
+                <option value="">Material</option>
+                {materiales.map((m) => (
+                  <option key={m} value={m}>{m}</option>
                 ))}
               </select>
             </div>
