@@ -228,8 +228,8 @@ export default function GestorHero({
 
   // Aspect ratio y label según vista
   const esDesktop = vistaActual === "desktop"
-  const previewRatio = esDesktop ? "16/6" : "9/16"
-  const previewMaxWidth = esDesktop ? "100%" : "280px"
+  const previewRatio = esDesktop ? "16/6" : "3/4"
+  const previewMaxWidth = esDesktop ? "100%" : "360px"
 
   return (
     <div style={{ padding: "32px", minHeight: "100vh", backgroundColor: "var(--color-fondo)" }}>
@@ -248,7 +248,7 @@ export default function GestorHero({
           alignItems: "center",
           gap: "6px",
           padding: "8px 16px",
-          border: "0.5px solid var(--color-borde)",
+          border: "0.5px solid var(--color-texto)",
           marginBottom: "16px",
         }}>
           ← Volver
