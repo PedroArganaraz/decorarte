@@ -42,7 +42,7 @@ export default function EditorNotas({ contenido, onChange }: Props) {
   useEffect(() => {
     if (!editor) return
     if (editor.getHTML() === contenido) return
-    editor.commands.setContent(contenido, false)
+    editor.commands.setContent(contenido, { emitUpdate: false })
   }, [contenido, editor])
 
   const estiloBtn = (activo: boolean): React.CSSProperties => ({
