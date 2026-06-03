@@ -30,7 +30,7 @@ export async function GET(solicitud: NextRequest) {
 
     const [ventas, gastos, productosSinStock, productosConStock, movimientosCaja] = await Promise.all([
       prisma.venta.findMany({
-        where: filtroPeriodo,
+        where: { ...filtroPeriodo, estado: { in: ["PAGADO", "PAGADO_Y_ENTREGADO"] } },
         include: {
           items: {
             include: {

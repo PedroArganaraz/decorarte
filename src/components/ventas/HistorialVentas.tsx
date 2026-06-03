@@ -622,6 +622,7 @@ export default function HistorialVentas() {
               )
             )
             setEditandoVenta(null)
+            fetchVentas()
           }}
         />
       )}

@@ -50,9 +50,9 @@ export async function GET(solicitud: NextRequest) {
         orderBy: { fecha: "desc" },
       }),
       prisma.venta.count({ where }),
-      prisma.itemVenta.aggregate({ _sum: { precioTotal: true }, where: { venta: where } }),
-      prisma.itemVenta.aggregate({ _sum: { precioTotal: true }, where: { venta: { ...where, metodoPago: "EFECTIVO" } } }),
-      prisma.itemVenta.aggregate({ _sum: { precioTotal: true }, where: { venta: { ...where, metodoPago: "TRANSFERENCIA" } } }),
+      prisma.itemVenta.aggregate({ _sum: { precioTotal: true }, where: { venta: { ...where, estado: { in: ["PAGADO", "PAGADO_Y_ENTREGADO"] } } } }),
+      prisma.itemVenta.aggregate({ _sum: { precioTotal: true }, where: { venta: { ...where, estado: { in: ["PAGADO", "PAGADO_Y_ENTREGADO"] }, metodoPago: "EFECTIVO" } } }),
+      prisma.itemVenta.aggregate({ _sum: { precioTotal: true }, where: { venta: { ...where, estado: { in: ["PAGADO", "PAGADO_Y_ENTREGADO"] }, metodoPago: "TRANSFERENCIA" } } }),
     ])
 
     const totalPaginas = Math.max(1, Math.ceil(total / limit))
