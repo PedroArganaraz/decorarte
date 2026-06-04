@@ -34,7 +34,14 @@ export async function GET(solicitud: NextRequest) {
       ...(cliente && { cliente: { contains: cliente, mode: Prisma.QueryMode.insensitive } }),
     }
 
-    const [ventas, total, sumaTotal, sumaEfectivo, sumaTransferencia] = await Promise.all([
+    const filtroFecha = desde || hasta ? {
+      fecha: {
+        ...(desde && { gte: new Date(desde) }),
+        ...(hasta && { lte: new Date(hasta) }),
+      },
+    } : {}
+
+    const [ventas, total, sumaTotal, sumaEfectivo, sumaTransferencia, ingresoEfectivo, ingresoTransferencia, transAEf, efATrans] = await Promise.all([
       prisma.venta.findMany({
         where,
         skip,
@@ -53,6 +60,10 @@ export async function GET(solicitud: NextRequest) {
       prisma.itemVenta.aggregate({ _sum: { precioTotal: true }, where: { venta: { ...where, estado: { in: ["PAGADO", "PAGADO_Y_ENTREGADO"] } } } }),
       prisma.itemVenta.aggregate({ _sum: { precioTotal: true }, where: { venta: { ...where, estado: { in: ["PAGADO", "PAGADO_Y_ENTREGADO"] }, metodoPago: "EFECTIVO" } } }),
       prisma.itemVenta.aggregate({ _sum: { precioTotal: true }, where: { venta: { ...where, estado: { in: ["PAGADO", "PAGADO_Y_ENTREGADO"] }, metodoPago: "TRANSFERENCIA" } } }),
+      prisma.movimientoCaja.aggregate({ _sum: { monto: true }, where: { tipo: "INGRESO", metodoPago: "EFECTIVO", ...filtroFecha } }),
+      prisma.movimientoCaja.aggregate({ _sum: { monto: true }, where: { tipo: "INGRESO", metodoPago: "TRANSFERENCIA", ...filtroFecha } }),
+      prisma.movimientoCaja.aggregate({ _sum: { monto: true }, where: { tipo: "TRANS_A_EF", ...filtroFecha } }),
+      prisma.movimientoCaja.aggregate({ _sum: { monto: true }, where: { tipo: "EF_A_TRANS", ...filtroFecha } }),
     ])
 
     const totalPaginas = Math.max(1, Math.ceil(total / limit))
@@ -63,9 +74,9 @@ export async function GET(solicitud: NextRequest) {
       pagina: page,
       totalPaginas,
       metricas: {
-        totalPeriodo: Number(sumaTotal._sum.precioTotal ?? 0),
-        totalEfectivo: Number(sumaEfectivo._sum.precioTotal ?? 0),
-        totalTransferencia: Number(sumaTransferencia._sum.precioTotal ?? 0),
+        totalPeriodo: Number(sumaTotal._sum.precioTotal ?? 0) + Number(ingresoEfectivo._sum.monto ?? 0) + Number(ingresoTransferencia._sum.monto ?? 0),
+        totalEfectivo: Number(sumaEfectivo._sum.precioTotal ?? 0) + Number(ingresoEfectivo._sum.monto ?? 0) + Number(transAEf._sum.monto ?? 0) - Number(efATrans._sum.monto ?? 0),
+        totalTransferencia: Number(sumaTransferencia._sum.precioTotal ?? 0) + Number(ingresoTransferencia._sum.monto ?? 0) + Number(efATrans._sum.monto ?? 0) - Number(transAEf._sum.monto ?? 0),
       },
     })
   } catch (error) {

@@ -211,6 +211,7 @@ export default function HistorialVentas() {
       const json = await res.json()
       if (!res.ok) throw new Error(json.error ?? "Error al eliminar")
       setMovimientos((prev) => prev.filter((m) => m.id !== id))
+      fetchVentas()
     } catch (e: unknown) {
       setErrorMov(e instanceof Error ? e.message : "Error al eliminar")
     } finally {
@@ -556,27 +557,28 @@ export default function HistorialVentas() {
                 {movimientos.map((mov) => {
                   const esEliminando = eliminandoMov === mov.id
                   const esProcesando = procesandoMov === mov.id
+                  const esIngreso = mov.tipo === "INGRESO"
                   return (
-                    <tr key={mov.id} style={{ borderBottom: "0.5px solid var(--color-borde)", backgroundColor: esEliminando ? "var(--color-superficie)" : "transparent" }}>
+                    <tr key={mov.id} style={{ borderBottom: "0.5px solid var(--color-borde)", backgroundColor: esEliminando ? "var(--color-superficie)" : esIngreso ? "#c8e6c9" : "transparent" }}>
                       <td style={estiloTd}><span style={{ fontSize: "12px", fontFamily: "'Jost', sans-serif", color: "var(--color-texto)", whiteSpace: "nowrap" }}>{new Date(mov.fecha).toLocaleDateString("es-AR", { day: "numeric", month: "short", year: "numeric" })}</span></td>
-                      <td style={estiloTd}><span style={{ fontSize: "11px", fontFamily: "'Jost', sans-serif", color: "var(--color-texto-muted)", letterSpacing: "0.04em" }}>{TIPO_LABELS[mov.tipo] ?? mov.tipo}</span></td>
-                      <td style={{ ...estiloTd, maxWidth: "240px" }}><span style={{ fontSize: "12px", fontFamily: "'Jost', sans-serif", color: "var(--color-texto-sutil)", display: "block", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{mov.descripcion ?? "—"}</span></td>
+                      <td style={estiloTd}><span style={{ fontSize: "11px", fontFamily: "'Jost', sans-serif", color: esIngreso ? "var(--color-texto)" : "var(--color-texto-muted)", letterSpacing: "0.04em" }}>{TIPO_LABELS[mov.tipo] ?? mov.tipo}</span></td>
+                      <td style={{ ...estiloTd, maxWidth: "240px" }}><span style={{ fontSize: "12px", fontFamily: "'Jost', sans-serif", color: esIngreso ? "var(--color-texto)" : "var(--color-texto-sutil)", display: "block", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{mov.descripcion ?? "—"}</span></td>
                       <td style={estiloTd}><span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "17px", fontWeight: 400, color: "var(--color-texto)", whiteSpace: "nowrap" }}>${Number(mov.monto).toLocaleString("es-AR")}</span></td>
                       <td style={{ ...estiloTd, whiteSpace: "nowrap" }}>
                         {esEliminando ? (
                           <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                             <span style={{ fontSize: "11px", fontFamily: "'Jost', sans-serif", color: "var(--color-acento)" }}>¿Eliminar?</span>
                             {esProcesando ? (
-                              <span style={{ fontSize: "11px", fontFamily: "'Jost', sans-serif", color: "var(--color-texto-muted)" }}>Eliminando...</span>
+                              <span style={{ fontSize: "11px", fontFamily: "'Jost', sans-serif", color: esIngreso ? "var(--color-texto)" : "var(--color-texto-muted)" }}>Eliminando...</span>
                             ) : (
                               <button onClick={() => ejecutarEliminarMov(mov.id)} style={{ padding: "4px 10px", fontSize: "10px", fontFamily: "'Jost', sans-serif", letterSpacing: "0.1em", textTransform: "uppercase", border: "0.5px solid var(--color-acento)", backgroundColor: "transparent", color: "var(--color-acento)", cursor: "pointer", borderRadius: 0 }}>Confirmar</button>
                             )}
-                            <button onClick={() => setEliminandoMov(null)} disabled={esProcesando} style={{ padding: "4px 10px", fontSize: "10px", fontFamily: "'Jost', sans-serif", letterSpacing: "0.1em", textTransform: "uppercase", border: "0.5px solid var(--color-borde)", backgroundColor: "transparent", color: "var(--color-texto-muted)", cursor: esProcesando ? "not-allowed" : "pointer", borderRadius: 0, opacity: esProcesando ? 0.4 : 1 }}>Cancelar</button>
+                            <button onClick={() => setEliminandoMov(null)} disabled={esProcesando} style={{ padding: "4px 10px", fontSize: "10px", fontFamily: "'Jost', sans-serif", letterSpacing: "0.1em", textTransform: "uppercase", border: `0.5px solid ${esIngreso ? "var(--color-texto)" : "var(--color-borde)"}`, backgroundColor: "transparent", color: esIngreso ? "var(--color-texto)" : "var(--color-texto-muted)", cursor: esProcesando ? "not-allowed" : "pointer", borderRadius: 0, opacity: esProcesando ? 0.4 : 1 }}>Cancelar</button>
                           </div>
                         ) : (
                           <div style={{ display: "flex", gap: "6px" }}>
                             <button onClick={() => { setEditandoMov(mov); setModalMovAbierto(true) }} style={{ padding: "4px 10px", fontSize: "10px", fontFamily: "'Jost', sans-serif", letterSpacing: "0.1em", textTransform: "uppercase", border: "0.5px solid var(--color-texto)", backgroundColor: "transparent", color: "var(--color-texto)", cursor: "pointer", borderRadius: 0 }}>Editar</button>
-                            <button onClick={() => { setErrorMov(null); setEliminandoMov(mov.id) }} style={{ padding: "4px 10px", fontSize: "10px", fontFamily: "'Jost', sans-serif", letterSpacing: "0.1em", textTransform: "uppercase", border: "0.5px solid var(--color-borde)", backgroundColor: "transparent", color: "var(--color-texto-muted)", cursor: "pointer", borderRadius: 0 }}>Eliminar</button>
+                            <button onClick={() => { setErrorMov(null); setEliminandoMov(mov.id) }} style={{ padding: "4px 10px", fontSize: "10px", fontFamily: "'Jost', sans-serif", letterSpacing: "0.1em", textTransform: "uppercase", border: "0.5px solid var(--color-texto)", backgroundColor: "transparent", color: "var(--color-texto)", cursor: "pointer", borderRadius: 0 }}>Eliminar</button>
                           </div>
                         )}
                       </td>
@@ -639,6 +641,7 @@ export default function HistorialVentas() {
             }
             setModalMovAbierto(false)
             setEditandoMov(null)
+            fetchVentas()
           }}
         />
       )}

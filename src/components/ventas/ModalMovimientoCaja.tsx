@@ -14,12 +14,14 @@ export interface MovimientoCaja {
 }
 
 const TIPOS = [
+  { value: "INGRESO",    label: "Ingreso" },
   { value: "VUELTO",     label: "Vuelto" },
   { value: "TRANS_A_EF", label: "Transferencia → Efectivo" },
   { value: "EF_A_TRANS", label: "Efectivo → Transferencia" },
 ]
 
 export const TIPO_LABELS: Record<string, string> = {
+  INGRESO:    "Ingreso",
   VUELTO:     "Vuelto",
   TRANS_A_EF: "Transferencia → Efectivo",
   EF_A_TRANS: "Efectivo → Transferencia",
@@ -66,7 +68,8 @@ const estiloInput: React.CSSProperties = {
 }
 
 export default function ModalMovimientoCaja({ movimiento, onCerrar, onGuardado }: Props) {
-  const [tipo, setTipo] = useState(movimiento?.tipo ?? "TRANS_A_EF")
+  const [tipo, setTipo] = useState(movimiento?.tipo ?? "INGRESO")
+  const [metodoPago, setMetodoPago] = useState(movimiento?.metodoPago ?? "EFECTIVO")
   const [monto, setMonto] = useState(movimiento ? String(Number(movimiento.monto)) : "")
   const [descripcion, setDescripcion] = useState(movimiento?.descripcion ?? "")
   const [fecha, setFecha] = useState(movimiento ? isoAFechaInput(movimiento.fecha) : fechaHoyLocal())
@@ -92,6 +95,7 @@ export default function ModalMovimientoCaja({ movimiento, onCerrar, onGuardado }
           monto: montoNum,
           descripcion: descripcion.trim() || undefined,
           fecha,
+          ...(tipo === "INGRESO" && { metodoPago }),
         }),
       })
       const json = await res.json()
@@ -165,6 +169,16 @@ export default function ModalMovimientoCaja({ movimiento, onCerrar, onGuardado }
               ))}
             </select>
           </div>
+
+          {tipo === "INGRESO" && (
+            <div>
+              <label style={estiloLabel}>Método de pago *</label>
+              <select value={metodoPago} onChange={(e) => setMetodoPago(e.target.value)} style={estiloInput}>
+                <option value="EFECTIVO">Efectivo</option>
+                <option value="TRANSFERENCIA">Transferencia</option>
+              </select>
+            </div>
+          )}
 
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
             <div>
