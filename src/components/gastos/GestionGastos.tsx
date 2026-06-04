@@ -333,13 +333,13 @@ export default function GestionGastos() {
                       <button onClick={() => ejecutarEliminar(gasto.id)} disabled={esProcesando} style={{ ...estiloBoton, border: "0.5px solid var(--color-acento)", color: "var(--color-acento)", opacity: esProcesando ? 0.4 : 1 }}>
                         {esProcesando ? "Eliminando..." : "Confirmar"}
                       </button>
-                      <button onClick={() => setEliminando(null)} disabled={esProcesando} style={{ ...estiloBoton, opacity: esProcesando ? 0.4 : 1 }}>Cancelar</button>
+                      <button onClick={() => setEliminando(null)} disabled={esProcesando} style={{ ...estiloBoton, border: "0.5px solid var(--color-texto)", color: "var(--color-texto)", opacity: esProcesando ? 0.4 : 1 }}>Cancelar</button>
                     </div>
                   </div>
                 ) : (
                   <div style={{ display: "flex", gap: "8px", borderTop: "0.5px solid var(--color-superficie)", paddingTop: "10px" }}>
                     <button onClick={() => abrirEditar(gasto)} style={{ ...estiloBoton, border: "0.5px solid var(--color-texto)", color: "var(--color-texto)" }}>Editar</button>
-                    <button onClick={() => { setErrorEliminar(null); setEliminando(gasto.id) }} style={estiloBoton}>Eliminar</button>
+                    <button onClick={() => { setErrorEliminar(null); setEliminando(gasto.id) }} style={{ ...estiloBoton, border: "0.5px solid var(--color-texto)", color: "var(--color-texto)" }}>Eliminar</button>
                   </div>
                 )}
               </div>
@@ -377,12 +377,12 @@ export default function GestionGastos() {
                           {esProcesando ? <span style={{ fontSize: "11px", fontFamily: "'Jost', sans-serif", color: "var(--color-texto-muted)", letterSpacing: "0.08em" }}>Eliminando...</span> : (
                             <button onClick={() => ejecutarEliminar(gasto.id)} style={{ padding: "4px 10px", fontSize: "10px", fontFamily: "'Jost', sans-serif", letterSpacing: "0.1em", textTransform: "uppercase", border: "0.5px solid var(--color-acento)", backgroundColor: "transparent", color: "var(--color-acento)", cursor: "pointer", borderRadius: 0 }}>Confirmar</button>
                           )}
-                          <button onClick={() => setEliminando(null)} disabled={esProcesando} style={{ padding: "4px 10px", fontSize: "10px", fontFamily: "'Jost', sans-serif", letterSpacing: "0.1em", textTransform: "uppercase", border: "0.5px solid var(--color-borde)", backgroundColor: "transparent", color: "var(--color-texto-muted)", cursor: esProcesando ? "not-allowed" : "pointer", borderRadius: 0, opacity: esProcesando ? 0.4 : 1 }}>Cancelar</button>
+                          <button onClick={() => setEliminando(null)} disabled={esProcesando} style={{ padding: "4px 10px", fontSize: "10px", fontFamily: "'Jost', sans-serif", letterSpacing: "0.1em", textTransform: "uppercase", border: "0.5px solid var(--color-texto)", backgroundColor: "transparent", color: "var(--color-texto)", cursor: esProcesando ? "not-allowed" : "pointer", borderRadius: 0, opacity: esProcesando ? 0.4 : 1 }}>Cancelar</button>
                         </div>
                       ) : (
                         <div style={{ display: "flex", gap: "6px" }}>
                           <button onClick={() => abrirEditar(gasto)} style={{ padding: "4px 10px", fontSize: "10px", fontFamily: "'Jost', sans-serif", letterSpacing: "0.1em", textTransform: "uppercase", border: "0.5px solid var(--color-texto)", backgroundColor: "transparent", color: "var(--color-texto)", cursor: "pointer", borderRadius: 0 }}>Editar</button>
-                          <button onClick={() => { setErrorEliminar(null); setEliminando(gasto.id) }} style={{ padding: "4px 10px", fontSize: "10px", fontFamily: "'Jost', sans-serif", letterSpacing: "0.1em", textTransform: "uppercase", border: "0.5px solid var(--color-borde)", backgroundColor: "transparent", color: "var(--color-texto-muted)", cursor: "pointer", borderRadius: 0 }}>Eliminar</button>
+                          <button onClick={() => { setErrorEliminar(null); setEliminando(gasto.id) }} style={{ padding: "4px 10px", fontSize: "10px", fontFamily: "'Jost', sans-serif", letterSpacing: "0.1em", textTransform: "uppercase", border: "0.5px solid var(--color-texto)", backgroundColor: "transparent", color: "var(--color-texto)", cursor: "pointer", borderRadius: 0 }}>Eliminar</button>
                         </div>
                       )}
                     </td>

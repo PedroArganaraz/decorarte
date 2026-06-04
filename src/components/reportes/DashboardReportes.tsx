@@ -356,13 +356,14 @@ export default function DashboardReportes() {
         </p>
       ) : datos ? (
         <>
-          {/* 4 CARDS MÉTRICAS */}
-          <div style={{ display: "grid", gridTemplateColumns: esMobile ? "repeat(2, 1fr)" : "repeat(4, 1fr)", gap: "12px" }}>
+          {/* 5 CARDS MÉTRICAS */}
+          <div style={{ display: "grid", gridTemplateColumns: esMobile ? "repeat(2, 1fr)" : "repeat(5, 1fr)", gap: "12px" }}>
             {[
-              { label: "Ventas brutas",    valor: datos.ventas.ingresosBrutos },
-              { label: "Costo mercadería", valor: datos.ventas.costoMercaderia },
+              { label: "Ventas brutas",     valor: datos.ventas.ingresosBrutos },
+              { label: "Costo mercadería",  valor: datos.ventas.costoMercaderia },
               { label: "Gastos operativos", valor: datos.gastos.total },
-              { label: "Ganancia neta",    valor: datos.gananciaNeta },
+              { label: "Retiro",            valor: datos.gastos.retiros },
+              { label: "Ganancia neta",     valor: datos.gananciaNeta },
             ].map(({ label, valor }) => {
               const negativo = valor < 0
               return (
