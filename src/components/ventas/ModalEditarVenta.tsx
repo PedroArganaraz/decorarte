@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useCallback, useRef, useEffect } from "react"
+import { ESTADO_COLORES } from "./HistorialVentas"
 
 interface ProductoBuscado {
   id: string
@@ -554,9 +555,9 @@ export default function ModalEditarVenta({ venta, onCerrar, onGuardada }: Props)
 
             <div style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
               <label style={estiloLabel}>Estado</label>
-              <select value={estado} onChange={(e) => setEstado(e.target.value)} style={estiloInput}>
+              <select value={estado} onChange={(e) => setEstado(e.target.value)} style={{ ...estiloInput, color: ESTADO_COLORES[estado] ?? "var(--color-texto)" }}>
                 {ESTADOS.map((e) => (
-                  <option key={e.value} value={e.value}>{e.label}</option>
+                  <option key={e.value} value={e.value} style={{ color: ESTADO_COLORES[e.value] ?? "var(--color-texto)" }}>{e.label}</option>
                 ))}
               </select>
             </div>

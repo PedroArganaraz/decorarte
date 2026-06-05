@@ -37,6 +37,14 @@ const ESTADO_LABELS: Record<string, string> = {
   REGALO: "Regalo",
 }
 
+export const ESTADO_COLORES: Record<string, string> = {
+  PENDIENTE:          "var(--color-texto)",
+  ENTREGADO:          "#C0392B",
+  PAGADO:             "#2980B9",
+  PAGADO_Y_ENTREGADO: "#27AE60",
+  REGALO:             "var(--color-texto-muted)",
+}
+
 const MESES = [
   "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
   "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre",
@@ -465,9 +473,15 @@ export default function HistorialVentas() {
                   <tr key={venta.id} style={{ borderBottom: "0.5px solid var(--color-borde)", backgroundColor: esConfirmando ? "var(--color-superficie)" : "transparent" }}>
                     <td style={estiloTd}><span style={{ fontSize: "12px", fontFamily: "'Jost', sans-serif", color: "var(--color-texto)", whiteSpace: "nowrap" }}>{formatFecha(venta.fecha)}</span></td>
                     <td style={estiloTd}><span style={{ fontSize: "12px", fontFamily: "'Jost', sans-serif", color: venta.cliente ? "var(--color-texto)" : "var(--color-texto-sutil)" }}>{venta.cliente ?? "—"}</span></td>
-                    <td style={{ ...estiloTd, maxWidth: "260px" }}><span style={{ fontSize: "12px", fontFamily: "'Jost', sans-serif", color: "var(--color-texto)", display: "block", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={resumenItems}>{resumenItems}</span></td>
-                    <td style={estiloTd}><span style={{ fontSize: "11px", fontFamily: "'Jost', sans-serif", color: "var(--color-texto-muted)" }}>{venta.metodoPago === "EFECTIVO" ? "Efectivo" : venta.metodoPago === "TRANSFERENCIA" ? "Transferencia" : "—"}</span></td>
-                    <td style={estiloTd}><span style={{ fontSize: "10px", fontFamily: "'Jost', sans-serif", letterSpacing: "0.06em", color: venta.estado === "PENDIENTE" ? "var(--color-acento)" : "var(--color-texto-muted)" }}>{estadoLabel}{venta.esRegalo && venta.estado !== "REGALO" && " · regalo"}</span></td>
+                    <td style={estiloTd}>
+                      {venta.items.map((i) => (
+                        <span key={i.id} style={{ fontSize: "12px", fontFamily: "'Jost', sans-serif", color: "var(--color-texto)", display: "block" }}>
+                          {i.cantidad}× {i.producto.nombre}
+                        </span>
+                      ))}
+                    </td>
+                    <td style={estiloTd}><span style={{ fontSize: "13px", fontFamily: "'Jost', sans-serif", color: "var(--color-texto)" }}>{venta.metodoPago === "EFECTIVO" ? "Efectivo" : venta.metodoPago === "TRANSFERENCIA" ? "Transferencia" : "—"}</span></td>
+                    <td style={estiloTd}><span style={{ fontSize: "13px", fontFamily: "'Jost', sans-serif", color: ESTADO_COLORES[venta.estado] ?? "var(--color-texto)" }}>{estadoLabel}{venta.esRegalo && venta.estado !== "REGALO" && " · regalo"}</span></td>
                     <td style={estiloTd}><span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "17px", fontWeight: 400, color: "var(--color-texto)", whiteSpace: "nowrap" }}>${total.toLocaleString("es-AR")}</span></td>
                     <td style={{ ...estiloTd, minWidth: "160px" }}>
                       {esConfirmando ? (

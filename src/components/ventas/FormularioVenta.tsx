@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useCallback, useRef } from "react"
+import { ESTADO_COLORES } from "./HistorialVentas"
 
 interface ProductoBuscado {
   id: string
@@ -640,10 +641,10 @@ export default function FormularioVenta() {
           <select
             value={estado}
             onChange={(e) => setEstado(e.target.value)}
-            style={estiloInput}
+            style={{ ...estiloInput, color: ESTADO_COLORES[estado] ?? "var(--color-texto)" }}
           >
             {ESTADOS.map((e) => (
-              <option key={e.value} value={e.value}>{e.label}</option>
+              <option key={e.value} value={e.value} style={{ color: ESTADO_COLORES[e.value] ?? "var(--color-texto)" }}>{e.label}</option>
             ))}
           </select>
         </div>
