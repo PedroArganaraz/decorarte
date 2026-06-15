@@ -58,6 +58,8 @@ interface Resumen {
     porCategoria: { categoria: string; total: number }[]
   }
   gananciaNeta: number
+  saldoEfectivo: number
+  saldoTransferencia: number
   movimientos: {
     total: number
     vueltos: number
@@ -426,6 +428,45 @@ export default function DashboardReportes() {
             return (
               <div>
                 <h2 style={estiloTituloSeccion}>Caja</h2>
+
+                {/* Cards de saldo por método */}
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "12px" }}>
+                  {[
+                    { label: "Saldo efectivo",       valor: datos.saldoEfectivo },
+                    { label: "Saldo transferencia",  valor: datos.saldoTransferencia },
+                  ].map(({ label, valor }) => {
+                    const negativo = valor < 0
+                    return (
+                      <div key={label} style={{
+                        backgroundColor: "var(--color-card)",
+                        border: "0.5px solid var(--color-borde)",
+                        padding: "16px 20px",
+                      }}>
+                        <p style={{
+                          fontSize: "9px",
+                          fontFamily: "'Jost', sans-serif",
+                          fontWeight: 500,
+                          letterSpacing: "0.15em",
+                          textTransform: "uppercase",
+                          color: "var(--color-texto-muted)",
+                          margin: "0 0 8px",
+                        }}>
+                          {label}
+                        </p>
+                        <p style={{
+                          fontFamily: "'Cormorant Garamond', serif",
+                          fontSize: "24px",
+                          fontWeight: 400,
+                          color: negativo ? "var(--color-acento)" : "var(--color-texto)",
+                          margin: 0,
+                        }}>
+                          {negativo && "−"}{fmt(Math.abs(valor))}
+                        </p>
+                      </div>
+                    )
+                  })}
+                </div>
+
                 <div style={{
                   backgroundColor: "var(--color-card)",
                   border: "0.5px solid var(--color-borde)",

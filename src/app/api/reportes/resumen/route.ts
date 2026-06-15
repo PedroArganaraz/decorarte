@@ -126,6 +126,8 @@ export async function GET(solicitud: NextRequest) {
     let vueltos = 0
     let efATransTotal = 0
     let transAEfTotal = 0
+    let ingresoEfectivo = 0
+    let ingresoTransferencia = 0
 
     for (const mov of movimientosCaja) {
       const monto = Number(mov.monto)
@@ -145,11 +147,17 @@ export async function GET(solicitud: NextRequest) {
         ajusteTransferencia -= monto
         ajusteEfectivo += monto
         transAEfTotal += monto
+      } else if (mov.tipo === "INGRESO") {
+        if (mov.metodoPago === "EFECTIVO") ingresoEfectivo += monto
+        else if (mov.metodoPago === "TRANSFERENCIA") ingresoTransferencia += monto
       }
     }
 
     efectivoVentas += ajusteEfectivo
     transferenciaVentas += ajusteTransferencia
+
+    const saldoEfectivo = efectivoVentas + ingresoEfectivo - efectivoGastos
+    const saldoTransferencia = transferenciaVentas + ingresoTransferencia - transferenciaGastos
 
     // Combinaciones frecuentes (pares de productos comprados en la misma venta)
     const parMap: Record<string, {
@@ -217,6 +225,8 @@ export async function GET(solicitud: NextRequest) {
         })),
       },
       gananciaNeta: Math.round(gananciaNeta * 100) / 100,
+      saldoEfectivo: Math.round(saldoEfectivo * 100) / 100,
+      saldoTransferencia: Math.round(saldoTransferencia * 100) / 100,
       movimientos: {
         total: movimientosCaja.length,
         vueltos: Math.round(vueltos * 100) / 100,

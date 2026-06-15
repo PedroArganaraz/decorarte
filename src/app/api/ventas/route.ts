@@ -68,8 +68,23 @@ export async function GET(solicitud: NextRequest) {
 
     const totalPaginas = Math.max(1, Math.ceil(total / limit))
 
+    // Obtener método de vuelto desde MovimientoCaja (tipo VUELTO, relacionado por ventaId)
+    const ventaIds = ventas.map((v) => v.id)
+    const vueltoMovs = ventaIds.length > 0
+      ? await prisma.movimientoCaja.findMany({
+          where: { tipo: "VUELTO", ventaId: { in: ventaIds } },
+          select: { ventaId: true, metodoPago: true },
+        })
+      : []
+    const metodoVueltoMap: Record<string, string | null> = {}
+    for (const m of vueltoMovs) {
+      if (m.ventaId) metodoVueltoMap[m.ventaId] = m.metodoPago
+    }
+
+    const datos = ventas.map((v) => ({ ...v, metodoVuelto: metodoVueltoMap[v.id] ?? null }))
+
     return NextResponse.json({
-      datos: ventas,
+      datos,
       total,
       pagina: page,
       totalPaginas,

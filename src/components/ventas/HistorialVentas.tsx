@@ -25,6 +25,7 @@ interface Venta {
   esRegalo: boolean
   notas: string | null
   montoRecibido: number | null
+  metodoVuelto: string | null
   items: ItemVenta[]
   vendedor: { nombre: string } | null
 }
@@ -126,6 +127,12 @@ const estiloBtnPaginacionDeshabilitado: React.CSSProperties = {
   opacity: 0.45,
 }
 
+function metodoMovLabel(tipo: string, metodoPago: string | null): string {
+  if (tipo === "EF_A_TRANS" || tipo === "TRANS_A_EF") return "—"
+  if (!metodoPago) return tipo === "VUELTO" ? "Efectivo" : "—"
+  return metodoPago === "EFECTIVO" ? "Efectivo" : metodoPago === "TRANSFERENCIA" ? "Transferencia" : metodoPago
+}
+
 export default function HistorialVentas() {
   const [mes, setMes] = useState(HOY.getMonth())
   const [anio, setAnio] = useState(ANIO_ACTUAL)
@@ -143,6 +150,7 @@ export default function HistorialVentas() {
   const [errorAnular, setErrorAnular] = useState<string | null>(null)
 
   const [editandoVenta, setEditandoVenta] = useState<Venta | null>(null)
+  const [tooltipVenta, setTooltipVenta] = useState<{ id: string; top: number; left: number } | null>(null)
 
   const [movimientos, setMovimientos] = useState<MovimientoCaja[]>([])
   const [cargandoMov, setCargandoMov] = useState(true)
@@ -467,6 +475,9 @@ export default function HistorialVentas() {
                 const esConfirmando = anulando === venta.id
                 const esProcesando = procesando === venta.id
                 const total = sumarVenta(venta)
+                const tieneVuelto = venta.montoRecibido != null && Number(venta.montoRecibido) > total + 0.01
+                const vueltoMonto = tieneVuelto ? Number(venta.montoRecibido) - total : 0
+                const metodoVueltoLabel = venta.metodoVuelto === "TRANSFERENCIA" ? "Transferencia" : "Efectivo"
                 const resumenItems = venta.items.map((i) => `${i.cantidad}× ${i.producto.nombre}`).join(", ")
                 const estadoLabel = ESTADO_LABELS[venta.estado] ?? venta.estado
                 return (
@@ -482,7 +493,21 @@ export default function HistorialVentas() {
                     </td>
                     <td style={estiloTd}><span style={{ fontSize: "13px", fontFamily: "'Jost', sans-serif", color: "var(--color-texto)" }}>{venta.metodoPago === "EFECTIVO" ? "Efectivo" : venta.metodoPago === "TRANSFERENCIA" ? "Transferencia" : "—"}</span></td>
                     <td style={estiloTd}><span style={{ fontSize: "13px", fontFamily: "'Jost', sans-serif", color: ESTADO_COLORES[venta.estado] ?? "var(--color-texto)" }}>{estadoLabel}{venta.esRegalo && venta.estado !== "REGALO" && " · regalo"}</span></td>
-                    <td style={estiloTd}><span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "17px", fontWeight: 400, color: "var(--color-texto)", whiteSpace: "nowrap" }}>${total.toLocaleString("es-AR")}</span></td>
+                    <td
+                      style={estiloTd}
+                      onMouseEnter={(e) => {
+                        if (tieneVuelto) {
+                          const rect = (e.currentTarget as HTMLTableCellElement).getBoundingClientRect()
+                          setTooltipVenta({ id: venta.id, top: rect.top, left: rect.left })
+                        }
+                      }}
+                      onMouseLeave={() => setTooltipVenta(null)}
+                    >
+                      <span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "17px", fontWeight: 400, color: "var(--color-texto)", whiteSpace: "nowrap", cursor: tieneVuelto ? "help" : "default" }}>
+                        ${total.toLocaleString("es-AR")}
+                        {tieneVuelto && <span style={{ fontSize: "14px", marginLeft: "5px", color: "var(--color-texto-muted)", fontFamily: "sans-serif", verticalAlign: "middle", lineHeight: 1, fontWeight: "bold" }}>ⓘ</span>}
+                      </span>
+                    </td>
                     <td style={{ ...estiloTd, minWidth: "160px" }}>
                       {esConfirmando ? (
                         <div style={{ display: "flex", flexDirection: "column", gap: "8px", alignItems: "flex-start" }}>
@@ -560,7 +585,7 @@ export default function HistorialVentas() {
             <table style={{ width: "100%", borderCollapse: "collapse" }}>
               <thead>
                 <tr style={{ borderBottom: "0.5px solid var(--color-borde)" }}>
-                  {["Fecha", "Tipo", "Descripción", "Monto", ""].map((h) => (
+                  {["Fecha", "Tipo", "Método", "Descripción", "Monto", ""].map((h) => (
                     <th key={h} style={{ padding: "12px 16px", textAlign: "left", fontSize: "9px", fontFamily: "'Jost', sans-serif", fontWeight: 500, letterSpacing: "0.15em", textTransform: "uppercase", color: "var(--color-texto-muted)", whiteSpace: "nowrap" }}>
                       {h}
                     </th>
@@ -576,6 +601,7 @@ export default function HistorialVentas() {
                     <tr key={mov.id} style={{ borderBottom: "0.5px solid var(--color-borde)", backgroundColor: esEliminando ? "var(--color-superficie)" : esIngreso ? "#c8e6c9" : "transparent" }}>
                       <td style={estiloTd}><span style={{ fontSize: "12px", fontFamily: "'Jost', sans-serif", color: "var(--color-texto)", whiteSpace: "nowrap" }}>{new Date(mov.fecha).toLocaleDateString("es-AR", { day: "numeric", month: "short", year: "numeric" })}</span></td>
                       <td style={estiloTd}><span style={{ fontSize: "11px", fontFamily: "'Jost', sans-serif", color: esIngreso ? "var(--color-texto)" : "var(--color-texto-muted)", letterSpacing: "0.04em" }}>{TIPO_LABELS[mov.tipo] ?? mov.tipo}</span></td>
+                      <td style={estiloTd}><span style={{ fontSize: "11px", fontFamily: "'Jost', sans-serif", color: "var(--color-texto-muted)", letterSpacing: "0.04em" }}>{metodoMovLabel(mov.tipo, mov.metodoPago)}</span></td>
                       <td style={{ ...estiloTd, maxWidth: "240px" }}><span style={{ fontSize: "12px", fontFamily: "'Jost', sans-serif", color: esIngreso ? "var(--color-texto)" : "var(--color-texto-sutil)", display: "block", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{mov.descripcion ?? "—"}</span></td>
                       <td style={estiloTd}><span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "17px", fontWeight: 400, color: "var(--color-texto)", whiteSpace: "nowrap" }}>${Number(mov.monto).toLocaleString("es-AR")}</span></td>
                       <td style={{ ...estiloTd, whiteSpace: "nowrap" }}>
@@ -624,6 +650,49 @@ export default function HistorialVentas() {
           </div>
         )}
       </div>
+
+      {/* TOOLTIP VUELTO — position fixed para evitar clipping por overflow del contenedor */}
+      {tooltipVenta && (() => {
+        const venta = ventas.find((v) => v.id === tooltipVenta.id)
+        if (!venta) return null
+        const total = sumarVenta(venta)
+        const vueltoMonto = Number(venta.montoRecibido) - total
+        const metodoVueltoLabel = venta.metodoVuelto === "TRANSFERENCIA" ? "Transferencia" : "Efectivo"
+        return (
+          <div style={{
+            position: "fixed",
+            bottom: `calc(100vh - ${tooltipVenta.top}px + 4px)`,
+            left: tooltipVenta.left,
+            zIndex: 1000,
+            backgroundColor: "var(--color-card)",
+            border: "0.5px solid var(--color-borde)",
+            boxShadow: "0 4px 12px rgba(0,0,0,0.12)",
+            padding: "10px 14px",
+            minWidth: "210px",
+            fontFamily: "'Jost', sans-serif",
+            pointerEvents: "none",
+          }}>
+            <p style={{ fontSize: "11px", color: "var(--color-texto-muted)", margin: "0 0 5px", letterSpacing: "0.02em" }}>
+              Recibido:{" "}
+              <span style={{ color: "var(--color-texto)", fontFamily: "'Cormorant Garamond', serif", fontSize: "14px" }}>
+                ${Number(venta.montoRecibido).toLocaleString("es-AR")}
+              </span>
+            </p>
+            <p style={{ fontSize: "11px", color: "var(--color-texto-muted)", margin: "0 0 5px", letterSpacing: "0.02em" }}>
+              Vuelto ({metodoVueltoLabel}):{" "}
+              <span style={{ color: "var(--color-acento)", fontFamily: "'Cormorant Garamond', serif", fontSize: "14px" }}>
+                −${vueltoMonto.toLocaleString("es-AR")}
+              </span>
+            </p>
+            <p style={{ fontSize: "11px", color: "var(--color-texto-muted)", margin: 0, borderTop: "0.5px solid var(--color-borde)", paddingTop: "5px", marginTop: "1px", letterSpacing: "0.02em" }}>
+              Neto:{" "}
+              <span style={{ color: "var(--color-texto)", fontFamily: "'Cormorant Garamond', serif", fontSize: "14px" }}>
+                ${total.toLocaleString("es-AR")}
+              </span>
+            </p>
+          </div>
+        )
+      })()}
 
       {editandoVenta && (
         <ModalEditarVenta
