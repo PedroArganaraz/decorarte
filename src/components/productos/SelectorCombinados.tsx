@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react"
 import { toast } from "sonner"
-import Image from "next/image"
 
 interface ProductoOpcion {
   id: string
@@ -325,12 +324,10 @@ export default function SelectorCombinados({ productoId, combinadosIniciales }: 
                         overflow: "hidden",
                       }}>
                         {imagen && (
-                          <Image
+                          <img
                             src={imagen.urlPublica}
                             alt={imagen.altText || p.nombre}
-                            fill
-                            sizes="44px"
-                            style={{ objectFit: "cover" }}
+                            style={{ width: "100%", height: "100%", objectFit: "cover" }}
                           />
                         )}
                       </div>
