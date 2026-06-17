@@ -1,7 +1,6 @@
 "use client"
 
 import Link from "next/link"
-import Image from "next/image"
 
 interface Props {
   producto: {
@@ -37,12 +36,12 @@ export default function TarjetaProducto({ producto, from }: Props) {
           overflow: "hidden",
         }}>
           {imagenPrincipal ? (
-            <Image
+            <img
               src={imagenPrincipal.urlPublica}
               alt={imagenPrincipal.altText || producto.nombre}
-              fill
-              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 33vw, 25vw"
               style={{
+                width: "100%",
+                height: "100%",
                 objectFit: "cover",
                 transition: "transform 0.4s ease",
               }}
