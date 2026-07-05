@@ -6,9 +6,19 @@ import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import type { Categoria } from "@prisma/client"
 
+interface InsumoEnForm {
+  insumoId: number
+  nombre: string
+  precioUnitario: number
+  cantidadDisponible: number
+  unidad: string
+  cantidadUsada: number
+}
+
 interface Props {
   categorias: Categoria[]
   accionesExtra?: React.ReactNode
+  insumosIniciales?: InsumoEnForm[]
   producto?: {
     id: string
     nombre: string
@@ -28,7 +38,7 @@ interface Props {
   }
 }
 
-export default function FormularioProducto({ categorias, accionesExtra, producto }: Props) {
+export default function FormularioProducto({ categorias, accionesExtra, producto, insumosIniciales }: Props) {
   const router = useRouter()
   const esEdicion = !!producto
 
@@ -53,6 +63,13 @@ export default function FormularioProducto({ categorias, accionesExtra, producto
   const [materialesDisponibles, setMaterialesDisponibles] = useState<string[]>([])
   const [campoFocus, setCampoFocus] = useState<string | null>(null)
 
+  // Insumos
+  const [insumosSeleccionados, setInsumosSeleccionados] = useState<InsumoEnForm[]>(insumosIniciales ?? [])
+  const [insumosDisponibles, setInsumosDisponibles] = useState<InsumoEnForm[]>([])
+  const [mostrarAgregarInsumo, setMostrarAgregarInsumo] = useState(false)
+  const [insumoParaAgregar, setInsumoParaAgregar] = useState({ insumoId: "", cantidad: "" })
+  const [costoManual, setCostoManual] = useState(false)
+
   const { esMobile } = useTamanioPantalla()
 
   const esAnillos = categorias.find(
@@ -69,11 +86,42 @@ export default function FormularioProducto({ categorias, accionesExtra, producto
       .then((data) => setMaterialesDisponibles((data.datos ?? []).map((m: { nombre: string }) => m.nombre)))
   }, [form.categoriaId])
 
+  useEffect(() => {
+    fetch("/api/insumos")
+      .then((r) => r.json())
+      .then((d) => {
+        setInsumosDisponibles((d.datos ?? []).map((i: { id: number; nombre: string; precioUnitario: number; cantidadDisponible: number; unidad: string }) => ({
+          insumoId: i.id,
+          nombre: i.nombre,
+          precioUnitario: i.precioUnitario,
+          cantidadDisponible: i.cantidadDisponible,
+          unidad: i.unidad,
+          cantidadUsada: 0,
+        })))
+      })
+      .catch(() => {})
+  }, [])
+
+  // Actualizar costo automáticamente cuando cambian los insumos (salvo que sea manual)
+  useEffect(() => {
+    if (costoManual) return
+    if (insumosSeleccionados.length === 0) return
+    const costoCalculado = insumosSeleccionados.reduce(
+      (sum, i) => sum + i.precioUnitario * i.cantidadUsada,
+      0
+    )
+    setForm((prev) => {
+      const precioMinimo = costoCalculado > 0 ? String(Math.round(costoCalculado * 3)) : prev.precioMinimo
+      return { ...prev, costo: String(Math.round(costoCalculado * 100) / 100), precioMinimo }
+    })
+  }, [insumosSeleccionados, costoManual])
+
   const actualizar = (campo: string, valor: string | boolean) => {
     setForm((prev) => ({ ...prev, [campo]: valor }))
   }
 
   const actualizarCosto = (valor: string) => {
+    setCostoManual(true)
     setForm((prev) => {
       const costoNum = parseFloat(valor)
       const precioMinimo = !isNaN(costoNum) && costoNum > 0
@@ -81,6 +129,34 @@ export default function FormularioProducto({ categorias, accionesExtra, producto
         : prev.precioMinimo
       return { ...prev, costo: valor, precioMinimo }
     })
+  }
+
+  const agregarInsumo = () => {
+    const insumo = insumosDisponibles.find((i) => i.insumoId === parseInt(insumoParaAgregar.insumoId))
+    if (!insumo) return
+    const cantidad = parseFloat(insumoParaAgregar.cantidad)
+    if (isNaN(cantidad) || cantidad <= 0) return
+
+    // Para edición: disponible real = cantidadDisponible + lo que ya tenía asignado este producto
+    const yaAsignado = insumosIniciales?.find((ii) => ii.insumoId === insumo.insumoId)?.cantidadUsada ?? 0
+    const disponibleReal = insumo.cantidadDisponible + yaAsignado
+    if (cantidad > disponibleReal) return
+
+    setInsumosSeleccionados((prev) => {
+      const existe = prev.find((i) => i.insumoId === insumo.insumoId)
+      if (existe) {
+        return prev.map((i) => i.insumoId === insumo.insumoId ? { ...i, cantidadUsada: cantidad } : i)
+      }
+      return [...prev, { ...insumo, cantidadUsada: cantidad }]
+    })
+    setCostoManual(false)
+    setInsumoParaAgregar({ insumoId: "", cantidad: "" })
+    setMostrarAgregarInsumo(false)
+  }
+
+  const quitarInsumo = (insumoId: number) => {
+    setInsumosSeleccionados((prev) => prev.filter((i) => i.insumoId !== insumoId))
+    setCostoManual(false)
   }
 
   const valorDisplay = (campo: string, valor: string) => {
@@ -108,6 +184,7 @@ export default function FormularioProducto({ categorias, accionesExtra, producto
       color: form.color || null,
       categoriaId: form.categoriaId,
       creadoEn: form.creadoEn ? new Date(form.creadoEn + "T12:00:00.000Z").toISOString() : undefined,
+      insumos: insumosSeleccionados.map((i) => ({ insumoId: i.insumoId, cantidadUsada: i.cantidadUsada })),
     }
 
     const url = esEdicion ? `/api/productos/${producto.id}` : "/api/productos"
@@ -412,6 +489,88 @@ export default function FormularioProducto({ categorias, accionesExtra, producto
                 />
               </div>
             </div>
+          </div>
+
+          {/* INSUMOS */}
+          <div style={{
+            backgroundColor: "var(--color-card)",
+            border: "0.5px solid var(--color-borde)",
+            padding: "24px",
+            display: "flex",
+            flexDirection: "column",
+            gap: "16px",
+          }}>
+            <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "18px", fontWeight: 400, color: "var(--color-texto)", marginBottom: "4px" }}>
+              Insumos utilizados
+            </h2>
+
+            {insumosSeleccionados.length > 0 && (
+              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                {insumosSeleccionados.map((ins) => {
+                  const costoParcial = ins.precioUnitario * ins.cantidadUsada
+                  return (
+                    <div key={ins.insumoId} style={{ display: "flex", alignItems: "center", gap: "10px", padding: "8px 12px", backgroundColor: "var(--color-fondo)", border: "0.5px solid var(--color-borde)" }}>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <span style={{ fontSize: "13px", fontFamily: "'Cormorant Garamond', serif", color: "var(--color-texto)", display: "block" }}>{ins.nombre}</span>
+                        <span style={{ fontSize: "10px", fontFamily: "'Jost', sans-serif", color: "var(--color-texto-muted)", letterSpacing: "0.04em" }}>
+                          {ins.cantidadUsada} {ins.unidad} · ${costoParcial.toLocaleString("es-AR")}
+                        </span>
+                      </div>
+                      <button type="button" onClick={() => quitarInsumo(ins.insumoId)} style={{ padding: "3px 8px", fontSize: "10px", fontFamily: "'Jost', sans-serif", letterSpacing: "0.08em", border: "0.5px solid var(--color-borde)", backgroundColor: "transparent", color: "var(--color-texto-muted)", cursor: "pointer", borderRadius: 0, flexShrink: 0 }}>
+                        ✕
+                      </button>
+                    </div>
+                  )
+                })}
+                <p style={{ fontSize: "10px", fontFamily: "'Jost', sans-serif", color: "var(--color-texto-muted)", margin: "4px 0 0", letterSpacing: "0.04em" }}>
+                  Costo total insumos: <strong style={{ color: "var(--color-texto)" }}>${insumosSeleccionados.reduce((s, i) => s + i.precioUnitario * i.cantidadUsada, 0).toLocaleString("es-AR")}</strong>
+                </p>
+              </div>
+            )}
+
+            {mostrarAgregarInsumo ? (
+              <div style={{ display: "flex", flexDirection: "column", gap: "10px", padding: "12px", backgroundColor: "var(--color-fondo)", border: "0.5px solid var(--color-borde)" }}>
+                <select
+                  value={insumoParaAgregar.insumoId}
+                  onChange={(e) => setInsumoParaAgregar((p) => ({ ...p, insumoId: e.target.value }))}
+                  style={{ ...estiloInput, fontSize: "13px", border: "0.5px solid var(--color-texto)" }}
+                >
+                  <option value="">Seleccioná un insumo</option>
+                  {insumosDisponibles
+                    .filter((i) => !insumosSeleccionados.some((s) => s.insumoId === i.insumoId))
+                    .map((i) => {
+                      const yaAsignado = insumosIniciales?.find((ii) => ii.insumoId === i.insumoId)?.cantidadUsada ?? 0
+                      const disponibleReal = i.cantidadDisponible + yaAsignado
+                      return (
+                        <option key={i.insumoId} value={i.insumoId} disabled={disponibleReal <= 0}>
+                          {i.nombre} — disponible: {disponibleReal} {i.unidad}
+                        </option>
+                      )
+                    })}
+                </select>
+                <div style={{ display: "flex", gap: "8px" }}>
+                  <input
+                    type="number"
+                    min="0.01"
+                    step="0.01"
+                    value={insumoParaAgregar.cantidad}
+                    onChange={(e) => setInsumoParaAgregar((p) => ({ ...p, cantidad: e.target.value }))}
+                    placeholder="Cantidad"
+                    style={{ ...estiloInput, fontSize: "13px", width: "140px", border: "0.5px solid var(--color-texto)", appearance: "textfield" } as React.CSSProperties}
+                  />
+                  <button type="button" onClick={agregarInsumo} style={{ padding: "8px 14px", fontSize: "10px", fontFamily: "'Jost', sans-serif", letterSpacing: "0.1em", textTransform: "uppercase", border: "none", backgroundColor: "var(--color-texto)", color: "var(--color-fondo)", cursor: "pointer", borderRadius: 0 }}>
+                    Agregar
+                  </button>
+                  <button type="button" onClick={() => { setMostrarAgregarInsumo(false); setInsumoParaAgregar({ insumoId: "", cantidad: "" }) }} style={{ padding: "8px 14px", fontSize: "10px", fontFamily: "'Jost', sans-serif", letterSpacing: "0.1em", textTransform: "uppercase", border: "0.5px solid var(--color-borde)", backgroundColor: "transparent", color: "var(--color-texto-muted)", cursor: "pointer", borderRadius: 0 }}>
+                    Cancelar
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <button type="button" onClick={() => setMostrarAgregarInsumo(true)} style={{ padding: "8px 14px", fontSize: "10px", fontFamily: "'Jost', sans-serif", letterSpacing: "0.1em", textTransform: "uppercase", border: "0.5px solid var(--color-borde)", backgroundColor: "transparent", color: "var(--color-texto-muted)", cursor: "pointer", borderRadius: 0, alignSelf: "flex-start" }}>
+                + Agregar insumo
+              </button>
+            )}
           </div>
 
           <div style={{

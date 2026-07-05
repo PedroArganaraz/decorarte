@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 
 export interface Gasto {
   id: string
@@ -11,6 +11,13 @@ export interface Gasto {
   fecha: string
   creadoEn?: string
   notas: string | null
+  insumo?: {
+    id: number
+    precioUnitario: number
+    cantidadTotal: number
+    cantidadDisponible?: number
+    unidad: string
+  } | null
 }
 
 interface Props {
@@ -30,6 +37,8 @@ const METODOS_PAGO = [
   { value: "EFECTIVO",      label: "Efectivo" },
   { value: "TRANSFERENCIA", label: "Transferencia" },
 ]
+
+const UNIDADES = ["unidad", "cm", "ml"]
 
 function fechaHoyLocal() {
   return new Date().toLocaleDateString("en-CA")
@@ -73,15 +82,75 @@ export default function ModalGasto({ gasto, onCerrar, onGuardado }: Props) {
   const [fecha, setFecha] = useState(gasto ? isoAFechaInput(gasto.fecha) : fechaHoyLocal())
   const [notas, setNotas] = useState(gasto?.notas ?? "")
 
+  const [precioUnitarioInsumo, setPrecioUnitarioInsumo] = useState(
+    gasto?.insumo ? String(gasto.insumo.precioUnitario) : ""
+  )
+  const [cantidadInsumo, setCantidadInsumo] = useState(
+    gasto?.insumo ? String(gasto.insumo.cantidadTotal) : ""
+  )
+  const [unidadInsumo, setUnidadInsumo] = useState(
+    gasto?.insumo?.unidad ?? "unidad"
+  )
+
+  const [confirmCambioCategoria, setConfirmCambioCategoria] = useState(false)
+  const [categoriaPendiente, setCategoriaPendiente] = useState("")
+
   const [montoFocused, setMontoFocused] = useState(false)
   const [guardando, setGuardando] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  const esInsumo = categoria === "INSUMOS"
+
+  useEffect(() => {
+    if (!esInsumo) return
+    const precio = parseFloat(precioUnitarioInsumo)
+    const cantidad = parseFloat(cantidadInsumo)
+    if (!isNaN(precio) && !isNaN(cantidad) && precio > 0 && cantidad > 0) {
+      setMonto(String(Math.round(precio * cantidad * 100) / 100))
+    } else {
+      setMonto("")
+    }
+  }, [precioUnitarioInsumo, cantidadInsumo, esInsumo])
+
+  const aplicarCambioCategoria = (nueva: string) => {
+    setCategoria(nueva)
+    if (nueva !== "INSUMOS") {
+      setMonto("")
+      setPrecioUnitarioInsumo("")
+      setCantidadInsumo("")
+      setUnidadInsumo("unidad")
+    }
+  }
+
+  const handleCategoriaChange = (nuevaCategoria: string) => {
+    const tieneInsumoData = precioUnitarioInsumo !== "" || cantidadInsumo !== ""
+    if (categoria === "INSUMOS" && nuevaCategoria !== "INSUMOS" && tieneInsumoData) {
+      setCategoriaPendiente(nuevaCategoria)
+      setConfirmCambioCategoria(true)
+      return
+    }
+    aplicarCambioCategoria(nuevaCategoria)
+  }
+
+  const confirmarCambioCategoria = () => {
+    aplicarCambioCategoria(categoriaPendiente)
+    setConfirmCambioCategoria(false)
+    setCategoriaPendiente("")
+  }
+
   const guardar = async () => {
-    const montoNum = parseFloat(monto)
     if (!descripcion.trim()) { setError("Ingresá una descripción."); return }
-    if (isNaN(montoNum) || montoNum <= 0) { setError("Ingresá un monto válido."); return }
     if (!categoria) { setError("Seleccioná una categoría."); return }
+
+    if (esInsumo) {
+      const precio = parseFloat(precioUnitarioInsumo)
+      const cantidad = parseFloat(cantidadInsumo)
+      if (isNaN(precio) || precio <= 0) { setError("Ingresá un precio unitario válido."); return }
+      if (isNaN(cantidad) || cantidad <= 0) { setError("Ingresá una cantidad válida."); return }
+    }
+
+    const montoNum = parseFloat(monto)
+    if (isNaN(montoNum) || montoNum <= 0) { setError("Ingresá un monto válido."); return }
     if (!metodoPago) { setError("Seleccioná el método de pago."); return }
 
     setError(null)
@@ -89,17 +158,29 @@ export default function ModalGasto({ gasto, onCerrar, onGuardado }: Props) {
     try {
       const url = gasto ? `/api/gastos/${gasto.id}` : "/api/gastos"
       const method = gasto ? "PATCH" : "POST"
+
+      const body: Record<string, unknown> = {
+        descripcion: descripcion.trim(),
+        monto: montoNum,
+        categoria,
+        metodoPago,
+        fecha,
+        notas: notas.trim() || undefined,
+      }
+
+      if (esInsumo) {
+        body.insumo = {
+          nombre: descripcion.trim(),
+          precioUnitario: parseFloat(precioUnitarioInsumo),
+          cantidadTotal: parseFloat(cantidadInsumo),
+          unidad: unidadInsumo,
+        }
+      }
+
       const res = await fetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          descripcion: descripcion.trim(),
-          monto: montoNum,
-          categoria,
-          metodoPago,
-          fecha,
-          notas: notas.trim() || undefined,
-        }),
+        body: JSON.stringify(body),
       })
       const json = await res.json()
       if (!res.ok) throw new Error(json.error ?? "Error al guardar")
@@ -166,13 +247,13 @@ export default function ModalGasto({ gasto, onCerrar, onGuardado }: Props) {
 
         {/* BODY */}
         <div style={{ padding: "24px 28px", overflowY: "auto", flex: 1, display: "flex", flexDirection: "column", gap: "16px" }}>
+
           <div>
             <label style={estiloLabel}>Descripción *</label>
             <input
               type="text"
               value={descripcion}
               onChange={(e) => setDescripcion(e.target.value)}
-              placeholder=""
               style={estiloInput}
               autoFocus
             />
@@ -180,17 +261,18 @@ export default function ModalGasto({ gasto, onCerrar, onGuardado }: Props) {
 
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
             <div>
-              <label style={estiloLabel}>Monto *</label>
-              <input
-                type="text"
-                inputMode="decimal"
-                value={montoFocused ? monto : (monto === "" || isNaN(Number(monto)) ? monto : Number(monto).toLocaleString("es-AR"))}
-                onChange={(e) => setMonto(e.target.value)}
-                onFocus={(e) => { setMontoFocused(true); e.target.select() }}
-                onBlur={() => setMontoFocused(false)}
-                placeholder="0"
-                style={estiloInput}
-              />
+              <label style={estiloLabel}>Categoría *</label>
+              <select value={categoria} onChange={(e) => handleCategoriaChange(e.target.value)} style={estiloInput}>
+                <option value="">Seleccioná...</option>
+                <optgroup label="Gastos operativos">
+                  {CATEGORIAS_OPERATIVAS.map((c) => (
+                    <option key={c.value} value={c.value}>{c.label}</option>
+                  ))}
+                </optgroup>
+                <optgroup label="Capital">
+                  <option value="RETIRO">Retiro</option>
+                </optgroup>
+              </select>
             </div>
             <div>
               <label style={estiloLabel}>Fecha *</label>
@@ -203,20 +285,95 @@ export default function ModalGasto({ gasto, onCerrar, onGuardado }: Props) {
             </div>
           </div>
 
+          {confirmCambioCategoria && (
+            <div style={{
+              backgroundColor: "#fdf5f3",
+              border: "0.5px solid var(--color-acento)",
+              padding: "12px 16px",
+              display: "flex",
+              flexDirection: "column",
+              gap: "10px",
+            }}>
+              <p style={{ fontSize: "12px", fontFamily: "'Jost', sans-serif", color: "var(--color-texto)", margin: 0 }}>
+                ¿Cambiar de categoría? Se perderán los datos del insumo ingresado.
+              </p>
+              <div style={{ display: "flex", gap: "8px" }}>
+                <button
+                  onClick={confirmarCambioCategoria}
+                  style={{ padding: "6px 14px", fontSize: "10px", fontFamily: "'Jost', sans-serif", letterSpacing: "0.1em", textTransform: "uppercase", border: "0.5px solid var(--color-acento)", backgroundColor: "transparent", color: "var(--color-acento)", cursor: "pointer", borderRadius: 0 }}
+                >
+                  Confirmar
+                </button>
+                <button
+                  onClick={() => { setConfirmCambioCategoria(false); setCategoriaPendiente("") }}
+                  style={{ padding: "6px 14px", fontSize: "10px", fontFamily: "'Jost', sans-serif", letterSpacing: "0.1em", textTransform: "uppercase", border: "0.5px solid var(--color-texto)", backgroundColor: "transparent", color: "var(--color-texto)", cursor: "pointer", borderRadius: 0 }}
+                >
+                  Cancelar
+                </button>
+              </div>
+            </div>
+          )}
+
+          {esInsumo && (
+            <>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+                <div>
+                  <label style={estiloLabel}>Precio unitario *</label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={precioUnitarioInsumo}
+                    onChange={(e) => setPrecioUnitarioInsumo(e.target.value)}
+                    placeholder="0"
+                    style={estiloInput}
+                  />
+                </div>
+                <div>
+                  <label style={estiloLabel}>Cantidad *</label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={cantidadInsumo}
+                    onChange={(e) => setCantidadInsumo(e.target.value)}
+                    placeholder="0"
+                    style={estiloInput}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label style={estiloLabel}>Unidad</label>
+                <select value={unidadInsumo} onChange={(e) => setUnidadInsumo(e.target.value)} style={estiloInput}>
+                  {UNIDADES.map((u) => <option key={u} value={u}>{u}</option>)}
+                </select>
+              </div>
+            </>
+          )}
+
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
             <div>
-              <label style={estiloLabel}>Categoría *</label>
-              <select value={categoria} onChange={(e) => setCategoria(e.target.value)} style={estiloInput}>
-                <option value="">Seleccioná...</option>
-                <optgroup label="Gastos operativos">
-                  {CATEGORIAS_OPERATIVAS.map((c) => (
-                    <option key={c.value} value={c.value}>{c.label}</option>
-                  ))}
-                </optgroup>
-                <optgroup label="Capital">
-                  <option value="RETIRO">Retiro</option>
-                </optgroup>
-              </select>
+              <label style={estiloLabel}>{esInsumo ? "Monto (calculado)" : "Monto *"}</label>
+              {esInsumo ? (
+                <input
+                  type="text"
+                  readOnly
+                  value={monto === "" ? "" : `$${Number(monto).toLocaleString("es-AR")}`}
+                  style={{ ...estiloInput, backgroundColor: "var(--color-fondo)", color: "var(--color-texto-muted)", cursor: "default" }}
+                />
+              ) : (
+                <input
+                  type="text"
+                  inputMode="decimal"
+                  value={montoFocused ? monto : (monto === "" || isNaN(Number(monto)) ? monto : Number(monto).toLocaleString("es-AR"))}
+                  onChange={(e) => setMonto(e.target.value)}
+                  onFocus={(e) => { setMontoFocused(true); e.target.select() }}
+                  onBlur={() => setMontoFocused(false)}
+                  placeholder="0"
+                  style={estiloInput}
+                />
+              )}
             </div>
             <div>
               <label style={estiloLabel}>Método de pago *</label>

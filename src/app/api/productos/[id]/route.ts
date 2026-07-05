@@ -56,6 +56,7 @@ export async function PUT(
     const { id } = await params
     const cuerpo = await solicitud.json()
     const { nombre, descripcion, precio, precioAnterior, costo, precioMinimo, stock, activo, destacado, categoriaId, material, talle, color, creadoEn } = cuerpo
+    const insumosData: { insumoId: number; cantidadUsada: number }[] = cuerpo.insumos ?? []
 
     let slug: string | undefined
     if (nombre) {
@@ -69,29 +70,54 @@ export async function PUT(
       }
     }
 
-    const productoActualizado = await prisma.producto.update({
-      where: { id },
-      data: {
-        ...(nombre && { nombre }),
-        ...(slug && { slug }),
-        ...(descripcion !== undefined && { descripcion }),
-        ...(precio !== undefined && { precio }),
-        ...(precioAnterior !== undefined && { precioAnterior: precioAnterior || null }),
-        ...(stock !== undefined && { stock }),
-        ...(activo !== undefined && { activo }),
-        ...(destacado !== undefined && { destacado }),
-        ...(categoriaId && { categoria: { connect: { id: categoriaId } } }),
-        ...(material !== undefined && { material: material || null }),
-        ...(talle !== undefined && { talle: talle || null }),
-        ...(color !== undefined && { color: color || null }),
-        ...(costo !== undefined && { costo: costo ?? null }),
-        ...(precioMinimo !== undefined && { precioMinimo: precioMinimo ?? null }),
-        ...(creadoEn !== undefined && { creadoEn: new Date(creadoEn) }),
-      },
-      include: {
-        imagenes: { orderBy: { orden: "asc" } },
-        categoria: true,
-      },
+    const productoActualizado = await prisma.$transaction(async (tx) => {
+      // Restaurar cantidadDisponible de insumos anteriores
+      const insumosAnteriores = await tx.insumoProducto.findMany({ where: { productoId: id } })
+      for (const anterior of insumosAnteriores) {
+        await tx.insumo.update({
+          where: { id: anterior.insumoId },
+          data: { cantidadDisponible: { increment: anterior.cantidadUsada } },
+        })
+      }
+      await tx.insumoProducto.deleteMany({ where: { productoId: id } })
+
+      // Crear nuevos registros de insumos
+      for (const ins of insumosData) {
+        const insumo = await tx.insumo.findUnique({ where: { id: ins.insumoId } })
+        if (!insumo || insumo.cantidadDisponible < ins.cantidadUsada) continue
+        await tx.insumoProducto.create({
+          data: { insumoId: ins.insumoId, productoId: id, cantidadUsada: ins.cantidadUsada },
+        })
+        await tx.insumo.update({
+          where: { id: ins.insumoId },
+          data: { cantidadDisponible: { decrement: ins.cantidadUsada } },
+        })
+      }
+
+      return tx.producto.update({
+        where: { id },
+        data: {
+          ...(nombre && { nombre }),
+          ...(slug && { slug }),
+          ...(descripcion !== undefined && { descripcion }),
+          ...(precio !== undefined && { precio }),
+          ...(precioAnterior !== undefined && { precioAnterior: precioAnterior || null }),
+          ...(stock !== undefined && { stock }),
+          ...(activo !== undefined && { activo }),
+          ...(destacado !== undefined && { destacado }),
+          ...(categoriaId && { categoria: { connect: { id: categoriaId } } }),
+          ...(material !== undefined && { material: material || null }),
+          ...(talle !== undefined && { talle: talle || null }),
+          ...(color !== undefined && { color: color || null }),
+          ...(costo !== undefined && { costo: costo ?? null }),
+          ...(precioMinimo !== undefined && { precioMinimo: precioMinimo ?? null }),
+          ...(creadoEn !== undefined && { creadoEn: new Date(creadoEn) }),
+        },
+        include: {
+          imagenes: { orderBy: { orden: "asc" } },
+          categoria: true,
+        },
+      })
     })
 
     revalidatePath("/")

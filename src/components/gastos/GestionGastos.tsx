@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react"
 import ModalGasto, { type Gasto } from "./ModalGasto"
+import GestionInsumos from "./GestionInsumos"
 import { useTamanioPantalla } from "@/hooks/useTamanioPantalla"
 import { SkeletonCard, SkeletonTable, SkeletonCardMobile } from "@/components/ui/skeleton"
 
@@ -75,6 +76,7 @@ export default function GestionGastos() {
   const [eliminando, setEliminando] = useState<string | null>(null)
   const [procesando, setProcesando] = useState<string | null>(null)
   const [errorEliminar, setErrorEliminar] = useState<string | null>(null)
+  const [insumosRefreshKey, setInsumosRefreshKey] = useState(0)
   const { esMobile } = useTamanioPantalla()
 
   const fetchGastos = useCallback(async () => {
@@ -111,6 +113,9 @@ export default function GestionGastos() {
       setGastos((prev) => prev.map((g) => g.id === guardado.id ? guardado : g))
     } else {
       setGastos((prev) => [guardado, ...prev])
+    }
+    if (guardado.categoria === "INSUMOS") {
+      setInsumosRefreshKey((k) => k + 1)
     }
     cerrarModal()
   }
@@ -402,6 +407,11 @@ export default function GestionGastos() {
           onGuardado={onGuardado}
         />
       )}
+
+      {/* INVENTARIO DE INSUMOS */}
+      <div style={{ marginTop: "32px", borderTop: "0.5px solid var(--color-borde)", paddingTop: "32px" }}>
+        <GestionInsumos refreshKey={insumosRefreshKey} />
+      </div>
     </div>
   )
 }

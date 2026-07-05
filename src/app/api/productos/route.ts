@@ -75,7 +75,8 @@ export async function POST(solicitud: NextRequest) {
     })
 
     const cuerpo = await solicitud.json()
-    const { nombre, descripcion, precio, precioAnterior, stock, activo, destacado, categoriaId, material, talle, color, creadoEn } = cuerpo
+    const { nombre, descripcion, precio, precioAnterior, stock, activo, destacado, categoriaId, material, talle, color, creadoEn, insumos } = cuerpo
+    const insumosData: { insumoId: number; cantidadUsada: number }[] = insumos ?? []
 
     if (!nombre || !precio || !categoriaId) {
       return NextResponse.json<RespuestaAPI<null>>(
@@ -96,25 +97,46 @@ export async function POST(solicitud: NextRequest) {
       materialId = materialEncontrado?.id ?? null
     }
 
-    const producto = await prisma.producto.create({
-      data: {
-        nombre,
-        slug,
-        descripcion,
-        precio,
-        precioAnterior: precioAnterior || null,
-        stock: stock ?? 0,
-        activo: activo ?? true,
-        destacado: destacado ?? false,
-        talle: talle || null,
-        material: material || null,
-        color: color || null,
-        materialId,
-        categoriaId,
-        vendedorId: user.id,
-        ...(creadoEn && { creadoEn: new Date(creadoEn) }),
-      },
-      include: { categoria: true, imagenes: true },
+    const costo = cuerpo.costo ?? null
+    const precioMinimo = cuerpo.precioMinimo ?? null
+
+    const producto = await prisma.$transaction(async (tx) => {
+      const creado = await tx.producto.create({
+        data: {
+          nombre,
+          slug,
+          descripcion,
+          precio,
+          precioAnterior: precioAnterior || null,
+          costo: costo ?? null,
+          precioMinimo: precioMinimo ?? null,
+          stock: stock ?? 0,
+          activo: activo ?? true,
+          destacado: destacado ?? false,
+          talle: talle || null,
+          material: material || null,
+          color: color || null,
+          materialId,
+          categoriaId,
+          vendedorId: user.id,
+          ...(creadoEn && { creadoEn: new Date(creadoEn) }),
+        },
+        include: { categoria: true, imagenes: true },
+      })
+
+      for (const ins of insumosData) {
+        const insumo = await tx.insumo.findUnique({ where: { id: ins.insumoId } })
+        if (!insumo || insumo.cantidadDisponible < ins.cantidadUsada) continue
+        await tx.insumoProducto.create({
+          data: { insumoId: ins.insumoId, productoId: creado.id, cantidadUsada: ins.cantidadUsada },
+        })
+        await tx.insumo.update({
+          where: { id: ins.insumoId },
+          data: { cantidadDisponible: { decrement: ins.cantidadUsada } },
+        })
+      }
+
+      return creado
     })
 
     revalidatePath("/")

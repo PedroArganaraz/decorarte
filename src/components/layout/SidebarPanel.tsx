@@ -22,8 +22,8 @@ import type { LucideIcon } from "lucide-react"
 const navegacion: { label: string; href: string; Icono: LucideIcon }[] = [
   { label: "Inicio",      href: "/panel",             Icono: Home },
   { label: "Productos",   href: "/panel/productos",   Icono: Package },
-  { label: "Ventas",      href: "/ventas",             Icono: ShoppingBag },
   { label: "Gastos",      href: "/gastos",             Icono: Receipt },
+  { label: "Ventas",      href: "/ventas",             Icono: ShoppingBag },
   { label: "Categorías",  href: "/panel/categorias",  Icono: Tag },
   { label: "Materiales",  href: "/panel/materiales",  Icono: Layers },
   { label: "Reportes",    href: "/reportes",           Icono: BarChart2 },

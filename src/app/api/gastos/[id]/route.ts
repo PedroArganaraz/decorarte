@@ -19,13 +19,85 @@ export async function PATCH(
     }
 
     const { id } = await params
-    const { descripcion, monto, categoria, metodoPago, notas, fecha } = await solicitud.json() as {
+    const body = await solicitud.json() as {
       descripcion?: string
       monto?: number
       categoria?: string
       metodoPago?: string
       notas?: string
       fecha?: string
+      insumo?: {
+        nombre: string
+        precioUnitario: number
+        cantidadTotal: number
+        unidad: string
+      }
+    }
+
+    const { descripcion, monto, categoria, metodoPago, notas, fecha, insumo } = body
+
+    if (categoria === "INSUMOS" && insumo) {
+      const result = await prisma.$transaction(async (tx) => {
+        const gasto = await tx.gasto.update({
+          where: { id },
+          data: {
+            ...(descripcion !== undefined && { descripcion }),
+            ...(monto !== undefined && { monto }),
+            ...(categoria !== undefined && { categoria: categoria as any }),
+            ...(metodoPago !== undefined && { metodoPago: metodoPago as any }),
+            ...(notas !== undefined && { notas: notas || null }),
+            ...(fecha !== undefined && { fecha: new Date(fecha) }),
+          },
+        })
+
+        const insumoExistente = await tx.insumo.findFirst({ where: { gastoId: id } })
+
+        if (insumoExistente) {
+          const cantidadUsadaEnProductos = Number(insumoExistente.cantidadTotal) - Number(insumoExistente.cantidadDisponible)
+          const nuevoCantidadDisponible = Math.max(0, insumo.cantidadTotal - cantidadUsadaEnProductos)
+          await tx.insumo.update({
+            where: { id: insumoExistente.id },
+            data: {
+              nombre: insumo.nombre,
+              precioUnitario: insumo.precioUnitario,
+              cantidadTotal: insumo.cantidadTotal,
+              cantidadDisponible: nuevoCantidadDisponible,
+              unidad: insumo.unidad,
+            },
+          })
+        } else {
+          await tx.insumo.create({
+            data: {
+              nombre: insumo.nombre,
+              precioUnitario: insumo.precioUnitario,
+              cantidadTotal: insumo.cantidadTotal,
+              cantidadDisponible: insumo.cantidadTotal,
+              unidad: insumo.unidad,
+              gastoId: id,
+            },
+          })
+        }
+
+        const insumoActualizado = await tx.insumo.findFirst({ where: { gastoId: id } })
+
+        return {
+          ...gasto,
+          insumo: insumoActualizado
+            ? {
+                id: insumoActualizado.id,
+                precioUnitario: Number(insumoActualizado.precioUnitario),
+                cantidadTotal: Number(insumoActualizado.cantidadTotal),
+                cantidadDisponible: Number(insumoActualizado.cantidadDisponible),
+                unidad: insumoActualizado.unidad,
+              }
+            : null,
+        }
+      })
+
+      return NextResponse.json<RespuestaAPI<typeof result>>({
+        datos: result,
+        mensaje: "Gasto actualizado correctamente",
+      })
     }
 
     const gasto = await prisma.gasto.update({
@@ -40,8 +112,8 @@ export async function PATCH(
       },
     })
 
-    return NextResponse.json<RespuestaAPI<typeof gasto>>({
-      datos: gasto,
+    return NextResponse.json<RespuestaAPI<typeof gasto & { insumo: null }>>({
+      datos: { ...gasto, insumo: null },
       mensaje: "Gasto actualizado correctamente",
     })
   } catch (error) {

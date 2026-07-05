@@ -66,6 +66,7 @@ model Producto {
   combinadoEn    Producto[]        @relation("ProductosCombinados")
   ventas         ItemVenta[]
   movimientos    MovimientoStock[]
+  insumos        InsumoProducto[]
   @@map("productos")
 }
 
@@ -174,6 +175,7 @@ model Gasto {
   creadoEn    DateTime       @default(now()) @map("creado_en")
 
   vendedor    Usuario?       @relation(fields: [vendedorId], references: [id])
+  insumos     Insumo[]
 
   @@map("gastos")
 }
@@ -254,4 +256,32 @@ model Nota {
   actualizado_en DateTime @updatedAt
 
   @@map("notas")
+}
+
+model Insumo {
+  id                 Int              @id @default(autoincrement())
+  nombre             String
+  precioUnitario     Float            @map("precio_unitario")
+  cantidadTotal      Float            @map("cantidad_total")
+  cantidadDisponible Float            @map("cantidad_disponible")
+  unidad             String           @default("unidad")
+  gastoId            String?          @map("gasto_id")
+  creadoEn           DateTime         @default(now()) @map("creado_en")
+  actualizadoEn      DateTime         @updatedAt @map("actualizado_en")
+  gasto              Gasto?           @relation(fields: [gastoId], references: [id])
+  productos          InsumoProducto[]
+
+  @@map("insumos")
+}
+
+model InsumoProducto {
+  id            Int      @id @default(autoincrement())
+  insumoId      Int      @map("insumo_id")
+  productoId    String   @map("producto_id")
+  cantidadUsada Float    @map("cantidad_usada")
+  creadoEn      DateTime @default(now()) @map("creado_en")
+  insumo        Insumo   @relation(fields: [insumoId], references: [id])
+  producto      Producto @relation(fields: [productoId], references: [id])
+
+  @@map("insumo_producto")
 }

@@ -21,6 +21,9 @@ export default async function PaginaEditarProducto({
       combinadoCon: {
         select: { id: true, nombre: true, slug: true },
       },
+      insumos: {
+        include: { insumo: { select: { id: true, nombre: true, precioUnitario: true, cantidadDisponible: true, unidad: true } } },
+      },
     },
   })
 
@@ -79,7 +82,18 @@ export default async function PaginaEditarProducto({
         <EliminarProducto id={producto.id} nombre={producto.nombre} />
       </div>
 
-      <FormularioProducto categorias={categorias} producto={productoParaForm} />
+      <FormularioProducto
+        categorias={categorias}
+        producto={productoParaForm}
+        insumosIniciales={producto.insumos.map((ip) => ({
+          insumoId: ip.insumo.id,
+          nombre: ip.insumo.nombre,
+          precioUnitario: ip.insumo.precioUnitario,
+          cantidadDisponible: ip.insumo.cantidadDisponible,
+          unidad: ip.insumo.unidad,
+          cantidadUsada: ip.cantidadUsada,
+        }))}
+      />
 
       <div style={{ marginTop: "40px" }}>
         <SubidorImagenes
