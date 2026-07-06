@@ -38,7 +38,7 @@ const METODOS_PAGO = [
   { value: "TRANSFERENCIA", label: "Transferencia" },
 ]
 
-const UNIDADES = ["unidad", "cm", "ml"]
+const UNIDADES = ["unidad", "cm"]
 
 function fechaHoyLocal() {
   return new Date().toLocaleDateString("en-CA")
@@ -92,9 +92,6 @@ export default function ModalGasto({ gasto, onCerrar, onGuardado }: Props) {
     gasto?.insumo?.unidad ?? "unidad"
   )
 
-  const [confirmCambioCategoria, setConfirmCambioCategoria] = useState(false)
-  const [categoriaPendiente, setCategoriaPendiente] = useState("")
-
   const [montoFocused, setMontoFocused] = useState(false)
   const [guardando, setGuardando] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -123,19 +120,7 @@ export default function ModalGasto({ gasto, onCerrar, onGuardado }: Props) {
   }
 
   const handleCategoriaChange = (nuevaCategoria: string) => {
-    const tieneInsumoData = precioUnitarioInsumo !== "" || cantidadInsumo !== ""
-    if (categoria === "INSUMOS" && nuevaCategoria !== "INSUMOS" && tieneInsumoData) {
-      setCategoriaPendiente(nuevaCategoria)
-      setConfirmCambioCategoria(true)
-      return
-    }
     aplicarCambioCategoria(nuevaCategoria)
-  }
-
-  const confirmarCambioCategoria = () => {
-    aplicarCambioCategoria(categoriaPendiente)
-    setConfirmCambioCategoria(false)
-    setCategoriaPendiente("")
   }
 
   const guardar = async () => {
@@ -285,37 +270,15 @@ export default function ModalGasto({ gasto, onCerrar, onGuardado }: Props) {
             </div>
           </div>
 
-          {confirmCambioCategoria && (
-            <div style={{
-              backgroundColor: "#fdf5f3",
-              border: "0.5px solid var(--color-acento)",
-              padding: "12px 16px",
-              display: "flex",
-              flexDirection: "column",
-              gap: "10px",
-            }}>
-              <p style={{ fontSize: "12px", fontFamily: "'Jost', sans-serif", color: "var(--color-texto)", margin: 0 }}>
-                ¿Cambiar de categoría? Se perderán los datos del insumo ingresado.
-              </p>
-              <div style={{ display: "flex", gap: "8px" }}>
-                <button
-                  onClick={confirmarCambioCategoria}
-                  style={{ padding: "6px 14px", fontSize: "10px", fontFamily: "'Jost', sans-serif", letterSpacing: "0.1em", textTransform: "uppercase", border: "0.5px solid var(--color-acento)", backgroundColor: "transparent", color: "var(--color-acento)", cursor: "pointer", borderRadius: 0 }}
-                >
-                  Confirmar
-                </button>
-                <button
-                  onClick={() => { setConfirmCambioCategoria(false); setCategoriaPendiente("") }}
-                  style={{ padding: "6px 14px", fontSize: "10px", fontFamily: "'Jost', sans-serif", letterSpacing: "0.1em", textTransform: "uppercase", border: "0.5px solid var(--color-texto)", backgroundColor: "transparent", color: "var(--color-texto)", cursor: "pointer", borderRadius: 0 }}
-                >
-                  Cancelar
-                </button>
-              </div>
-            </div>
-          )}
-
           {esInsumo && (
             <>
+              <div>
+                <label style={estiloLabel}>Medida</label>
+                <select value={unidadInsumo} onChange={(e) => setUnidadInsumo(e.target.value)} style={estiloInput}>
+                  {UNIDADES.map((u) => <option key={u} value={u}>{u}</option>)}
+                </select>
+              </div>
+
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
                 <div>
                   <label style={estiloLabel}>Precio unitario *</label>
@@ -342,13 +305,6 @@ export default function ModalGasto({ gasto, onCerrar, onGuardado }: Props) {
                   />
                 </div>
               </div>
-
-              <div>
-                <label style={estiloLabel}>Unidad</label>
-                <select value={unidadInsumo} onChange={(e) => setUnidadInsumo(e.target.value)} style={estiloInput}>
-                  {UNIDADES.map((u) => <option key={u} value={u}>{u}</option>)}
-                </select>
-              </div>
             </>
           )}
 
@@ -356,12 +312,19 @@ export default function ModalGasto({ gasto, onCerrar, onGuardado }: Props) {
             <div>
               <label style={estiloLabel}>{esInsumo ? "Monto (calculado)" : "Monto *"}</label>
               {esInsumo ? (
-                <input
-                  type="text"
-                  readOnly
-                  value={monto === "" ? "" : `$${Number(monto).toLocaleString("es-AR")}`}
-                  style={{ ...estiloInput, backgroundColor: "var(--color-fondo)", color: "var(--color-texto-muted)", cursor: "default" }}
-                />
+                <>
+                  <input
+                    type="text"
+                    readOnly
+                    value={monto === "" ? "" : `$${Number(monto).toLocaleString("es-AR")}`}
+                    style={{ ...estiloInput, backgroundColor: "var(--color-fondo)", color: "var(--color-texto-muted)", cursor: "default" }}
+                  />
+                  {parseFloat(precioUnitarioInsumo) > 0 && parseFloat(cantidadInsumo) > 0 && (
+                    <p style={{ fontSize: "10px", fontFamily: "'Jost', sans-serif", color: "var(--color-texto-muted)", margin: "5px 0 0", letterSpacing: "0.03em" }}>
+                      {parseFloat(cantidadInsumo).toLocaleString("es-AR")} {unidadInsumo} × ${parseFloat(precioUnitarioInsumo).toLocaleString("es-AR")} = ${Number(monto).toLocaleString("es-AR")}
+                    </p>
+                  )}
+                </>
               ) : (
                 <input
                   type="text"

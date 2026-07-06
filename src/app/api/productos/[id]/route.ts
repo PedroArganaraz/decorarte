@@ -76,7 +76,7 @@ export async function PUT(
       for (const anterior of insumosAnteriores) {
         await tx.insumo.update({
           where: { id: anterior.insumoId },
-          data: { cantidadDisponible: { increment: anterior.cantidadUsada } },
+          data: { cantidadDisponible: { increment: Number(anterior.cantidadUsada) } },
         })
       }
       await tx.insumoProducto.deleteMany({ where: { productoId: id } })
@@ -172,7 +172,17 @@ export async function DELETE(
       await supabaseAdmin.storage.from("productos").remove(paths)
     }
 
-    await prisma.producto.delete({ where: { id } })
+    await prisma.$transaction(async (tx) => {
+      const insumosAsociados = await tx.insumoProducto.findMany({ where: { productoId: id } })
+      for (const ip of insumosAsociados) {
+        await tx.insumo.update({
+          where: { id: ip.insumoId },
+          data: { cantidadDisponible: { increment: Number(ip.cantidadUsada) } },
+        })
+      }
+      await tx.insumoProducto.deleteMany({ where: { productoId: id } })
+      await tx.producto.delete({ where: { id } })
+    })
 
     revalidatePath("/")
     revalidatePath("/catalogo")

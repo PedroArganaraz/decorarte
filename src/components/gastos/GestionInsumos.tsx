@@ -92,7 +92,9 @@ export default function GestionInsumos({ refreshKey }: Props) {
                       </span>
                     </td>
                     <td style={estiloTd}>
-                      <span style={{ fontSize: "13px", fontFamily: "'Jost', sans-serif", color: "var(--color-texto)" }}>{ins.cantidadTotal}</span>
+                      <span style={{ fontSize: "13px", fontFamily: "'Jost', sans-serif", color: "var(--color-texto)" }}>
+                        {ins.cantidadTotal}{ins.unidad !== "unidad" ? ` ${ins.unidad}` : ""}
+                      </span>
                     </td>
                     <td style={estiloTd}>
                       <span style={{
@@ -101,7 +103,7 @@ export default function GestionInsumos({ refreshKey }: Props) {
                         color: agotado ? "var(--color-acento)" : pocaDisponible ? "#E67E22" : "var(--color-texto)",
                         fontWeight: agotado || pocaDisponible ? 500 : 400,
                       }}>
-                        {ins.cantidadDisponible}
+                        {ins.cantidadDisponible}{ins.unidad !== "unidad" ? ` ${ins.unidad}` : ""}
                       </span>
                     </td>
                   </tr>

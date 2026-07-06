@@ -127,7 +127,11 @@ export default function GestionGastos() {
       const res = await fetch(`/api/gastos/${id}`, { method: "DELETE" })
       const json = await res.json()
       if (!res.ok) throw new Error(json.error ?? "Error al eliminar")
+      const eliminado = gastos.find((g) => g.id === id)
       setGastos((prev) => prev.filter((g) => g.id !== id))
+      if (eliminado?.categoria === "INSUMOS") {
+        setInsumosRefreshKey((k) => k + 1)
+      }
     } catch (e: unknown) {
       setErrorEliminar(e instanceof Error ? e.message : "Error al eliminar")
     } finally {

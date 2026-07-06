@@ -561,7 +561,7 @@ export default function FormularioProducto({ categorias, accionesExtra, producto
                   <button type="button" onClick={agregarInsumo} style={{ padding: "8px 14px", fontSize: "10px", fontFamily: "'Jost', sans-serif", letterSpacing: "0.1em", textTransform: "uppercase", border: "none", backgroundColor: "var(--color-texto)", color: "var(--color-fondo)", cursor: "pointer", borderRadius: 0 }}>
                     Agregar
                   </button>
-                  <button type="button" onClick={() => { setMostrarAgregarInsumo(false); setInsumoParaAgregar({ insumoId: "", cantidad: "" }) }} style={{ padding: "8px 14px", fontSize: "10px", fontFamily: "'Jost', sans-serif", letterSpacing: "0.1em", textTransform: "uppercase", border: "0.5px solid var(--color-borde)", backgroundColor: "transparent", color: "var(--color-texto-muted)", cursor: "pointer", borderRadius: 0 }}>
+                  <button type="button" onClick={() => { setMostrarAgregarInsumo(false); setInsumoParaAgregar({ insumoId: "", cantidad: "" }) }} style={{ padding: "8px 14px", fontSize: "10px", fontFamily: "'Jost', sans-serif", letterSpacing: "0.1em", textTransform: "uppercase", border: "0.5px solid var(--color-texto)", backgroundColor: "transparent", color: "var(--color-texto)", cursor: "pointer", borderRadius: 0 }}>
                     Cancelar
                   </button>
                 </div>
