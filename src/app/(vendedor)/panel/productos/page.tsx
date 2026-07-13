@@ -243,14 +243,20 @@ export default async function PaginaProductos({ searchParams }: Props) {
                   <td style={{ padding: "12px 16px" }}>
                     <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                       <div>
-                        {producto.precioAnterior != null && Number(producto.precioAnterior) > 0 && (
-                          <span style={{ display: "block", fontSize: "11px", color: "var(--color-texto-muted)", textDecoration: "line-through" }}>
-                            ${Number(producto.precioAnterior).toLocaleString("es-AR")}
+                        {producto.precioAnterior != null && Number(producto.precioAnterior) > 0 ? (
+                          <>
+                            <span style={{ display: "block", fontSize: "11px", color: "var(--color-texto-muted)", textDecoration: "line-through" }}>
+                              ${Number(producto.precio).toLocaleString("es-AR")}
+                            </span>
+                            <span style={{ fontSize: "13px", color: "var(--color-texto)" }}>
+                              ${Number(producto.precioAnterior).toLocaleString("es-AR")}
+                            </span>
+                          </>
+                        ) : (
+                          <span style={{ fontSize: "13px", color: "var(--color-texto)" }}>
+                            ${Number(producto.precio).toLocaleString("es-AR")}
                           </span>
                         )}
-                        <span style={{ fontSize: "13px", color: "var(--color-texto)" }}>
-                          ${Number(producto.precio).toLocaleString("es-AR")}
-                        </span>
                       </div>
                       {producto.precioMinimo != null &&
                         Number(producto.precio) < Number(producto.precioMinimo) && (
