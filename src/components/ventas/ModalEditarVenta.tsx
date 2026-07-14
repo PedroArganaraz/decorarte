@@ -51,10 +51,11 @@ const METODOS_PAGO = [
 ]
 
 const ESTADOS = [
+  { value: "PENDIENTE",          label: "Pendiente" },
+  { value: "PAGO_PARCIAL",       label: "Pago parcial" },
+  { value: "ENTREGADO",          label: "Entregado" },
+  { value: "PAGADO",             label: "Pagado" },
   { value: "PAGADO_Y_ENTREGADO", label: "Pagado y entregado" },
-  { value: "PAGADO", label: "Pagado" },
-  { value: "ENTREGADO", label: "Entregado" },
-  { value: "PENDIENTE", label: "Pendiente" },
 ]
 
 const estiloLabel: React.CSSProperties = {
@@ -106,6 +107,9 @@ export default function ModalEditarVenta({ venta, onCerrar, onGuardada }: Props)
   const [montoRecibidoFocused, setMontoRecibidoFocused] = useState(false)
   const [metodoPagoVuelto, setMetodoPagoVuelto] = useState("TRANSFERENCIA")
   const [movimientoVueltoId, setMovimientoVueltoId] = useState<string | null>(null)
+  const [montoParcial, setMontoParcial] = useState(
+    venta.estado === "PAGO_PARCIAL" && venta.montoRecibido != null ? String(venta.montoRecibido) : ""
+  )
 
   const [busqueda, setBusqueda] = useState("")
   const [resultados, setResultados] = useState<ProductoBuscado[]>([])
@@ -255,7 +259,9 @@ export default function ModalEditarVenta({ venta, onCerrar, onGuardada }: Props)
           estado: esRegalo ? "REGALO" : estado,
           esRegalo,
           notas: notas.trim() || undefined,
-          montoRecibido: pagoConMayorMonto && vuelto > 0 ? totalCarrito + vuelto : null,
+          montoRecibido: estado === "PAGO_PARCIAL"
+            ? (Number(montoParcial) > 0 ? Number(montoParcial) : null)
+            : (pagoConMayorMonto && vuelto > 0 ? totalCarrito + vuelto : null),
           items: carrito.map((i) => ({
             productoId: i.productoId,
             cantidad: i.cantidad,
@@ -561,6 +567,25 @@ export default function ModalEditarVenta({ venta, onCerrar, onGuardada }: Props)
                 ))}
               </select>
             </div>
+
+            {estado === "PAGO_PARCIAL" && !esRegalo && (
+              <div style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
+                <label style={estiloLabel}>Monto pagado *</label>
+                <input
+                  type="text"
+                  inputMode="decimal"
+                  value={montoParcial}
+                  onChange={(e) => setMontoParcial(e.target.value)}
+                  placeholder="0"
+                  style={estiloInput}
+                />
+                {Number(montoParcial) > 0 && totalCarrito > Number(montoParcial) && (
+                  <p style={{ fontSize: "11px", fontFamily: "'Jost', sans-serif", color: "#D97706", margin: "4px 0 0" }}>
+                    Debe: ${(totalCarrito - Number(montoParcial)).toLocaleString("es-AR")}
+                  </p>
+                )}
+              </div>
+            )}
 
             <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
               <input

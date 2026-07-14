@@ -27,10 +27,11 @@ const METODOS_PAGO = [
 ]
 
 const ESTADOS = [
-  { value: "PAGADO_Y_ENTREGADO", label: "Pagado y entregado" },
-  { value: "PAGADO",             label: "Pagado" },
-  { value: "ENTREGADO",          label: "Entregado" },
   { value: "PENDIENTE",          label: "Pendiente" },
+  { value: "PAGO_PARCIAL",       label: "Pago parcial" },
+  { value: "ENTREGADO",          label: "Entregado" },
+  { value: "PAGADO",             label: "Pagado" },
+  { value: "PAGADO_Y_ENTREGADO", label: "Pagado y entregado" },
 ]
 
 export default function FormularioVenta() {
@@ -48,6 +49,7 @@ export default function FormularioVenta() {
   const [pagoConMayorMonto, setPagoConMayorMonto] = useState(false)
   const [montoRecibido, setMontoRecibido] = useState("")
   const [metodoPagoVuelto, setMetodoPagoVuelto] = useState("TRANSFERENCIA")
+  const [montoParcial, setMontoParcial] = useState("")
 
   const [enviando, setEnviando] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -154,6 +156,7 @@ export default function FormularioVenta() {
     setPagoConMayorMonto(false)
     setMontoRecibido("")
     setMetodoPagoVuelto("TRANSFERENCIA")
+    setMontoParcial("")
   }
 
   const enviar = async () => {
@@ -163,6 +166,10 @@ export default function FormularioVenta() {
     }
     if (!metodoPago) {
       setError("Seleccioná el método de pago.")
+      return
+    }
+    if (estado === "PAGO_PARCIAL" && !esRegalo && !(Number(montoParcial) > 0)) {
+      setError("Ingresá el monto pagado para pago parcial.")
       return
     }
 
@@ -179,7 +186,8 @@ export default function FormularioVenta() {
           estado: esRegalo ? "REGALO" : estado,
           esRegalo,
           notas: notas.trim() || undefined,
-          ...(pagoConMayorMonto && !esRegalo && vuelto > 0 && { montoRecibido: totalCarrito + vuelto }),
+          ...(estado === "PAGO_PARCIAL" && !esRegalo && Number(montoParcial) > 0 && { montoRecibido: Number(montoParcial) }),
+          ...(estado !== "PAGO_PARCIAL" && pagoConMayorMonto && !esRegalo && vuelto > 0 && { montoRecibido: totalCarrito + vuelto }),
           items: carrito.map((i) => ({
             productoId: i.productoId,
             cantidad: i.cantidad,
@@ -648,6 +656,26 @@ export default function FormularioVenta() {
             ))}
           </select>
         </div>
+
+        {/* Monto pagado (PAGO_PARCIAL) */}
+        {estado === "PAGO_PARCIAL" && !esRegalo && (
+          <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+            <label style={estiloLabel}>Monto pagado *</label>
+            <input
+              type="text"
+              inputMode="decimal"
+              value={montoParcial}
+              onChange={(e) => setMontoParcial(e.target.value)}
+              placeholder="0"
+              style={estiloInput}
+            />
+            {Number(montoParcial) > 0 && totalCarrito > Number(montoParcial) && (
+              <p style={{ fontSize: "11px", fontFamily: "'Jost', sans-serif", color: "#D97706", margin: "3px 0 0" }}>
+                Debe: ${(totalCarrito - Number(montoParcial)).toLocaleString("es-AR")}
+              </p>
+            )}
+          </div>
+        )}
 
         {/* Es regalo */}
         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>

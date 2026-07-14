@@ -193,6 +193,7 @@ enum EstadoVenta {
   PAGADO_Y_ENTREGADO
   REGALO
   PENDIENTE
+  PAGO_PARCIAL
 
   @@map("estado_venta")
 }

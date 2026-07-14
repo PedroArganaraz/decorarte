@@ -41,7 +41,7 @@ export async function GET(solicitud: NextRequest) {
       },
     } : {}
 
-    const [ventas, total, sumaTotal, sumaEfectivo, sumaTransferencia, ingresoEfectivo, ingresoTransferencia, transAEf, efATrans] = await Promise.all([
+    const [ventas, total, sumaTotal, sumaEfectivo, sumaTransferencia, ingresoEfectivo, ingresoTransferencia, transAEf, efATrans, ventasParciales] = await Promise.all([
       prisma.venta.findMany({
         where,
         skip,
@@ -64,9 +64,14 @@ export async function GET(solicitud: NextRequest) {
       prisma.movimientoCaja.aggregate({ _sum: { monto: true }, where: { tipo: "INGRESO", metodoPago: "TRANSFERENCIA", ...filtroFecha } }),
       prisma.movimientoCaja.aggregate({ _sum: { monto: true }, where: { tipo: "TRANS_A_EF", ...filtroFecha } }),
       prisma.movimientoCaja.aggregate({ _sum: { monto: true }, where: { tipo: "EF_A_TRANS", ...filtroFecha } }),
+      prisma.venta.findMany({ where: { ...filtroFecha, estado: "PAGO_PARCIAL" }, select: { montoRecibido: true, metodoPago: true } }),
     ])
 
     const totalPaginas = Math.max(1, Math.ceil(total / limit))
+
+    const sumaParcialTotal = ventasParciales.reduce((s, v) => s + Number(v.montoRecibido ?? 0), 0)
+    const sumaParcialEfectivo = ventasParciales.filter((v) => v.metodoPago === "EFECTIVO").reduce((s, v) => s + Number(v.montoRecibido ?? 0), 0)
+    const sumaParcialTransferencia = ventasParciales.filter((v) => v.metodoPago === "TRANSFERENCIA").reduce((s, v) => s + Number(v.montoRecibido ?? 0), 0)
 
     // Obtener método de vuelto desde MovimientoCaja (tipo VUELTO, relacionado por ventaId)
     const ventaIds = ventas.map((v) => v.id)
@@ -89,9 +94,9 @@ export async function GET(solicitud: NextRequest) {
       pagina: page,
       totalPaginas,
       metricas: {
-        totalPeriodo: Number(sumaTotal._sum.precioTotal ?? 0) + Number(ingresoEfectivo._sum.monto ?? 0) + Number(ingresoTransferencia._sum.monto ?? 0),
-        totalEfectivo: Number(sumaEfectivo._sum.precioTotal ?? 0) + Number(ingresoEfectivo._sum.monto ?? 0) + Number(transAEf._sum.monto ?? 0) - Number(efATrans._sum.monto ?? 0),
-        totalTransferencia: Number(sumaTransferencia._sum.precioTotal ?? 0) + Number(ingresoTransferencia._sum.monto ?? 0) + Number(efATrans._sum.monto ?? 0) - Number(transAEf._sum.monto ?? 0),
+        totalPeriodo: Number(sumaTotal._sum.precioTotal ?? 0) + sumaParcialTotal + Number(ingresoEfectivo._sum.monto ?? 0) + Number(ingresoTransferencia._sum.monto ?? 0),
+        totalEfectivo: Number(sumaEfectivo._sum.precioTotal ?? 0) + sumaParcialEfectivo + Number(ingresoEfectivo._sum.monto ?? 0) + Number(transAEf._sum.monto ?? 0) - Number(efATrans._sum.monto ?? 0),
+        totalTransferencia: Number(sumaTransferencia._sum.precioTotal ?? 0) + sumaParcialTransferencia + Number(ingresoTransferencia._sum.monto ?? 0) + Number(efATrans._sum.monto ?? 0) - Number(transAEf._sum.monto ?? 0),
       },
     })
   } catch (error) {

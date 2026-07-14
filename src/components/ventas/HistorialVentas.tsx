@@ -14,7 +14,7 @@ interface ItemVenta {
   producto: { id: string; nombre: string; slug: string }
 }
 
-type EstadoVenta = "PAGADO" | "ENTREGADO" | "PAGADO_Y_ENTREGADO" | "REGALO" | "PENDIENTE"
+type EstadoVenta = "PAGADO" | "ENTREGADO" | "PAGADO_Y_ENTREGADO" | "REGALO" | "PENDIENTE" | "PAGO_PARCIAL"
 
 interface Venta {
   id: string
@@ -35,11 +35,13 @@ const ESTADO_LABELS: Record<string, string> = {
   PAGADO: "Pagado",
   ENTREGADO: "Entregado",
   PENDIENTE: "Pendiente",
+  PAGO_PARCIAL: "Pago parcial",
   REGALO: "Regalo",
 }
 
 export const ESTADO_COLORES: Record<string, string> = {
   PENDIENTE:          "var(--color-texto)",
+  PAGO_PARCIAL:       "#D97706",
   ENTREGADO:          "#C0392B",
   PAGADO:             "#2980B9",
   PAGADO_Y_ENTREGADO: "#27AE60",

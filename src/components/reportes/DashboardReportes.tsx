@@ -40,6 +40,17 @@ interface TopProducto {
   montoTotal: number
 }
 
+interface VentaPendiente {
+  id: string
+  fecha: string
+  cliente: string | null
+  estado: string
+  metodoPago: string | null
+  montoRecibido: number | null
+  total: number
+  items: { nombre: string; cantidad: number }[]
+}
+
 interface Resumen {
   periodo: { desde: string | null; hasta: string | null }
   ventas: {
@@ -218,6 +229,10 @@ export default function DashboardReportes() {
   const [verTodosProductos, setVerTodosProductos] = useState(false)
   const [verTodosCombinaciones, setVerTodosCombinaciones] = useState(false)
 
+  const [cobrosPendientes, setCobrosPendientes] = useState<VentaPendiente[]>([])
+  const [cargandoPendientes, setCargandoPendientes] = useState(true)
+  const [errorPendientes, setErrorPendientes] = useState<string | null>(null)
+
   const fetchResumen = useCallback(async () => {
     setCargando(true)
     setError(null)
@@ -244,6 +259,25 @@ export default function DashboardReportes() {
   useEffect(() => {
     fetchResumen()
   }, [fetchResumen])
+
+  const fetchCobrosPendientes = useCallback(async () => {
+    setCargandoPendientes(true)
+    setErrorPendientes(null)
+    try {
+      const res = await fetch("/api/ventas/pendientes")
+      const json = await res.json()
+      if (!res.ok) throw new Error(json.error ?? "Error al cargar")
+      setCobrosPendientes(json.datos ?? [])
+    } catch (e: unknown) {
+      setErrorPendientes(e instanceof Error ? e.message : "Error al cargar")
+    } finally {
+      setCargandoPendientes(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    fetchCobrosPendientes()
+  }, [fetchCobrosPendientes])
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
@@ -398,6 +432,95 @@ export default function DashboardReportes() {
                 </div>
               )
             })}
+          </div>
+
+          {/* COBROS PENDIENTES */}
+          <div>
+            <h2 style={estiloTituloSeccion}>Cobros pendientes</h2>
+            {cargandoPendientes ? (
+              <p style={{ fontSize: "13px", fontFamily: "'Jost', sans-serif", color: "var(--color-texto-sutil)", padding: "32px 0", textAlign: "center", margin: 0 }}>
+                Cargando...
+              </p>
+            ) : errorPendientes ? (
+              <p style={{ fontSize: "13px", fontFamily: "'Jost', sans-serif", color: "var(--color-acento)", padding: "16px", border: "0.5px solid var(--color-acento)", margin: 0 }}>
+                {errorPendientes}
+              </p>
+            ) : cobrosPendientes.length === 0 ? (
+              <div style={{ backgroundColor: "var(--color-card)", border: "0.5px solid var(--color-borde)", padding: "32px", textAlign: "center" }}>
+                <p style={{ fontSize: "13px", fontFamily: "'Jost', sans-serif", color: "var(--color-texto-sutil)", margin: 0 }}>
+                  No hay cobros pendientes.
+                </p>
+              </div>
+            ) : (
+              <div style={{ backgroundColor: "var(--color-card)", border: "0.5px solid var(--color-borde)", overflowX: "auto" }}>
+                <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                  <thead>
+                    <tr style={{ borderBottom: "0.5px solid var(--color-borde)" }}>
+                      {["Fecha", "Cliente", "Productos", "Total", "Pagado", "Debe", "Estado"].map((col) => (
+                        <th key={col} style={{
+                          padding: "10px 16px",
+                          textAlign: ["Total", "Pagado", "Debe", "Estado"].includes(col) ? "center" : "left",
+                          fontSize: "9px",
+                          fontFamily: "'Jost', sans-serif",
+                          fontWeight: 500,
+                          letterSpacing: "0.15em",
+                          textTransform: "uppercase",
+                          color: "var(--color-texto-muted)",
+                          whiteSpace: "nowrap",
+                        }}>
+                          {col}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {cobrosPendientes.map((v) => {
+                      const pagado = v.montoRecibido ?? 0
+                      const debe = v.total - pagado
+                      return (
+                        <tr key={v.id} style={{ borderBottom: "0.5px solid var(--color-superficie)" }}>
+                          <td style={{ padding: "10px 16px", fontSize: "12px", fontFamily: "'Jost', sans-serif", color: "var(--color-texto-muted)", whiteSpace: "nowrap" }}>
+                            {new Date(v.fecha).toLocaleDateString("es-AR", { day: "numeric", month: "short", year: "numeric" })}
+                          </td>
+                          <td style={{ padding: "10px 16px", fontSize: "13px", fontFamily: "'Cormorant Garamond', serif", color: "var(--color-texto)" }}>
+                            {v.cliente ?? "—"}
+                          </td>
+                          <td style={{ padding: "10px 16px", fontSize: "12px", fontFamily: "'Jost', sans-serif", color: "var(--color-texto-muted)", maxWidth: "220px" }}>
+                            {v.items.map((i) => `${i.nombre}${i.cantidad > 1 ? ` ×${i.cantidad}` : ""}`).join(", ")}
+                          </td>
+                          <td style={{ padding: "10px 16px", fontSize: "15px", fontFamily: "'Cormorant Garamond', serif", color: "var(--color-texto)", whiteSpace: "nowrap", textAlign: "center" }}>
+                            {fmt(v.total)}
+                          </td>
+                          <td style={{ padding: "10px 16px", fontSize: "15px", fontFamily: "'Cormorant Garamond', serif", color: pagado > 0 ? "#D97706" : "var(--color-texto-muted)", whiteSpace: "nowrap", textAlign: "center" }}>
+                            {pagado > 0 ? fmt(pagado) : "—"}
+                          </td>
+                          <td style={{ padding: "10px 16px", fontSize: "15px", fontFamily: "'Cormorant Garamond', serif", color: "var(--color-acento)", whiteSpace: "nowrap", fontWeight: 500, textAlign: "center" }}>
+                            {fmt(debe > 0 ? debe : v.total)}
+                          </td>
+                          <td style={{ padding: "10px 16px", whiteSpace: "nowrap", textAlign: "center" }}>
+                            <span style={{
+                              fontSize: "9px",
+                              fontFamily: "'Jost', sans-serif",
+                              fontWeight: 500,
+                              letterSpacing: "0.1em",
+                              textTransform: "uppercase",
+                              padding: "3px 8px",
+                              border: `0.5px solid ${v.estado === "PAGO_PARCIAL" ? "#D97706" : "var(--color-texto)"}`,
+                              color: v.estado === "PAGO_PARCIAL" ? "#D97706" : "var(--color-texto)",
+                              minWidth: "120px",
+                              textAlign: "center",
+                              display: "inline-block",
+                            }}>
+                              {v.estado === "PAGO_PARCIAL" ? "Pago parcial" : "Pendiente"}
+                            </span>
+                          </td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
 
           {/* CAJA */}
@@ -859,6 +982,7 @@ export default function DashboardReportes() {
           })()}
         </>
       ) : null}
+
     </div>
   )
 }
