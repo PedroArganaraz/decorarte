@@ -82,9 +82,8 @@ export default function ModalGasto({ gasto, onCerrar, onGuardado }: Props) {
   const [fecha, setFecha] = useState(gasto ? isoAFechaInput(gasto.fecha) : fechaHoyLocal())
   const [notas, setNotas] = useState(gasto?.notas ?? "")
 
-  const [precioUnitarioInsumo, setPrecioUnitarioInsumo] = useState(
-    gasto?.insumo ? String(gasto.insumo.precioUnitario) : ""
-  )
+  // precioUnitarioInsumo es CALCULADO: monto / cantidad
+  const [precioUnitarioInsumo, setPrecioUnitarioInsumo] = useState("")
   const [cantidadInsumo, setCantidadInsumo] = useState(
     gasto?.insumo ? String(gasto.insumo.cantidadTotal) : ""
   )
@@ -93,21 +92,23 @@ export default function ModalGasto({ gasto, onCerrar, onGuardado }: Props) {
   )
 
   const [montoFocused, setMontoFocused] = useState(false)
+  const [cantidadFocused, setCantidadFocused] = useState(false)
   const [guardando, setGuardando] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const esInsumo = categoria === "INSUMOS"
 
+  // Calcular precioUnitario = monto / cantidad
   useEffect(() => {
     if (!esInsumo) return
-    const precio = parseFloat(precioUnitarioInsumo)
+    const montoNum = parseFloat(monto)
     const cantidad = parseFloat(cantidadInsumo)
-    if (!isNaN(precio) && !isNaN(cantidad) && precio > 0 && cantidad > 0) {
-      setMonto(String(Math.round(precio * cantidad * 100) / 100))
+    if (!isNaN(montoNum) && !isNaN(cantidad) && montoNum > 0 && cantidad > 0) {
+      setPrecioUnitarioInsumo(String(Math.round((montoNum / cantidad) * 100) / 100))
     } else {
-      setMonto("")
+      setPrecioUnitarioInsumo("")
     }
-  }, [precioUnitarioInsumo, cantidadInsumo, esInsumo])
+  }, [monto, cantidadInsumo, esInsumo])
 
   const aplicarCambioCategoria = (nueva: string) => {
     setCategoria(nueva)
@@ -128,9 +129,7 @@ export default function ModalGasto({ gasto, onCerrar, onGuardado }: Props) {
     if (!categoria) { setError("Seleccioná una categoría."); return }
 
     if (esInsumo) {
-      const precio = parseFloat(precioUnitarioInsumo)
       const cantidad = parseFloat(cantidadInsumo)
-      if (isNaN(precio) || precio <= 0) { setError("Ingresá un precio unitario válido."); return }
       if (isNaN(cantidad) || cantidad <= 0) { setError("Ingresá una cantidad válida."); return }
     }
 
@@ -154,10 +153,11 @@ export default function ModalGasto({ gasto, onCerrar, onGuardado }: Props) {
       }
 
       if (esInsumo) {
+        const cantidad = parseFloat(cantidadInsumo)
         body.insumo = {
           nombre: descripcion.trim(),
-          precioUnitario: parseFloat(precioUnitarioInsumo),
-          cantidadTotal: parseFloat(cantidadInsumo),
+          precioUnitario: montoNum / cantidad,
+          cantidadTotal: cantidad,
           unidad: unidadInsumo,
         }
       }
@@ -176,6 +176,10 @@ export default function ModalGasto({ gasto, onCerrar, onGuardado }: Props) {
       setGuardando(false)
     }
   }
+
+  const precioUnitarioNum = parseFloat(precioUnitarioInsumo)
+  const cantidadNum = parseFloat(cantidadInsumo)
+  const mostrarHint = esInsumo && !isNaN(precioUnitarioNum) && precioUnitarioNum > 0 && !isNaN(cantidadNum) && cantidadNum > 0
 
   return (
     <>
@@ -272,6 +276,7 @@ export default function ModalGasto({ gasto, onCerrar, onGuardado }: Props) {
 
           {esInsumo && (
             <>
+              {/* 1. Medida */}
               <div>
                 <label style={estiloLabel}>Medida</label>
                 <select value={unidadInsumo} onChange={(e) => setUnidadInsumo(e.target.value)} style={estiloInput}>
@@ -279,15 +284,17 @@ export default function ModalGasto({ gasto, onCerrar, onGuardado }: Props) {
                 </select>
               </div>
 
+              {/* 2. Monto* | Cantidad* */}
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
                 <div>
-                  <label style={estiloLabel}>Precio unitario *</label>
+                  <label style={estiloLabel}>Monto *</label>
                   <input
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={precioUnitarioInsumo}
-                    onChange={(e) => setPrecioUnitarioInsumo(e.target.value)}
+                    type="text"
+                    inputMode="decimal"
+                    value={montoFocused ? monto : (monto === "" || isNaN(Number(monto)) ? monto : Number(monto).toLocaleString("es-AR"))}
+                    onChange={(e) => setMonto(e.target.value)}
+                    onFocus={(e) => { setMontoFocused(true); e.target.select() }}
+                    onBlur={() => setMontoFocused(false)}
                     placeholder="0"
                     style={estiloInput}
                   />
@@ -295,37 +302,52 @@ export default function ModalGasto({ gasto, onCerrar, onGuardado }: Props) {
                 <div>
                   <label style={estiloLabel}>Cantidad *</label>
                   <input
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={cantidadInsumo}
+                    type="text"
+                    inputMode="decimal"
+                    value={cantidadFocused ? cantidadInsumo : (cantidadInsumo === "" || isNaN(Number(cantidadInsumo)) ? cantidadInsumo : Number(cantidadInsumo).toLocaleString("es-AR"))}
                     onChange={(e) => setCantidadInsumo(e.target.value)}
+                    onFocus={(e) => { setCantidadFocused(true); e.target.select() }}
+                    onBlur={() => setCantidadFocused(false)}
                     placeholder="0"
                     style={estiloInput}
                   />
                 </div>
               </div>
-            </>
-          )}
 
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
-            <div>
-              <label style={estiloLabel}>{esInsumo ? "Monto (calculado)" : "Monto *"}</label>
-              {esInsumo ? (
-                <>
+              {/* 3. Precio unitario (calculado) | Método de pago */}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+                <div>
+                  <label style={estiloLabel}>Precio unitario (calculado)</label>
                   <input
                     type="text"
                     readOnly
-                    value={monto === "" ? "" : `$${Number(monto).toLocaleString("es-AR")}`}
+                    value={precioUnitarioInsumo === "" ? "" : `$${Number(precioUnitarioInsumo).toLocaleString("es-AR")}`}
                     style={{ ...estiloInput, backgroundColor: "var(--color-fondo)", color: "var(--color-texto-muted)", cursor: "default" }}
                   />
-                  {parseFloat(precioUnitarioInsumo) > 0 && parseFloat(cantidadInsumo) > 0 && (
+                  {mostrarHint && (
                     <p style={{ fontSize: "10px", fontFamily: "'Jost', sans-serif", color: "var(--color-texto-muted)", margin: "5px 0 0", letterSpacing: "0.03em" }}>
-                      {parseFloat(cantidadInsumo).toLocaleString("es-AR")} {unidadInsumo} × ${parseFloat(precioUnitarioInsumo).toLocaleString("es-AR")} = ${Number(monto).toLocaleString("es-AR")}
+                      {cantidadNum.toLocaleString("es-AR")} {unidadInsumo} → ${precioUnitarioNum.toLocaleString("es-AR")} por {unidadInsumo}
                     </p>
                   )}
-                </>
-              ) : (
+                </div>
+                <div>
+                  <label style={estiloLabel}>Método de pago *</label>
+                  <select value={metodoPago} onChange={(e) => setMetodoPago(e.target.value)} style={estiloInput}>
+                    <option value="">Seleccioná...</option>
+                    {METODOS_PAGO.map((m) => (
+                      <option key={m.value} value={m.value}>{m.label}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            </>
+          )}
+
+          {/* Monto + Método para categorías que NO son INSUMOS */}
+          {!esInsumo && (
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+              <div>
+                <label style={estiloLabel}>Monto *</label>
                 <input
                   type="text"
                   inputMode="decimal"
@@ -336,18 +358,18 @@ export default function ModalGasto({ gasto, onCerrar, onGuardado }: Props) {
                   placeholder="0"
                   style={estiloInput}
                 />
-              )}
+              </div>
+              <div>
+                <label style={estiloLabel}>Método de pago *</label>
+                <select value={metodoPago} onChange={(e) => setMetodoPago(e.target.value)} style={estiloInput}>
+                  <option value="">Seleccioná...</option>
+                  {METODOS_PAGO.map((m) => (
+                    <option key={m.value} value={m.value}>{m.label}</option>
+                  ))}
+                </select>
+              </div>
             </div>
-            <div>
-              <label style={estiloLabel}>Método de pago *</label>
-              <select value={metodoPago} onChange={(e) => setMetodoPago(e.target.value)} style={estiloInput}>
-                <option value="">Seleccioná...</option>
-                {METODOS_PAGO.map((m) => (
-                  <option key={m.value} value={m.value}>{m.label}</option>
-                ))}
-              </select>
-            </div>
-          </div>
+          )}
 
           <div>
             <label style={estiloLabel}>Notas (opcional)</label>
