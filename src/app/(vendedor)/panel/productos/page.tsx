@@ -25,7 +25,8 @@ export default async function PaginaProductos({ searchParams }: Props) {
   const filtro = {
     ...(nombre && { nombre: { contains: nombre, mode: "insensitive" as const } }),
     ...(categoriaId && { categoriaId }),
-    ...(soloActivos === "1" && { activo: true }),
+    ...(soloActivos === "activo" && { activo: true }),
+    ...(soloActivos === "inactivo" && { activo: false }),
     ...(material && { material: { contains: material, mode: "insensitive" as const } }),
     ...((fechaDesde || fechaHasta) && {
       creadoEn: {

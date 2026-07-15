@@ -17,7 +17,7 @@ export default function FiltrosProductos({ categorias, materiales }: Props) {
   const searchParams = useSearchParams()
   const [nombre, setNombre] = useState(searchParams.get("nombre") ?? "")
   const [categoriaId, setCategoriaId] = useState(searchParams.get("categoriaId") ?? "")
-  const [soloActivos, setSoloActivos] = useState(searchParams.get("soloActivos") === "1")
+  const [soloActivos, setSoloActivos] = useState(searchParams.get("soloActivos") ?? "")
   const [material, setMaterial] = useState(searchParams.get("material") ?? "")
   const [orden, setOrden] = useState(searchParams.get("orden") ?? "")
   const [fechaDesde, setFechaDesde] = useState(searchParams.get("fechaDesde") ?? "")
@@ -42,7 +42,7 @@ export default function FiltrosProductos({ categorias, materiales }: Props) {
           const parsed = JSON.parse(guardados) as {
             nombre?: string
             categoriaId?: string
-            soloActivos?: boolean
+            soloActivos?: string
             material?: string
             orden?: string
             fechaDesde?: string
@@ -50,7 +50,7 @@ export default function FiltrosProductos({ categorias, materiales }: Props) {
           }
           const n = parsed.nombre ?? ""
           const c = parsed.categoriaId ?? ""
-          const s = parsed.soloActivos ?? false
+          const s = parsed.soloActivos ?? ""
           const m = parsed.material ?? ""
           const o = parsed.orden ?? ""
           const fd = parsed.fechaDesde ?? ""
@@ -65,7 +65,7 @@ export default function FiltrosProductos({ categorias, materiales }: Props) {
           const params = new URLSearchParams()
           if (n) params.set("nombre", n)
           if (c) params.set("categoriaId", c)
-          if (s) params.set("soloActivos", "1")
+          if (s) params.set("soloActivos", s)
           if (m) params.set("material", m)
           if (o) params.set("orden", o)
           if (fd) params.set("fechaDesde", fd)
@@ -93,7 +93,7 @@ export default function FiltrosProductos({ categorias, materiales }: Props) {
     const params = new URLSearchParams()
     if (nombre) params.set("nombre", nombre)
     if (categoriaId) params.set("categoriaId", categoriaId)
-    if (soloActivos) params.set("soloActivos", "1")
+    if (soloActivos) params.set("soloActivos", soloActivos)
     if (material) params.set("material", material)
     if (orden) params.set("orden", orden)
     if (fechaDesde) params.set("fechaDesde", fechaDesde)
@@ -122,7 +122,7 @@ export default function FiltrosProductos({ categorias, materiales }: Props) {
     const params = new URLSearchParams()
     if (nombre) params.set("nombre", nombre)
     if (categoriaId) params.set("categoriaId", categoriaId)
-    if (soloActivos) params.set("soloActivos", "1")
+    if (soloActivos) params.set("soloActivos", soloActivos)
     if (material) params.set("material", material)
     if (orden) params.set("orden", orden)
     if (nuevoDesde) params.set("fechaDesde", nuevoDesde)
@@ -134,7 +134,7 @@ export default function FiltrosProductos({ categorias, materiales }: Props) {
     try { localStorage.removeItem(STORAGE_KEY) } catch {}
     setNombre("")
     setCategoriaId("")
-    setSoloActivos(false)
+    setSoloActivos("")
     setMaterial("")
     setOrden("")
     setFechaDesde("")
@@ -282,25 +282,15 @@ export default function FiltrosProductos({ categorias, materiales }: Props) {
         )}
       </div>
 
-      <label style={{
-        display: "flex",
-        alignItems: "center",
-        gap: "7px",
-        cursor: "pointer",
-        fontSize: "11px",
-        fontFamily: "'Jost', sans-serif",
-        letterSpacing: "0.08em",
-        color: "var(--color-texto)",
-        userSelect: "none",
-      }}>
-        <input
-          type="checkbox"
-          checked={soloActivos}
-          onChange={(e) => setSoloActivos(e.target.checked)}
-          style={{ width: "13px", height: "13px", cursor: "pointer", accentColor: "var(--color-texto)" }}
-        />
-        Solo activos
-      </label>
+      <select
+        value={soloActivos}
+        onChange={(e) => setSoloActivos(e.target.value)}
+        style={{ ...estiloInput, minWidth: "140px", width: esMobile ? "100%" : "auto" }}
+      >
+        <option value="">Estado</option>
+        <option value="activo">Solo activos</option>
+        <option value="inactivo">Solo inactivos</option>
+      </select>
 
       <button
         onClick={limpiar}
