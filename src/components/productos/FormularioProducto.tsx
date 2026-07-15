@@ -68,7 +68,7 @@ export default function FormularioProducto({ categorias, accionesExtra, producto
   const [insumosDisponibles, setInsumosDisponibles] = useState<InsumoEnForm[]>([])
   const [mostrarAgregarInsumo, setMostrarAgregarInsumo] = useState(false)
   const [insumoParaAgregar, setInsumoParaAgregar] = useState({ insumoId: "", cantidad: "" })
-  const [costoManual, setCostoManual] = useState(false)
+  const [costoManual, setCostoManual] = useState(!!(insumosIniciales && insumosIniciales.length > 0))
 
   const { esMobile } = useTamanioPantalla()
 
@@ -149,14 +149,17 @@ export default function FormularioProducto({ categorias, accionesExtra, producto
       }
       return [...prev, { ...insumo, cantidadUsada: cantidad }]
     })
-    setCostoManual(false)
     setInsumoParaAgregar({ insumoId: "", cantidad: "" })
     setMostrarAgregarInsumo(false)
   }
 
   const quitarInsumo = (insumoId: number) => {
-    setInsumosSeleccionados((prev) => prev.filter((i) => i.insumoId !== insumoId))
-    setCostoManual(false)
+    const updated = insumosSeleccionados.filter((i) => i.insumoId !== insumoId)
+    setInsumosSeleccionados(updated)
+    if (updated.length === 0) {
+      setCostoManual(false)
+      setForm((prev) => ({ ...prev, costo: "" }))
+    }
   }
 
   const valorDisplay = (campo: string, valor: string) => {
