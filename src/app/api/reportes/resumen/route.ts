@@ -124,6 +124,8 @@ export async function GET(solicitud: NextRequest) {
     for (const gasto of gastos) {
       if (gasto.categoria === "RETIRO") {
         totalRetiros += gasto.monto
+        if (gasto.metodoPago === "EFECTIVO") efectivoGastos += gasto.monto
+        else if (gasto.metodoPago === "TRANSFERENCIA") transferenciaGastos += gasto.monto
       } else {
         totalGastosOperativos += gasto.monto
         if (gasto.metodoPago === "EFECTIVO") efectivoGastos += gasto.monto
