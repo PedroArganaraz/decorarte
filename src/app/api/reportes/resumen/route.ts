@@ -28,7 +28,7 @@ export async function GET(solicitud: NextRequest) {
         }
       : {}
 
-    const [ventas, gastos, productosSinStock, productosConStock, movimientosCaja] = await Promise.all([
+    const [ventas, ventasParciales, gastos, productosSinStock, productosConStock, movimientosCaja] = await Promise.all([
       prisma.venta.findMany({
         where: { ...filtroPeriodo, estado: { in: ["PAGADO", "PAGADO_Y_ENTREGADO"] } },
         include: {
@@ -44,6 +44,10 @@ export async function GET(solicitud: NextRequest) {
             },
           },
         },
+      }),
+      prisma.venta.findMany({
+        where: { ...filtroPeriodo, estado: "PAGO_PARCIAL" },
+        select: { metodoPago: true, montoRecibido: true },
       }),
       prisma.gasto.findMany({
         where: filtroPeriodo,
@@ -100,6 +104,14 @@ export async function GET(solicitud: NextRequest) {
       } else if (venta.metodoPago === "TRANSFERENCIA") {
         transferenciaVentas += totalVenta
       }
+    }
+
+    // PAGO_PARCIAL — solo montoRecibido cuenta para los saldos de caja
+    for (const venta of ventasParciales) {
+      if (venta.montoRecibido == null) continue
+      const monto = Number(venta.montoRecibido)
+      if (venta.metodoPago === "EFECTIVO") efectivoVentas += monto
+      else if (venta.metodoPago === "TRANSFERENCIA") transferenciaVentas += monto
     }
 
     // Gastos — separados entre operativos y retiros de capital
