@@ -88,12 +88,14 @@ export default function GestionInsumos({ refreshKey }: Props) {
                     </td>
                     <td style={estiloTd}>
                       <span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "15px", color: "var(--color-texto)", whiteSpace: "nowrap" }}>
-                        ${Number(ins.precioUnitario).toLocaleString("es-AR")}
+                        {ins.unidad === "monto_libre" ? "—" : `$${Number(ins.precioUnitario).toLocaleString("es-AR")}`}
                       </span>
                     </td>
                     <td style={estiloTd}>
                       <span style={{ fontSize: "13px", fontFamily: "'Jost', sans-serif", color: "var(--color-texto)" }}>
-                        {ins.cantidadTotal}{ins.unidad !== "unidad" ? ` ${ins.unidad}` : ""}
+                        {ins.unidad === "monto_libre"
+                          ? `$${Number(ins.cantidadTotal).toLocaleString("es-AR")}`
+                          : `${ins.cantidadTotal}${ins.unidad !== "unidad" ? ` ${ins.unidad}` : ""}`}
                       </span>
                     </td>
                     <td style={estiloTd}>
@@ -103,7 +105,9 @@ export default function GestionInsumos({ refreshKey }: Props) {
                         color: agotado ? "var(--color-acento)" : pocaDisponible ? "#E67E22" : "var(--color-texto)",
                         fontWeight: agotado || pocaDisponible ? 500 : 400,
                       }}>
-                        {ins.cantidadDisponible}{ins.unidad !== "unidad" ? ` ${ins.unidad}` : ""}
+                        {ins.unidad === "monto_libre"
+                          ? `$${Number(ins.cantidadDisponible).toLocaleString("es-AR")}`
+                          : `${ins.cantidadDisponible}${ins.unidad !== "unidad" ? ` ${ins.unidad}` : ""}`}
                       </span>
                     </td>
                   </tr>

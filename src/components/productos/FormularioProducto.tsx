@@ -209,6 +209,11 @@ export default function FormularioProducto({ categorias, accionesExtra, producto
     router.refresh()
   }
 
+  const insumoSeleccionado = insumosDisponibles.find((i) => i.insumoId === parseInt(insumoParaAgregar.insumoId))
+  const disponibleRealSeleccionado = insumoSeleccionado
+    ? insumoSeleccionado.cantidadDisponible + (insumosIniciales?.find((ii) => ii.insumoId === insumoSeleccionado.insumoId)?.cantidadUsada ?? 0)
+    : 0
+
   const estiloLabel = {
     fontSize: "10px",
     fontWeight: 500,
@@ -513,7 +518,9 @@ export default function FormularioProducto({ categorias, accionesExtra, producto
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <span style={{ fontSize: "13px", fontFamily: "'Cormorant Garamond', serif", color: "var(--color-texto)", display: "block" }}>{ins.nombre}</span>
                         <span style={{ fontSize: "10px", fontFamily: "'Jost', sans-serif", color: "var(--color-texto-muted)", letterSpacing: "0.04em" }}>
-                          {ins.cantidadUsada} {ins.unidad} · ${costoParcial.toLocaleString("es-AR")}
+                          {ins.unidad === "monto_libre"
+                            ? `$${ins.cantidadUsada.toLocaleString("es-AR")}`
+                            : `${ins.cantidadUsada} ${ins.unidad} · $${costoParcial.toLocaleString("es-AR")}`}
                         </span>
                       </div>
                       <button type="button" onClick={() => quitarInsumo(ins.insumoId)} style={{ padding: "3px 8px", fontSize: "10px", fontFamily: "'Jost', sans-serif", letterSpacing: "0.08em", border: "0.5px solid var(--color-borde)", backgroundColor: "transparent", color: "var(--color-texto-muted)", cursor: "pointer", borderRadius: 0, flexShrink: 0 }}>
@@ -543,7 +550,7 @@ export default function FormularioProducto({ categorias, accionesExtra, producto
                       const disponibleReal = i.cantidadDisponible + yaAsignado
                       return (
                         <option key={i.insumoId} value={i.insumoId} disabled={disponibleReal <= 0}>
-                          {i.nombre} — disponible: {disponibleReal} {i.unidad}
+                          {i.nombre} — disponible: {i.unidad === "monto_libre" ? `$${disponibleReal.toLocaleString("es-AR")} (monto libre)` : `${disponibleReal} ${i.unidad}`}
                         </option>
                       )
                     })}
@@ -555,7 +562,7 @@ export default function FormularioProducto({ categorias, accionesExtra, producto
                     step="0.01"
                     value={insumoParaAgregar.cantidad}
                     onChange={(e) => setInsumoParaAgregar((p) => ({ ...p, cantidad: e.target.value }))}
-                    placeholder="Cantidad"
+                    placeholder={insumosDisponibles.find((i) => i.insumoId === parseInt(insumoParaAgregar.insumoId))?.unidad === "monto_libre" ? "Monto a descontar ($)" : "Cantidad"}
                     style={{ ...estiloInput, fontSize: "13px", width: "140px", border: "0.5px solid var(--color-texto)", appearance: "textfield" } as React.CSSProperties}
                   />
                   <button type="button" onClick={agregarInsumo} style={{ padding: "8px 14px", fontSize: "10px", fontFamily: "'Jost', sans-serif", letterSpacing: "0.1em", textTransform: "uppercase", border: "none", backgroundColor: "var(--color-texto)", color: "var(--color-fondo)", cursor: "pointer", borderRadius: 0 }}>
@@ -565,6 +572,13 @@ export default function FormularioProducto({ categorias, accionesExtra, producto
                     Cancelar
                   </button>
                 </div>
+                {insumoSeleccionado && insumoParaAgregar.cantidad && parseFloat(insumoParaAgregar.cantidad) > disponibleRealSeleccionado && (
+                  <p style={{ fontSize: "11px", fontFamily: "'Jost', sans-serif", color: "var(--color-acento)", margin: "2px 0 0" }}>
+                    {insumoSeleccionado.unidad === "monto_libre"
+                      ? `El monto no puede superar el disponible ($${disponibleRealSeleccionado.toLocaleString("es-AR")})`
+                      : `La cantidad no puede superar el disponible (${disponibleRealSeleccionado} ${insumoSeleccionado.unidad})`}
+                  </p>
+                )}
               </div>
             ) : (
               <button type="button" onClick={() => setMostrarAgregarInsumo(true)} style={{ padding: "8px 14px", fontSize: "10px", fontFamily: "'Jost', sans-serif", letterSpacing: "0.1em", textTransform: "uppercase", border: "0.5px solid var(--color-borde)", backgroundColor: "transparent", color: "var(--color-texto-muted)", cursor: "pointer", borderRadius: 0, alignSelf: "flex-start" }}>

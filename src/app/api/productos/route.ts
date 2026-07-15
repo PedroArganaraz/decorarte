@@ -126,13 +126,13 @@ export async function POST(solicitud: NextRequest) {
 
       for (const ins of insumosData) {
         const insumo = await tx.insumo.findUnique({ where: { id: ins.insumoId } })
-        if (!insumo || insumo.cantidadDisponible < ins.cantidadUsada) continue
+        if (!insumo || Number(insumo.cantidadDisponible) < ins.cantidadUsada) continue
         await tx.insumoProducto.create({
           data: { insumoId: ins.insumoId, productoId: creado.id, cantidadUsada: ins.cantidadUsada },
         })
         await tx.insumo.update({
           where: { id: ins.insumoId },
-          data: { cantidadDisponible: { decrement: ins.cantidadUsada } },
+          data: { cantidadDisponible: { decrement: Number(ins.cantidadUsada) } },
         })
       }
 
