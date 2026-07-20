@@ -30,6 +30,7 @@ interface ItemVenta {
 
 export interface VentaParaEditar {
   id: string
+  fecha: string
   cliente: string | null
   metodoPago: "EFECTIVO" | "TRANSFERENCIA" | null
   estado: string
@@ -96,6 +97,7 @@ export default function ModalEditarVenta({ venta, onCerrar, onGuardada }: Props)
     }))
   )
 
+  const [fecha, setFecha] = useState(new Date(venta.fecha).toISOString().split("T")[0])
   const [cliente, setCliente] = useState(venta.cliente ?? "")
   const [metodoPago, setMetodoPago] = useState(venta.metodoPago ?? "")
   const [estado, setEstado] = useState(venta.estado === "REGALO" ? "PAGADO_Y_ENTREGADO" : venta.estado)
@@ -255,6 +257,7 @@ export default function ModalEditarVenta({ venta, onCerrar, onGuardada }: Props)
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           cliente: cliente.trim() || undefined,
+          fecha: fecha ? new Date(fecha + "T12:00:00.000Z").toISOString() : undefined,
           metodoPago,
           estado: esRegalo ? "REGALO" : estado,
           esRegalo,
@@ -547,6 +550,17 @@ export default function ModalEditarVenta({ venta, onCerrar, onGuardada }: Props)
             <div style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
               <label style={estiloLabel}>Cliente (opcional)</label>
               <input type="text" value={cliente} onChange={(e) => setCliente(e.target.value)} placeholder="Nombre del cliente" style={estiloInput} />
+            </div>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
+              <label style={estiloLabel}>Fecha</label>
+              <input
+                type="date"
+                value={fecha}
+                onChange={(e) => setFecha(e.target.value)}
+                onClick={(e) => (e.currentTarget as HTMLInputElement).showPicker?.()}
+                style={{ ...estiloInput, cursor: "pointer" }}
+              />
             </div>
 
             <div style={{ display: "flex", flexDirection: "column", gap: "5px" }}>

@@ -76,8 +76,9 @@ export async function PATCH(
     }
 
     const { id } = await params
-    const { cliente, metodoPago, estado, esRegalo, notas, items, montoRecibido } = await solicitud.json() as {
+    const { cliente, fecha, metodoPago, estado, esRegalo, notas, items, montoRecibido } = await solicitud.json() as {
       cliente?: string
+      fecha?: string
       metodoPago?: string
       estado?: string
       esRegalo?: boolean
@@ -152,6 +153,7 @@ export async function PATCH(
         where: { id },
         data: {
           ...(cliente !== undefined && { cliente: cliente || null }),
+          ...(fecha !== undefined && { fecha: new Date(fecha) }),
           ...(metodoPago !== undefined && { metodoPago: (metodoPago as any) || null }),
           ...(estado !== undefined && { estado: estado as any }),
           ...(esRegalo !== undefined && { esRegalo }),
