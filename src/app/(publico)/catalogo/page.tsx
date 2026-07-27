@@ -69,7 +69,7 @@ export default async function PaginaCatalogo({ searchParams }: Props) {
       destacado: true,
       material: true,
       imagenes: {
-        select: { urlPublica: true, altText: true, esPrincipal: true },
+        select: { urlPublica: true, altText: true, esPrincipal: true, posicion: true },
         orderBy: { orden: "asc" },
       },
       categoria: { select: { nombre: true, slug: true } },

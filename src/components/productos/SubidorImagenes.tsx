@@ -16,6 +16,9 @@ export default function SubidorImagenes({ productoId, imagenesActuales }: Props)
   const [eliminando, setEliminando] = useState<string | null>(null)
   const [draggingId, setDraggingId] = useState<string | null>(null)
   const [dragOverId, setDragOverId] = useState<string | null>(null)
+  const [ajustando, setAjustando] = useState<string | null>(null)
+  const [posicionTemp, setPosicionTemp] = useState(50)
+  const [guardandoPosicion, setGuardandoPosicion] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
   const router = useRouter()
 
@@ -87,6 +90,32 @@ export default function SubidorImagenes({ productoId, imagenesActuales }: Props)
     }
   }
 
+  const abrirAjuste = (img: ImagenProducto) => {
+    setAjustando(img.id)
+    setPosicionTemp(img.posicion ?? 50)
+  }
+
+  const guardarPosicion = async () => {
+    if (!ajustando) return
+    setGuardandoPosicion(true)
+    const res = await fetch(`/api/productos/${productoId}/imagenes/${ajustando}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ posicion: posicionTemp }),
+    })
+    if (res.ok) {
+      setImagenes((prev) =>
+        prev.map((img) => img.id === ajustando ? { ...img, posicion: posicionTemp } : img)
+      )
+      toast.success("Posición guardada")
+      router.refresh()
+    } else {
+      toast.error("Error al guardar la posición")
+    }
+    setGuardandoPosicion(false)
+    setAjustando(null)
+  }
+
   const reordenarImagenes = async (origenId: string, destinoId: string) => {
     const lista = [...imagenes]
     const origenIdx = lista.findIndex((img) => img.id === origenId)
@@ -135,12 +164,120 @@ export default function SubidorImagenes({ productoId, imagenesActuales }: Props)
     manejarArchivos(e.dataTransfer.files)
   }
 
+  const imagenAjustando = ajustando ? imagenes.find((img) => img.id === ajustando) : null
+
   return (
     <div style={{
       backgroundColor: "var(--color-card)",
       border: "0.5px solid var(--color-borde)",
       padding: "24px",
     }}>
+
+      {ajustando && imagenAjustando && (
+        <div style={{
+          position: "fixed",
+          inset: 0,
+          backgroundColor: "rgba(0,0,0,0.6)",
+          zIndex: 1000,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}>
+          <div style={{
+            backgroundColor: "var(--color-card)",
+            border: "0.5px solid var(--color-borde)",
+            padding: "24px",
+            width: "min(480px, 90vw)",
+          }}>
+            <h3 style={{
+              fontFamily: "'Cormorant Garamond', serif",
+              fontSize: "18px",
+              fontWeight: 400,
+              color: "var(--color-texto)",
+              marginBottom: "16px",
+            }}>
+              Ajustar posición
+            </h3>
+
+            <div style={{
+              position: "relative",
+              aspectRatio: "1",
+              overflow: "hidden",
+              border: "0.5px solid var(--color-borde)",
+              marginBottom: "20px",
+              backgroundColor: "var(--color-superficie)",
+            }}>
+              <img
+                src={imagenAjustando.urlPublica}
+                alt={imagenAjustando.altText || ""}
+                style={{
+                  width: "100%",
+                  height: "100%",
+                  objectFit: "cover",
+                  objectPosition: `center ${posicionTemp}%`,
+                }}
+              />
+            </div>
+
+            <div style={{ display: "flex", gap: "16px", alignItems: "center", marginBottom: "20px" }}>
+              <span style={{ fontSize: "10px", fontFamily: "'Jost', sans-serif", color: "var(--color-texto-sutil)", letterSpacing: "0.08em", textTransform: "uppercase", whiteSpace: "nowrap" }}>
+                Arriba
+              </span>
+              <input
+                type="range"
+                min={0}
+                max={100}
+                value={posicionTemp}
+                onChange={(e) => setPosicionTemp(Number(e.target.value))}
+                style={{ flex: 1, accentColor: "var(--color-texto)", cursor: "pointer" }}
+              />
+              <span style={{ fontSize: "10px", fontFamily: "'Jost', sans-serif", color: "var(--color-texto-sutil)", letterSpacing: "0.08em", textTransform: "uppercase", whiteSpace: "nowrap" }}>
+                Abajo
+              </span>
+            </div>
+
+            <div style={{ display: "flex", gap: "8px" }}>
+              <button
+                onClick={() => setAjustando(null)}
+                disabled={guardandoPosicion}
+                style={{
+                  flex: 1,
+                  padding: "10px",
+                  fontSize: "10px",
+                  fontFamily: "'Jost', sans-serif",
+                  letterSpacing: "0.1em",
+                  textTransform: "uppercase",
+                  backgroundColor: "transparent",
+                  color: "var(--color-texto-muted)",
+                  border: "0.5px solid var(--color-borde)",
+                  cursor: "pointer",
+                }}
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={guardarPosicion}
+                disabled={guardandoPosicion}
+                style={{
+                  flex: 1,
+                  padding: "10px",
+                  fontSize: "10px",
+                  fontFamily: "'Jost', sans-serif",
+                  letterSpacing: "0.1em",
+                  textTransform: "uppercase",
+                  backgroundColor: "var(--color-texto)",
+                  color: "var(--color-fondo)",
+                  border: "none",
+                  cursor: guardandoPosicion ? "not-allowed" : "pointer",
+                  opacity: guardandoPosicion ? 0.6 : 1,
+                }}
+              >
+                {guardandoPosicion ? "Guardando..." : "Guardar"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       <h2 style={{
         fontFamily: "'Cormorant Garamond', serif",
         fontSize: "18px",
@@ -186,6 +323,7 @@ export default function SubidorImagenes({ productoId, imagenesActuales }: Props)
                   width: "100%",
                   aspectRatio: "1",
                   objectFit: "cover",
+                  objectPosition: `center ${img.posicion ?? 50}%`,
                   display: "block",
                 }}
               />
@@ -207,41 +345,62 @@ export default function SubidorImagenes({ productoId, imagenesActuales }: Props)
               )}
               <div style={{
                 display: "flex",
+                flexDirection: "column",
                 borderTop: "0.5px solid var(--color-borde)",
               }}>
-                {!img.esPrincipal && (
+                <div style={{ display: "flex" }}>
+                  {!img.esPrincipal && (
+                    <button
+                      onClick={() => marcarPrincipal(img.id)}
+                      style={{
+                        flex: 1,
+                        padding: "5px 2px",
+                        fontSize: "8px",
+                        fontFamily: "'Jost', sans-serif",
+                        letterSpacing: "0.06em",
+                        textTransform: "uppercase",
+                        backgroundColor: "transparent",
+                        color: "var(--color-texto-muted)",
+                        border: "none",
+                        borderRight: "0.5px solid var(--color-borde)",
+                        cursor: "pointer",
+                      }}
+                    >
+                      Principal
+                    </button>
+                  )}
                   <button
-                    onClick={() => marcarPrincipal(img.id)}
+                    onClick={() => abrirAjuste(img)}
                     style={{
                       flex: 1,
-                      padding: "5px",
-                      fontSize: "9px",
+                      padding: "5px 2px",
+                      fontSize: "8px",
                       fontFamily: "'Jost', sans-serif",
-                      letterSpacing: "0.08em",
+                      letterSpacing: "0.06em",
                       textTransform: "uppercase",
                       backgroundColor: "transparent",
                       color: "var(--color-texto-muted)",
                       border: "none",
-                      borderRight: "0.5px solid var(--color-borde)",
                       cursor: "pointer",
                     }}
                   >
-                    Principal
+                    Ajustar
                   </button>
-                )}
+                </div>
                 <button
                   onClick={() => eliminarImagen(img.id)}
                   disabled={eliminando === img.id}
                   style={{
-                    flex: 1,
+                    width: "100%",
                     padding: "5px",
-                    fontSize: "9px",
+                    fontSize: "8px",
                     fontFamily: "'Jost', sans-serif",
-                    letterSpacing: "0.08em",
+                    letterSpacing: "0.06em",
                     textTransform: "uppercase",
                     backgroundColor: "transparent",
                     color: eliminando === img.id ? "var(--color-texto-sutil)" : "#A32D2D",
                     border: "none",
+                    borderTop: "0.5px solid var(--color-borde)",
                     cursor: eliminando === img.id ? "not-allowed" : "pointer",
                   }}
                 >

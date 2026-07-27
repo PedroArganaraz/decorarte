@@ -39,7 +39,7 @@ export default async function PaginaInicio() {
       activo: true,
       destacado: true,
       imagenes: {
-        select: { urlPublica: true, altText: true, esPrincipal: true },
+        select: { urlPublica: true, altText: true, esPrincipal: true, posicion: true },
         orderBy: { orden: "asc" },
       },
       categoria: { select: { nombre: true, slug: true } },
@@ -66,7 +66,7 @@ export default async function PaginaInicio() {
       activo: true,
       destacado: true,
       imagenes: {
-        select: { urlPublica: true, altText: true, esPrincipal: true },
+        select: { urlPublica: true, altText: true, esPrincipal: true, posicion: true },
         orderBy: { orden: "asc" },
       },
       categoria: { select: { nombre: true, slug: true } },

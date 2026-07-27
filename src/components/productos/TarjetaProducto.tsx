@@ -12,7 +12,7 @@ interface Props {
     stock: number
     activo: boolean
     destacado: boolean
-    imagenes: { urlPublica: string; altText: string | null; esPrincipal: boolean }[]
+    imagenes: { urlPublica: string; altText: string | null; esPrincipal: boolean; posicion?: number | null }[]
     categoria: { nombre: string; slug: string }
   }
   from?: string
@@ -43,6 +43,7 @@ export default function TarjetaProducto({ producto, from }: Props) {
                 width: "100%",
                 height: "100%",
                 objectFit: "cover",
+                objectPosition: `center ${imagenPrincipal?.posicion ?? 50}%`,
                 transition: "transform 0.4s ease",
               }}
               onMouseEnter={(e) => {

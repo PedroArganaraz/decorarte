@@ -87,6 +87,7 @@ model ImagenProducto {
   altText     String?  @map("alt_text")
   esPrincipal Boolean  @default(false) @map("es_principal")
   orden       Int      @default(0)
+  posicion    Int      @default(50)
   creadoEn    DateTime @default(now()) @map("creado_en")
   producto    Producto @relation(fields: [productoId], references: [id], onDelete: Cascade)
   @@map("imagenes_productos")

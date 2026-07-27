@@ -44,6 +44,7 @@ export default function GaleriaProducto({ imagenes }: Props) {
             width: "100%",
             height: "100%",
             objectFit: "cover",
+            objectPosition: `center ${seleccionada?.posicion ?? 50}%`,
             transition: "opacity 0.2s ease",
           }}
         />
@@ -78,6 +79,7 @@ export default function GaleriaProducto({ imagenes }: Props) {
                   width: "100%",
                   height: "100%",
                   objectFit: "cover",
+                  objectPosition: `center ${img.posicion ?? 50}%`,
                   opacity: seleccionada?.id === img.id ? 1 : 0.6,
                   transition: "opacity 0.2s ease",
                 }}

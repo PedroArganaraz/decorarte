@@ -41,7 +41,7 @@ export default async function PaginaProducto({ params, searchParams }: Props) {
           destacado: true,
           imagenes: {
             where: { esPrincipal: true },
-            select: { urlPublica: true, altText: true, esPrincipal: true },
+            select: { urlPublica: true, altText: true, esPrincipal: true, posicion: true },
             take: 1,
           },
           categoria: { select: { nombre: true, slug: true } },

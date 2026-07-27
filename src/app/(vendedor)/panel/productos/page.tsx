@@ -212,7 +212,7 @@ export default async function PaginaProductos({ searchParams }: Props) {
                       backgroundColor: "var(--color-superficie)",
                       backgroundImage: producto.imagenes[0] ? `url(${producto.imagenes[0].urlPublica})` : "none",
                       backgroundSize: "cover",
-                      backgroundPosition: "center",
+                      backgroundPosition: `center ${producto.imagenes[0]?.posicion ?? 50}%`,
                     }} />
                   </td>
                   <td style={{ padding: "12px 16px" }}>
