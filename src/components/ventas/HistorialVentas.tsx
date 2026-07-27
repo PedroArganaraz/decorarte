@@ -20,7 +20,9 @@ interface Venta {
   id: string
   fecha: string
   cliente: string | null
-  metodoPago: "EFECTIVO" | "TRANSFERENCIA" | null
+  metodoPago: "EFECTIVO" | "TRANSFERENCIA" | "EFECTIVO_Y_TRANSFERENCIA" | null
+  montoEfectivo?: number | null
+  montoTransferencia?: number | null
   estado: EstadoVenta
   esRegalo: boolean
   notas: string | null
@@ -434,7 +436,7 @@ export default function HistorialVentas() {
                 <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginBottom: "10px" }}>
                   {venta.cliente && <span style={{ fontSize: "11px", fontFamily: "'Jost', sans-serif", color: "var(--color-texto-muted)" }}>{venta.cliente}</span>}
                   <span style={{ fontSize: "10px", fontFamily: "'Jost', sans-serif", color: "var(--color-texto-muted)", letterSpacing: "0.06em" }}>
-                    {venta.metodoPago === "EFECTIVO" ? "Efectivo" : venta.metodoPago === "TRANSFERENCIA" ? "Transferencia" : "—"}
+                    {venta.metodoPago === "EFECTIVO" ? "Efectivo" : venta.metodoPago === "TRANSFERENCIA" ? "Transferencia" : venta.metodoPago === "EFECTIVO_Y_TRANSFERENCIA" ? "Efectivo + Transf." : "—"}
                   </span>
                   <span style={{ fontSize: "10px", fontFamily: "'Jost', sans-serif", letterSpacing: "0.06em", color: venta.estado === "PENDIENTE" ? "var(--color-acento)" : "var(--color-texto-muted)" }}>
                     {estadoLabel}{venta.esRegalo && venta.estado !== "REGALO" && " · regalo"}
@@ -493,7 +495,7 @@ export default function HistorialVentas() {
                         </span>
                       ))}
                     </td>
-                    <td style={estiloTd}><span style={{ fontSize: "13px", fontFamily: "'Jost', sans-serif", color: "var(--color-texto)" }}>{venta.metodoPago === "EFECTIVO" ? "Efectivo" : venta.metodoPago === "TRANSFERENCIA" ? "Transferencia" : "—"}</span></td>
+                    <td style={estiloTd}><span style={{ fontSize: "13px", fontFamily: "'Jost', sans-serif", color: "var(--color-texto)" }}>{venta.metodoPago === "EFECTIVO" ? "Efectivo" : venta.metodoPago === "TRANSFERENCIA" ? "Transferencia" : venta.metodoPago === "EFECTIVO_Y_TRANSFERENCIA" ? "Efectivo + Transf." : "—"}</span></td>
                     <td style={estiloTd}><span style={{ fontSize: "13px", fontFamily: "'Jost', sans-serif", color: ESTADO_COLORES[venta.estado] ?? "var(--color-texto)" }}>{estadoLabel}{venta.esRegalo && venta.estado !== "REGALO" && " · regalo"}</span></td>
                     <td
                       style={estiloTd}

@@ -24,6 +24,7 @@ interface ItemCarrito {
 const METODOS_PAGO = [
   { value: "EFECTIVO", label: "Efectivo" },
   { value: "TRANSFERENCIA", label: "Transferencia" },
+  { value: "EFECTIVO_Y_TRANSFERENCIA", label: "Efectivo + Transferencia" },
 ]
 
 const ESTADOS = [
@@ -50,6 +51,7 @@ export default function FormularioVenta() {
   const [montoRecibido, setMontoRecibido] = useState("")
   const [metodoPagoVuelto, setMetodoPagoVuelto] = useState("TRANSFERENCIA")
   const [montoParcial, setMontoParcial] = useState("")
+  const [montoEfectivoMixto, setMontoEfectivoMixto] = useState("")
 
   const [enviando, setEnviando] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -157,6 +159,7 @@ export default function FormularioVenta() {
     setMontoRecibido("")
     setMetodoPagoVuelto("TRANSFERENCIA")
     setMontoParcial("")
+    setMontoEfectivoMixto("")
   }
 
   const enviar = async () => {
@@ -171,6 +174,11 @@ export default function FormularioVenta() {
     if (estado === "PAGO_PARCIAL" && !esRegalo && !(Number(montoParcial) > 0)) {
       setError("Ingresá el monto pagado para pago parcial.")
       return
+    }
+    if (metodoPago === "EFECTIVO_Y_TRANSFERENCIA" && !esRegalo) {
+      const ef = parseFloat(montoEfectivoMixto)
+      if (isNaN(ef) || ef <= 0) { setError("Ingresá el monto en efectivo."); return }
+      if (ef >= totalCarrito) { setError("El monto en efectivo no puede ser mayor o igual al total."); return }
     }
 
     setError(null)
@@ -188,6 +196,10 @@ export default function FormularioVenta() {
           notas: notas.trim() || undefined,
           ...(estado === "PAGO_PARCIAL" && !esRegalo && Number(montoParcial) > 0 && { montoRecibido: Number(montoParcial) }),
           ...(estado !== "PAGO_PARCIAL" && pagoConMayorMonto && !esRegalo && vuelto > 0 && { montoRecibido: totalCarrito + vuelto }),
+          ...(metodoPago === "EFECTIVO_Y_TRANSFERENCIA" && !esRegalo && {
+            montoEfectivo: parseFloat(montoEfectivoMixto),
+            montoTransferencia: Math.max(0, totalCarrito - parseFloat(montoEfectivoMixto)),
+          }),
           items: carrito.map((i) => ({
             productoId: i.productoId,
             cantidad: i.cantidad,
@@ -642,6 +654,42 @@ export default function FormularioVenta() {
             ))}
           </select>
         </div>
+
+        {/* Monto mixto (EFECTIVO_Y_TRANSFERENCIA) */}
+        {metodoPago === "EFECTIVO_Y_TRANSFERENCIA" && !esRegalo && (() => {
+          const ef = parseFloat(montoEfectivoMixto) || 0
+          const tr = Math.max(0, totalCarrito - ef)
+          return (
+            <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+              <label style={estiloLabel}>Monto efectivo *</label>
+              <input
+                type="text"
+                inputMode="decimal"
+                value={montoEfectivoMixto}
+                onChange={(e) => setMontoEfectivoMixto(e.target.value)}
+                placeholder="0"
+                style={estiloInput}
+              />
+              <label style={estiloLabel}>Monto transferencia (calculado)</label>
+              <input
+                type="text"
+                readOnly
+                value={`$${tr.toLocaleString("es-AR")}`}
+                style={{ ...estiloInput, backgroundColor: "var(--color-fondo)", color: "var(--color-texto-muted)", cursor: "default" }}
+              />
+              {ef > 0 && ef < totalCarrito && (
+                <p style={{ fontSize: "11px", fontFamily: "'Jost', sans-serif", color: "var(--color-texto-muted)", margin: "2px 0 0" }}>
+                  Total: ${totalCarrito.toLocaleString("es-AR")} = ${ef.toLocaleString("es-AR")} efectivo + ${tr.toLocaleString("es-AR")} transferencia
+                </p>
+              )}
+              {ef >= totalCarrito && ef > 0 && (
+                <p style={{ fontSize: "11px", fontFamily: "'Jost', sans-serif", color: "var(--color-acento)", margin: "2px 0 0" }}>
+                  El monto en efectivo no puede ser mayor o igual al total.
+                </p>
+              )}
+            </div>
+          )
+        })()}
 
         {/* Estado */}
         <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>

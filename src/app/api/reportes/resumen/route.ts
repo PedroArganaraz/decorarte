@@ -47,7 +47,7 @@ export async function GET(solicitud: NextRequest) {
       }),
       prisma.venta.findMany({
         where: { ...filtroPeriodo, estado: "PAGO_PARCIAL" },
-        select: { metodoPago: true, montoRecibido: true },
+        select: { metodoPago: true, montoRecibido: true, montoEfectivo: true, montoTransferencia: true },
       }),
       prisma.gasto.findMany({
         where: filtroPeriodo,
@@ -103,6 +103,9 @@ export async function GET(solicitud: NextRequest) {
         efectivoVentas += venta.montoRecibido != null ? Number(venta.montoRecibido) : totalVenta
       } else if (venta.metodoPago === "TRANSFERENCIA") {
         transferenciaVentas += totalVenta
+      } else if ((venta.metodoPago as string) === "EFECTIVO_Y_TRANSFERENCIA") {
+        efectivoVentas += Number((venta as any).montoEfectivo ?? 0)
+        transferenciaVentas += Number((venta as any).montoTransferencia ?? 0)
       }
     }
 
@@ -110,8 +113,15 @@ export async function GET(solicitud: NextRequest) {
     for (const venta of ventasParciales) {
       if (venta.montoRecibido == null) continue
       const monto = Number(venta.montoRecibido)
-      if (venta.metodoPago === "EFECTIVO") efectivoVentas += monto
-      else if (venta.metodoPago === "TRANSFERENCIA") transferenciaVentas += monto
+      if ((venta.metodoPago as string) === "EFECTIVO_Y_TRANSFERENCIA") {
+        const ef = Math.min(Number(venta.montoEfectivo ?? 0), monto)
+        efectivoVentas += ef
+        transferenciaVentas += monto - ef
+      } else if (venta.metodoPago === "EFECTIVO") {
+        efectivoVentas += monto
+      } else if (venta.metodoPago === "TRANSFERENCIA") {
+        transferenciaVentas += monto
+      }
     }
 
     // Gastos — separados entre operativos y retiros de capital
