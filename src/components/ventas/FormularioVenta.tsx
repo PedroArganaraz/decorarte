@@ -8,6 +8,7 @@ interface ProductoBuscado {
   nombre: string
   slug: string
   precio: number
+  precioAnterior?: number | null
   stock: number
   imagenes: { urlPublica: string; esPrincipal: boolean; altText: string | null }[]
 }
@@ -73,6 +74,7 @@ export default function FormularioVenta() {
           json.datos.map((p: any) => ({
             ...p,
             precio: typeof p.precio === "object" ? Number(p.precio) : p.precio,
+            precioAnterior: p.precioAnterior != null ? Number(p.precioAnterior) : null,
           }))
         )
       }
@@ -103,12 +105,15 @@ export default function FormularioVenta() {
         producto.imagenes.find((img) => img.esPrincipal)?.urlPublica ??
         producto.imagenes[0]?.urlPublica ??
         null
+      const precioFinal = producto.precioAnterior && producto.precioAnterior > 0
+        ? producto.precioAnterior
+        : producto.precio
       return [
         ...prev,
         {
           productoId: producto.id,
           nombre: producto.nombre,
-          precio: producto.precio,
+          precio: precioFinal,
           cantidad: 1,
           stock: producto.stock,
           imagen: imagenPrincipal,
@@ -311,6 +316,9 @@ export default function FormularioVenta() {
             }}>
               {resultados.map((producto) => {
                 const sinStock = producto.stock === 0
+                const precioMostrar = producto.precioAnterior && producto.precioAnterior > 0
+                  ? producto.precioAnterior
+                  : producto.precio
                 const imagen =
                   producto.imagenes.find((i) => i.esPrincipal)?.urlPublica ??
                   producto.imagenes[0]?.urlPublica
@@ -370,7 +378,7 @@ export default function FormularioVenta() {
                         margin: 0,
                         marginTop: "2px",
                       }}>
-                        ${producto.precio.toLocaleString("es-AR")}
+                        ${precioMostrar.toLocaleString("es-AR")}
                         {" · "}
                         {sinStock ? (
                           <span style={{ color: "var(--color-acento)" }}>Sin stock</span>

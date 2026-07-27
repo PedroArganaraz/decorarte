@@ -7,6 +7,7 @@ interface ProductoBuscado {
   id: string
   nombre: string
   precio: number
+  precioAnterior?: number | null
   stock: number
   imagenes: { urlPublica: string; esPrincipal: boolean; altText: string | null }[]
 }
@@ -183,6 +184,8 @@ export default function ModalEditarVenta({ venta, onCerrar, onGuardada }: Props)
         setResultados(json.datos.map((p: any) => ({
           ...p,
           precio: typeof p.precio === "object" ? Number(p.precio) : p.precio,
+          precioAnterior: p.precioAnterior != null ? Number(p.precioAnterior) : null,
+          stock: Number(p.stock),
         })))
       }
     } catch { /* silent */ } finally {
@@ -211,10 +214,13 @@ export default function ModalEditarVenta({ venta, onCerrar, onGuardada }: Props)
       const imagen =
         producto.imagenes.find((img) => img.esPrincipal)?.urlPublica ??
         producto.imagenes[0]?.urlPublica ?? null
+      const precioFinal = producto.precioAnterior && producto.precioAnterior > 0
+        ? producto.precioAnterior
+        : producto.precio
       return [...prev, {
         productoId: producto.id,
         nombre: producto.nombre,
-        precio: producto.precio,
+        precio: precioFinal,
         cantidad: 1,
         stock: producto.stock,
         imagen,
@@ -431,6 +437,9 @@ export default function ModalEditarVenta({ venta, onCerrar, onGuardada }: Props)
                 }}>
                   {resultados.map((producto) => {
                     const sinStock = producto.stock === 0
+                    const precioMostrar = producto.precioAnterior && producto.precioAnterior > 0
+                      ? producto.precioAnterior
+                      : producto.precio
                     const imagen =
                       producto.imagenes.find((i) => i.esPrincipal)?.urlPublica ??
                       producto.imagenes[0]?.urlPublica
@@ -463,7 +472,7 @@ export default function ModalEditarVenta({ venta, onCerrar, onGuardada }: Props)
                             {producto.nombre}
                           </p>
                           <p style={{ fontSize: "11px", fontFamily: "'Jost', sans-serif", color: "var(--color-texto-muted)", margin: 0 }}>
-                            ${producto.precio.toLocaleString("es-AR")} · {sinStock ? <span style={{ color: "var(--color-acento)" }}>Sin stock</span> : `Stock: ${producto.stock}`}
+                            ${precioMostrar.toLocaleString("es-AR")} · {sinStock ? <span style={{ color: "var(--color-acento)" }}>Sin stock</span> : `Stock: ${producto.stock}`}
                           </p>
                         </div>
                         {!sinStock && <span style={{ fontSize: "16px", color: "var(--color-texto-sutil)" }}>+</span>}
