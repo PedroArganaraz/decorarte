@@ -119,7 +119,7 @@ const estiloTituloSeccion: React.CSSProperties = {
 }
 
 function fmt(n: number): string {
-  return `$${n.toLocaleString("es-AR")}`
+  return `$${(n ?? 0).toLocaleString("es-AR")}`
 }
 
 // Tooltip compartido para barras
@@ -222,7 +222,7 @@ export default function DashboardReportes() {
   const { esMobile } = useTamanioPantalla()
   const [mes, setMes] = useState(HOY.getMonth())
   const [anio, setAnio] = useState(ANIO_ACTUAL)
-  const [verAnioCompleto, setVerAnioCompleto] = useState(false)
+  const [verAnioCompleto, setVerAnioCompleto] = useState(true)
   const [datos, setDatos] = useState<Resumen | null>(null)
   const [cargando, setCargando] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -248,7 +248,44 @@ export default function DashboardReportes() {
       )
       const json = await res.json()
       if (!res.ok) throw new Error(json.error ?? "Error al cargar")
-      setDatos(json.datos)
+      const d = json.datos
+      setDatos({
+        ...d,
+        ventas: {
+          ...d.ventas,
+          cantidad:           d.ventas?.cantidad           ?? 0,
+          ingresosBrutos:     d.ventas?.ingresosBrutos     ?? 0,
+          costoMercaderia:    d.ventas?.costoMercaderia     ?? 0,
+          gananciaProductos:  d.ventas?.gananciaProductos  ?? 0,
+          desglosePago: {
+            efectivo:       d.ventas?.desglosePago?.efectivo       ?? 0,
+            transferencia:  d.ventas?.desglosePago?.transferencia  ?? 0,
+          },
+          porCategoria: d.ventas?.porCategoria ?? [],
+        },
+        gastos: {
+          ...d.gastos,
+          cantidad:   d.gastos?.cantidad  ?? 0,
+          total:      d.gastos?.total     ?? 0,
+          retiros:    d.gastos?.retiros   ?? 0,
+          desglosePago: {
+            efectivo:       d.gastos?.desglosePago?.efectivo       ?? 0,
+            transferencia:  d.gastos?.desglosePago?.transferencia  ?? 0,
+          },
+          porCategoria: d.gastos?.porCategoria ?? [],
+        },
+        gananciaNeta:       d.gananciaNeta       ?? 0,
+        saldoEfectivo:      d.saldoEfectivo      ?? 0,
+        saldoTransferencia: d.saldoTransferencia ?? 0,
+        movimientos: {
+          total:          d.movimientos?.total         ?? 0,
+          vueltos:        d.movimientos?.vueltos       ?? 0,
+          efATransTotal:  d.movimientos?.efATransTotal ?? 0,
+          transAEfTotal:  d.movimientos?.transAEfTotal ?? 0,
+        },
+        topProductos:           d.topProductos           ?? [],
+        combinacionesFrecuentes: d.combinacionesFrecuentes ?? [],
+      })
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "Error al cargar")
     } finally {
