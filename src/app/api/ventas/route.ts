@@ -20,6 +20,7 @@ export async function GET(solicitud: NextRequest) {
     const desde = searchParams.get("desde")
     const hasta = searchParams.get("hasta")
     const cliente = searchParams.get("cliente")
+    const estadoFiltro = searchParams.get("estado")
     const page = Math.max(1, parseInt(searchParams.get("page") ?? "1", 10) || 1)
     const limit = Math.max(1, parseInt(searchParams.get("limit") ?? "20", 10) || 20)
     const skip = (page - 1) * limit
@@ -32,6 +33,7 @@ export async function GET(solicitud: NextRequest) {
         },
       } : {}),
       ...(cliente && { cliente: { contains: cliente, mode: Prisma.QueryMode.insensitive } }),
+      ...(estadoFiltro && { estado: estadoFiltro as any }),
     }
 
     const filtroFecha = desde || hasta ? {

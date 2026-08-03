@@ -140,7 +140,8 @@ function metodoMovLabel(tipo: string, metodoPago: string | null): string {
 export default function HistorialVentas() {
   const [mes, setMes] = useState(HOY.getMonth())
   const [anio, setAnio] = useState(ANIO_ACTUAL)
-  const [verAnioCompleto, setVerAnioCompleto] = useState(false)
+  const [verAnioCompleto, setVerAnioCompleto] = useState(true)
+  const [filtroEstado, setFiltroEstado] = useState("")
   const [ventas, setVentas] = useState<Venta[]>([])
   const [cargando, setCargando] = useState(true)
   const [errorCarga, setErrorCarga] = useState<string | null>(null)
@@ -152,6 +153,11 @@ export default function HistorialVentas() {
   const [anulando, setAnulando] = useState<string | null>(null)
   const [procesando, setProcesando] = useState<string | null>(null)
   const [errorAnular, setErrorAnular] = useState<string | null>(null)
+
+  const [pendientes, setPendientes] = useState<Venta[]>([])
+  const [cargandoPendientes, setCargandoPendientes] = useState(true)
+  const [anulandoPendiente, setAnulandoPendiente] = useState<string | null>(null)
+  const [procesandoPendiente, setProcesandoPendiente] = useState<string | null>(null)
 
   const [editandoVenta, setEditandoVenta] = useState<Venta | null>(null)
   const [tooltipVenta, setTooltipVenta] = useState<{ id: string; top: number; left: number } | null>(null)
@@ -180,7 +186,7 @@ export default function HistorialVentas() {
       : new Date(anio, mes + 1, 0, 23, 59, 59, 999).toISOString()
     try {
       const res = await fetch(
-        `/api/ventas?desde=${encodeURIComponent(desde)}&hasta=${encodeURIComponent(hasta)}&page=${pagina}&limit=20`
+        `/api/ventas?desde=${encodeURIComponent(desde)}&hasta=${encodeURIComponent(hasta)}&page=${pagina}&limit=20${filtroEstado ? `&estado=${encodeURIComponent(filtroEstado)}` : ""}`
       )
       const json = await res.json()
       if (!res.ok) throw new Error(json.error ?? "Error al cargar ventas")
@@ -197,7 +203,7 @@ export default function HistorialVentas() {
     } finally {
       setCargando(false)
     }
-  }, [mes, anio, verAnioCompleto, pagina])
+  }, [mes, anio, verAnioCompleto, pagina, filtroEstado])
 
   const fetchMovimientos = useCallback(async () => {
     setCargandoMov(true)
@@ -220,8 +226,22 @@ export default function HistorialVentas() {
     }
   }, [mes, anio, verAnioCompleto, paginaMov])
 
+  const fetchPendientes = useCallback(async () => {
+    setCargandoPendientes(true)
+    try {
+      const res = await fetch("/api/ventas/pendientes")
+      const json = await res.json()
+      setPendientes(json.datos ?? [])
+    } catch {
+      // silently fail
+    } finally {
+      setCargandoPendientes(false)
+    }
+  }, [])
+
   useEffect(() => { fetchVentas() }, [fetchVentas])
   useEffect(() => { fetchMovimientos() }, [fetchMovimientos])
+  useEffect(() => { fetchPendientes() }, [fetchPendientes])
 
   const ejecutarEliminarMov = async (id: string) => {
     setProcesandoMov(id)
@@ -248,6 +268,7 @@ export default function HistorialVentas() {
       const json = await res.json()
       if (!res.ok) throw new Error(json.error ?? "Error al anular la venta")
       setVentas((prev) => prev.filter((v) => v.id !== id))
+      setPendientes((prev) => prev.filter((v) => v.id !== id))
       setMovimientos((prev) => prev.filter((m) => m.ventaId !== id))
     } catch (e: unknown) {
       setErrorAnular(e instanceof Error ? e.message : "Error al anular")
@@ -256,34 +277,153 @@ export default function HistorialVentas() {
     }
   }
 
+  const ejecutarAnularPendiente = async (id: string) => {
+    setProcesandoPendiente(id)
+    try {
+      const res = await fetch(`/api/ventas/${id}`, { method: "DELETE" })
+      const json = await res.json()
+      if (!res.ok) throw new Error(json.error ?? "Error al anular la venta")
+      setPendientes((prev) => prev.filter((v) => v.id !== id))
+      setVentas((prev) => prev.filter((v) => v.id !== id))
+      setMovimientos((prev) => prev.filter((m) => m.ventaId !== id))
+      fetchVentas()
+    } catch (e: unknown) {
+      setErrorAnular(e instanceof Error ? e.message : "Error al anular")
+    } finally {
+      setProcesandoPendiente(null)
+      setAnulandoPendiente(null)
+    }
+  }
+
   const ventasFiltradas = ventas
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+
+      {/* LISTA PENDIENTES */}
+      <div style={{ backgroundColor: "var(--color-card)", border: "0.5px solid var(--color-borde)" }}>
+        <div style={{ padding: "14px 20px", borderBottom: "0.5px solid var(--color-borde)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "18px", fontWeight: 400, letterSpacing: "0.04em", color: "var(--color-texto)", margin: 0 }}>
+            Lista pendientes
+          </h2>
+          {!cargandoPendientes && pendientes.length > 0 && (
+            <span style={{ fontSize: "10px", fontFamily: "'Jost', sans-serif", color: "var(--color-texto-sutil)", letterSpacing: "0.08em" }}>
+              {pendientes.length} {pendientes.length === 1 ? "pedido" : "pedidos"}
+            </span>
+          )}
+        </div>
+
+        {cargandoPendientes ? (
+          <div style={{ padding: "20px 16px" }}>
+            <SkeletonTable cols={[50, 30, 70, 30, 35, 20, 0]} filas={2} />
+          </div>
+        ) : pendientes.length === 0 ? (
+          <p style={{ padding: "24px 20px", fontSize: "12px", fontFamily: "'Jost', sans-serif", color: "var(--color-texto-sutil)", margin: 0, letterSpacing: "0.04em" }}>
+            No hay pedidos pendientes.
+          </p>
+        ) : (
+          <div style={{ overflowX: "auto" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse" }}>
+              <thead>
+                <tr style={{ borderBottom: "0.5px solid var(--color-borde)" }}>
+                  {["Fecha", "Cliente", "Productos", "Método", "Estado", "Total", ""].map((h) => (
+                    <th key={h} style={{ padding: "10px 16px", textAlign: "left", fontSize: "9px", fontFamily: "'Jost', sans-serif", fontWeight: 500, letterSpacing: "0.15em", textTransform: "uppercase", color: "var(--color-texto-muted)", whiteSpace: "nowrap" }}>
+                      {h}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {pendientes.map((venta) => {
+                  const esConfirmando = anulandoPendiente === venta.id
+                  const esProcesando = procesandoPendiente === venta.id
+                  const total = sumarVenta(venta)
+                  const estadoLabel = ESTADO_LABELS[venta.estado] ?? venta.estado
+                  return (
+                    <tr key={venta.id} style={{ borderBottom: "0.5px solid var(--color-borde)", backgroundColor: esConfirmando ? "var(--color-superficie)" : "transparent" }}>
+                      <td style={estiloTd}><span style={{ fontSize: "12px", fontFamily: "'Jost', sans-serif", color: "var(--color-texto)", whiteSpace: "nowrap" }}>{formatFecha(venta.fecha)}</span></td>
+                      <td style={estiloTd}><span style={{ fontSize: "12px", fontFamily: "'Jost', sans-serif", color: venta.cliente ? "var(--color-texto)" : "var(--color-texto-sutil)" }}>{venta.cliente ?? "—"}</span></td>
+                      <td style={estiloTd}>
+                        {venta.items.map((i) => (
+                          <span key={i.id} style={{ fontSize: "12px", fontFamily: "'Jost', sans-serif", color: "var(--color-texto)", display: "block" }}>
+                            {i.cantidad}× {i.producto.nombre}
+                          </span>
+                        ))}
+                      </td>
+                      <td style={estiloTd}><span style={{ fontSize: "12px", fontFamily: "'Jost', sans-serif", color: "var(--color-texto)" }}>{venta.metodoPago === "EFECTIVO" ? "Efectivo" : venta.metodoPago === "TRANSFERENCIA" ? "Transferencia" : venta.metodoPago === "EFECTIVO_Y_TRANSFERENCIA" ? "Efectivo + Transf." : "—"}</span></td>
+                      <td style={estiloTd}><span style={{ fontSize: "12px", fontFamily: "'Jost', sans-serif", color: ESTADO_COLORES[venta.estado] ?? "var(--color-texto)", fontWeight: venta.estado === "PENDIENTE" ? 600 : undefined }}>{estadoLabel}</span></td>
+                      <td style={estiloTd}><span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "16px", fontWeight: 400, color: "var(--color-texto)", whiteSpace: "nowrap" }}>${total.toLocaleString("es-AR")}</span></td>
+                      <td style={{ ...estiloTd, minWidth: "150px" }}>
+                        {esConfirmando ? (
+                          <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                            <span style={{ fontSize: "11px", fontFamily: "'Jost', sans-serif", color: "var(--color-acento)" }}>¿Anular? Se restaura el stock.</span>
+                            <div style={{ display: "flex", gap: "6px" }}>
+                              {esProcesando ? (
+                                <span style={{ fontSize: "11px", fontFamily: "'Jost', sans-serif", color: "var(--color-texto-muted)" }}>Anulando...</span>
+                              ) : (
+                                <button onClick={() => ejecutarAnularPendiente(venta.id)} style={{ padding: "4px 10px", fontSize: "10px", fontFamily: "'Jost', sans-serif", letterSpacing: "0.1em", textTransform: "uppercase", border: "0.5px solid var(--color-acento)", backgroundColor: "transparent", color: "var(--color-acento)", cursor: "pointer", borderRadius: 0 }}>Confirmar</button>
+                              )}
+                              <button onClick={() => setAnulandoPendiente(null)} disabled={esProcesando} style={{ padding: "4px 10px", fontSize: "10px", fontFamily: "'Jost', sans-serif", letterSpacing: "0.1em", textTransform: "uppercase", border: "0.5px solid var(--color-borde)", backgroundColor: "transparent", color: "var(--color-texto-muted)", cursor: esProcesando ? "not-allowed" : "pointer", borderRadius: 0, opacity: esProcesando ? 0.4 : 1 }}>Cancelar</button>
+                            </div>
+                          </div>
+                        ) : (
+                          <div style={{ display: "flex", gap: "6px" }}>
+                            <button onClick={() => setEditandoVenta(venta)} style={{ padding: "4px 10px", fontSize: "10px", fontFamily: "'Jost', sans-serif", letterSpacing: "0.1em", textTransform: "uppercase", border: "0.5px solid var(--color-texto)", backgroundColor: "transparent", color: "var(--color-texto)", cursor: "pointer", borderRadius: 0 }}>Editar</button>
+                            <button onClick={() => setAnulandoPendiente(venta.id)} style={{ padding: "4px 10px", fontSize: "10px", fontFamily: "'Jost', sans-serif", letterSpacing: "0.1em", textTransform: "uppercase", border: "0.5px solid var(--color-borde)", backgroundColor: "transparent", color: "var(--color-texto-muted)", cursor: "pointer", borderRadius: 0 }}>Anular</button>
+                          </div>
+                        )}
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
 
       {/* HEADER + FILTROS */}
       <div style={{
         display: "flex",
         flexDirection: esMobile ? "column" : "row",
         justifyContent: "space-between",
-        alignItems: esMobile ? "flex-start" : "flex-end",
-        gap: esMobile ? "12px" : "24px",
+        alignItems: esMobile ? "stretch" : "flex-end",
+        gap: esMobile ? "12px" : "16px",
+        flexWrap: "wrap",
       }}>
-        <div>
+        {/* Título */}
+        <div style={{ flexShrink: 0 }}>
           <h1 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "28px", fontWeight: 300, letterSpacing: "0.05em", color: "var(--color-texto)", margin: 0 }}>
             Ventas
           </h1>
-          <p style={{ fontSize: "11px", fontFamily: "'Jost', sans-serif", color: "var(--color-texto-muted)", marginTop: "6px", letterSpacing: "0.05em" }}>
+          <p style={{ fontSize: "11px", fontFamily: "'Jost', sans-serif", color: "var(--color-texto-muted)", marginTop: "6px", letterSpacing: "0.05em", margin: 0 }}>
             {verAnioCompleto ? String(anio) : `${MESES[mes]} ${anio}`}
           </p>
         </div>
+
+        {/* Filtros */}
         <div style={{
           display: "flex",
           flexDirection: esMobile ? "column" : "row",
           gap: esMobile ? "10px" : "8px",
           alignItems: esMobile ? "stretch" : "flex-end",
-          width: esMobile ? "100%" : undefined,
+          flexWrap: "wrap",
         }}>
+          <div>
+            <label style={estiloLabel}>Estado</label>
+            <select
+              value={filtroEstado}
+              onChange={(e) => { setFiltroEstado(e.target.value); setPagina(1) }}
+              style={{ ...estiloSelect, width: esMobile ? "100%" : undefined }}
+            >
+              <option value="">Todos los estados</option>
+              <option value="PENDIENTE">Pendiente</option>
+              <option value="PAGO_PARCIAL">Pago parcial</option>
+              <option value="ENTREGADO">Entregado</option>
+              <option value="PAGADO">Pagado</option>
+              <option value="PAGADO_Y_ENTREGADO">Pagado y entregado</option>
+            </select>
+          </div>
           <div>
             <label style={estiloLabel}>Mes</label>
             <select
@@ -336,11 +476,10 @@ export default function HistorialVentas() {
               backgroundColor: "var(--color-texto)",
               color: "var(--color-fondo)",
               textDecoration: "none",
-              display: "block",
+              display: esMobile ? "block" : "inline-block",
               width: esMobile ? "100%" : undefined,
               boxSizing: "border-box",
               textAlign: "center",
-              alignSelf: esMobile ? undefined : "flex-end",
             }}
           >
             + Nueva venta
@@ -496,7 +635,7 @@ export default function HistorialVentas() {
                       ))}
                     </td>
                     <td style={estiloTd}><span style={{ fontSize: "13px", fontFamily: "'Jost', sans-serif", color: "var(--color-texto)" }}>{venta.metodoPago === "EFECTIVO" ? "Efectivo" : venta.metodoPago === "TRANSFERENCIA" ? "Transferencia" : venta.metodoPago === "EFECTIVO_Y_TRANSFERENCIA" ? "Efectivo + Transf." : "—"}</span></td>
-                    <td style={estiloTd}><span style={{ fontSize: "13px", fontFamily: "'Jost', sans-serif", color: ESTADO_COLORES[venta.estado] ?? "var(--color-texto)" }}>{estadoLabel}{venta.esRegalo && venta.estado !== "REGALO" && " · regalo"}</span></td>
+                    <td style={estiloTd}><span style={{ fontSize: "13px", fontFamily: "'Jost', sans-serif", color: ESTADO_COLORES[venta.estado] ?? "var(--color-texto)", fontWeight: venta.estado === "PENDIENTE" ? 600 : undefined }}>{estadoLabel}{venta.esRegalo && venta.estado !== "REGALO" && " · regalo"}</span></td>
                     <td
                       style={estiloTd}
                       onMouseEnter={(e) => {
@@ -712,6 +851,7 @@ export default function HistorialVentas() {
             )
             setEditandoVenta(null)
             fetchVentas()
+            fetchPendientes()
           }}
         />
       )}

@@ -16,13 +16,14 @@ export async function GET() {
     }
 
     const ventas = await prisma.venta.findMany({
-      where: { estado: { in: ["PENDIENTE", "PAGO_PARCIAL"] } },
+      where: { estado: { in: ["PENDIENTE", "PAGO_PARCIAL", "ENTREGADO", "PAGADO"] } },
       include: {
         items: {
           include: {
-            producto: { select: { nombre: true } },
+            producto: { select: { id: true, nombre: true, slug: true } },
           },
         },
+        vendedor: { select: { nombre: true } },
       },
       orderBy: { fecha: "desc" },
     })
@@ -34,8 +35,19 @@ export async function GET() {
       estado: v.estado,
       metodoPago: v.metodoPago,
       montoRecibido: v.montoRecibido != null ? Number(v.montoRecibido) : null,
-      total: v.items.reduce((s, i) => s + Number(i.precioTotal), 0),
-      items: v.items.map((i) => ({ nombre: i.producto.nombre, cantidad: i.cantidad })),
+      montoEfectivo: v.montoEfectivo != null ? Number(v.montoEfectivo) : null,
+      montoTransferencia: v.montoTransferencia != null ? Number(v.montoTransferencia) : null,
+      esRegalo: v.esRegalo,
+      notas: v.notas,
+      metodoVuelto: null,
+      vendedor: v.vendedor,
+      items: v.items.map((i) => ({
+        id: i.id,
+        cantidad: i.cantidad,
+        precioUnitario: Number(i.precioUnitario),
+        precioTotal: Number(i.precioTotal),
+        producto: { id: i.producto.id, nombre: i.producto.nombre, slug: i.producto.slug },
+      })),
     }))
 
     return NextResponse.json<RespuestaAPI<typeof datos>>({ datos })
