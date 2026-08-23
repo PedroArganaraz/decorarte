@@ -31,6 +31,7 @@ export async function GET(solicitud: NextRequest) {
         activo: true,
         destacado: true,
         material: true,
+        color: true,
         imagenes: {
           select: { urlPublica: true, altText: true, esPrincipal: true },
           orderBy: { orden: "asc" },

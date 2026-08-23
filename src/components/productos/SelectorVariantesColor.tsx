@@ -24,11 +24,19 @@ interface ProductoOpcion {
 interface Props {
   productoId: string
   variantesIniciales: VarianteVinculada[]
+  colorActual?: string | null
 }
 
-export default function SelectorVariantesColor({ productoId, variantesIniciales }: Props) {
+export default function SelectorVariantesColor({ productoId, variantesIniciales, colorActual: colorActualProp }: Props) {
+  const [colorActual, setColorActual] = useState(colorActualProp ?? "")
   const [variantes, setVariantes] = useState<VarianteVinculada[]>(variantesIniciales)
   const [modalAbierto, setModalAbierto] = useState(false)
+
+  useEffect(() => {
+    const handler = (e: Event) => setColorActual((e as CustomEvent<string>).detail ?? "")
+    window.addEventListener("producto-color-change", handler)
+    return () => window.removeEventListener("producto-color-change", handler)
+  }, [])
   const [seleccionTemp, setSeleccionTemp] = useState<string[]>([])
   const [productos, setProductos] = useState<ProductoOpcion[]>([])
   const [cargando, setCargando] = useState(false)
@@ -45,13 +53,14 @@ export default function SelectorVariantesColor({ productoId, variantesIniciales 
     const res = await fetch(`/api/productos?${params.toString()}`)
     const data = await res.json()
     const filtrados = (data.datos ?? []).filter(
-      (p: ProductoOpcion) => p.id !== productoId && !idsVinculados.includes(p.id)
+      (p: ProductoOpcion) => p.id !== productoId && !idsVinculados.includes(p.id) && !!p.color
     )
     setProductos(filtrados)
     setCargando(false)
   }
 
   const abrirModal = () => {
+    if (!colorActual?.trim()) return
     setSeleccionTemp([])
     setBusqueda("")
     setModalAbierto(true)
@@ -153,10 +162,12 @@ export default function SelectorVariantesColor({ productoId, variantesIniciales 
             fontWeight: 400,
             color: "var(--color-texto)",
           }}>
-            Variantes de color
+            Variante de...
           </h2>
           <button
+            type="button"
             onClick={abrirModal}
+            disabled={!colorActual?.trim()}
             style={{
               padding: "8px 16px",
               fontSize: "11px",
@@ -165,16 +176,21 @@ export default function SelectorVariantesColor({ productoId, variantesIniciales 
               letterSpacing: "0.1em",
               textTransform: "uppercase",
               backgroundColor: "transparent",
-              color: "var(--color-texto)",
-              border: "0.5px solid var(--color-texto)",
+              color: colorActual?.trim() ? "var(--color-texto)" : "var(--color-texto-sutil)",
+              border: `0.5px solid ${colorActual?.trim() ? "var(--color-texto)" : "var(--color-borde)"}`,
               borderRadius: 0,
-              cursor: "pointer",
+              cursor: colorActual?.trim() ? "pointer" : "not-allowed",
+              opacity: colorActual?.trim() ? 1 : 0.5,
             }}
           >
             + Vincular producto
           </button>
         </div>
-
+        {!colorActual?.trim() && (
+          <p style={{ fontSize: "12px", color: "var(--color-acento)", letterSpacing: "0.03em", marginBottom: "12px" }}>
+            Para vincular variantes, primero agregá un color a este producto.
+          </p>
+        )}
         {variantes.length === 0 ? (
           <p style={{ fontSize: "12px", color: "var(--color-texto-sutil)", letterSpacing: "0.03em" }}>
             Sin variantes vinculadas. Esta sección no se mostrará en el catálogo.
@@ -199,6 +215,7 @@ export default function SelectorVariantesColor({ productoId, variantesIniciales 
                   </span>
                 )}
                 <button
+                  type="button"
                   onClick={() => desvincular(v.varianteId)}
                   disabled={eliminando === v.varianteId}
                   style={{
@@ -275,7 +292,7 @@ export default function SelectorVariantesColor({ productoId, variantesIniciales 
                 </p>
               ) : productos.length === 0 ? (
                 <p style={{ fontSize: "13px", color: "var(--color-texto-muted)", textAlign: "center", padding: "32px" }}>
-                  No hay productos disponibles
+                  No se encontraron productos con color definido.
                 </p>
               ) : (
                 productos.map((p) => {
@@ -359,6 +376,7 @@ export default function SelectorVariantesColor({ productoId, variantesIniciales 
               </span>
               <div style={{ display: "flex", gap: "8px" }}>
                 <button
+                  type="button"
                   onClick={() => setModalAbierto(false)}
                   style={{
                     padding: "10px 20px",
@@ -376,6 +394,7 @@ export default function SelectorVariantesColor({ productoId, variantesIniciales 
                   Cancelar
                 </button>
                 <button
+                  type="button"
                   onClick={guardar}
                   disabled={guardando || seleccionTemp.length === 0}
                   style={{

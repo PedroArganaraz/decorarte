@@ -5,7 +5,6 @@ import { useTamanioPantalla } from "@/hooks/useTamanioPantalla"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import type { Categoria } from "@prisma/client"
-
 interface InsumoEnForm {
   insumoId: number
   nombre: string
@@ -340,11 +339,14 @@ export default function FormularioProducto({ categorias, accionesExtra, producto
           )}
 
           <div>
-            <label style={estiloLabel}>Color (opcional)</label>
+            <label style={estiloLabel}>Color/Variación (opcional)</label>
             <input
               type="text"
               value={form.color}
-              onChange={(e) => actualizar("color", e.target.value)}
+              onChange={(e) => {
+                actualizar("color", e.target.value)
+                window.dispatchEvent(new CustomEvent("producto-color-change", { detail: e.target.value }))
+              }}
               placeholder="Ej: Dorado, Plateado, Negro"
               style={estiloInput}
             />

@@ -115,6 +115,7 @@ export default async function PaginaEditarProducto({
       <div style={{ marginTop: "24px" }}>
         <SelectorVariantesColor
           productoId={producto.id}
+          colorActual={producto.color}
           variantesIniciales={[
             ...producto.variantesComoA.map((v) => ({
               varianteId: v.id,
