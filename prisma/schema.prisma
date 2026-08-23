@@ -62,11 +62,13 @@ model Producto {
   materialRel    Material?        @relation(fields: [materialId], references: [id])
   imagenes       ImagenProducto[]
   itemsCarrito   ItemCarrito[]
-  combinadoCon   Producto[]        @relation("ProductosCombinados")
-  combinadoEn    Producto[]        @relation("ProductosCombinados")
-  ventas         ItemVenta[]
-  movimientos    MovimientoStock[]
-  insumos        InsumoProducto[]
+  combinadoCon    Producto[]        @relation("ProductosCombinados")
+  combinadoEn     Producto[]        @relation("ProductosCombinados")
+  ventas          ItemVenta[]
+  movimientos     MovimientoStock[]
+  insumos         InsumoProducto[]
+  variantesComoA  VarianteColor[]   @relation("VarianteA")
+  variantesComoB  VarianteColor[]   @relation("VarianteB")
   @@map("productos")
 }
 
@@ -277,6 +279,18 @@ model Insumo {
   productos          InsumoProducto[]
 
   @@map("insumos")
+}
+
+model VarianteColor {
+  id          Int      @id @default(autoincrement())
+  productoAId String   @map("producto_a_id")
+  productoBId String   @map("producto_b_id")
+  creadoEn    DateTime @default(now()) @map("creado_en")
+  productoA   Producto @relation("VarianteA", fields: [productoAId], references: [id], onDelete: Cascade)
+  productoB   Producto @relation("VarianteB", fields: [productoBId], references: [id], onDelete: Cascade)
+
+  @@unique([productoAId, productoBId])
+  @@map("variantes_color")
 }
 
 model InsumoProducto {

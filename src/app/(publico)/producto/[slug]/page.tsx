@@ -28,6 +28,12 @@ export default async function PaginaProducto({ params, searchParams }: Props) {
     include: {
       imagenes: { orderBy: { orden: "asc" } },
       categoria: true,
+      variantesComoA: {
+        include: { productoB: { select: { id: true, slug: true, color: true, stock: true } } },
+      },
+      variantesComoB: {
+        include: { productoA: { select: { id: true, slug: true, color: true, stock: true } } },
+      },
       combinadoCon: {
         where: { activo: true },
         select: {
@@ -51,6 +57,11 @@ export default async function PaginaProducto({ params, searchParams }: Props) {
   })
 
   if (!producto) notFound()
+
+  const variantesColor = [
+    ...producto.variantesComoA.map((v) => v.productoB),
+    ...producto.variantesComoB.map((v) => v.productoA),
+  ].filter((v) => v.color)
 
   const relacionados = await prisma.producto.findMany({
     where: {
@@ -261,23 +272,57 @@ export default async function PaginaProducto({ params, searchParams }: Props) {
             {producto.color && (
               <div style={{ marginBottom: "16px" }}>
                 <span style={{
-                  fontSize: "13px",
-                  fontWeight: 300,
-                  letterSpacing: "0.08em",
+                  fontSize: "10px",
+                  fontWeight: 500,
+                  letterSpacing: "0.12em",
                   textTransform: "uppercase",
                   color: "var(--color-texto-muted)",
-                  marginRight: "8px",
+                  display: "block",
+                  marginBottom: "10px",
                 }}>
                   Color
                 </span>
-                <span style={{
-                  fontSize: "18px",
-                  fontFamily: "'Cormorant Garamond', serif",
-                  fontWeight: 300,
-                  color: "var(--color-texto)",
-                }}>
-                  {producto.color}
-                </span>
+                {variantesColor.length > 0 ? (
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+                    <span style={{
+                      padding: "6px 14px",
+                      fontSize: "12px",
+                      fontFamily: "'Jost', sans-serif",
+                      letterSpacing: "0.06em",
+                      border: "2px solid var(--color-texto)",
+                      color: "var(--color-texto)",
+                    }}>
+                      {producto.color}
+                    </span>
+                    {variantesColor.map((v) => (
+                      <a
+                        key={v.id}
+                        href={`/producto/${v.slug}`}
+                        style={{
+                          padding: "6px 14px",
+                          fontSize: "12px",
+                          fontFamily: "'Jost', sans-serif",
+                          letterSpacing: "0.06em",
+                          border: "0.5px solid var(--color-texto-muted)",
+                          color: "var(--color-texto)",
+                          textDecoration: "none",
+                          opacity: v.stock === 0 ? 0.4 : 1,
+                        }}
+                      >
+                        {v.color}
+                      </a>
+                    ))}
+                  </div>
+                ) : (
+                  <span style={{
+                    fontSize: "18px",
+                    fontFamily: "'Cormorant Garamond', serif",
+                    fontWeight: 300,
+                    color: "var(--color-texto)",
+                  }}>
+                    {producto.color}
+                  </span>
+                )}
               </div>
             )}
 

@@ -5,6 +5,7 @@ import FormularioProducto from "@/components/productos/FormularioProducto"
 import SubidorImagenes from "@/components/productos/SubidorImagenes"
 import EliminarProducto from "@/components/productos/EliminarProducto"
 import SelectorCombinados from "@/components/productos/SelectorCombinados"
+import SelectorVariantesColor from "@/components/productos/SelectorVariantesColor"
 
 export default async function PaginaEditarProducto({
   params,
@@ -24,6 +25,8 @@ export default async function PaginaEditarProducto({
       insumos: {
         include: { insumo: { select: { id: true, nombre: true, precioUnitario: true, cantidadDisponible: true, unidad: true } } },
       },
+      variantesComoA: { include: { productoB: { select: { id: true, nombre: true, slug: true, color: true, stock: true } } } },
+      variantesComoB: { include: { productoA: { select: { id: true, nombre: true, slug: true, color: true, stock: true } } } },
     },
   })
 
@@ -106,6 +109,30 @@ export default async function PaginaEditarProducto({
         <SelectorCombinados
           productoId={producto.id}
           combinadosIniciales={producto.combinadoCon}
+        />
+      </div>
+
+      <div style={{ marginTop: "24px" }}>
+        <SelectorVariantesColor
+          productoId={producto.id}
+          variantesIniciales={[
+            ...producto.variantesComoA.map((v) => ({
+              varianteId: v.id,
+              id: v.productoB.id,
+              nombre: v.productoB.nombre,
+              slug: v.productoB.slug,
+              color: v.productoB.color,
+              stock: v.productoB.stock,
+            })),
+            ...producto.variantesComoB.map((v) => ({
+              varianteId: v.id,
+              id: v.productoA.id,
+              nombre: v.productoA.nombre,
+              slug: v.productoA.slug,
+              color: v.productoA.color,
+              stock: v.productoA.stock,
+            })),
+          ]}
         />
       </div>
 
