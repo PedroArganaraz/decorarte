@@ -22,6 +22,7 @@ export default function FiltrosProductos({ categorias, materiales }: Props) {
   const [orden, setOrden] = useState(searchParams.get("orden") ?? "")
   const [fechaDesde, setFechaDesde] = useState(searchParams.get("fechaDesde") ?? "")
   const [fechaHasta, setFechaHasta] = useState(searchParams.get("fechaHasta") ?? "")
+  const [materialesFiltrados, setMaterialesFiltrados] = useState<string[]>(materiales)
   const { esMobile } = useTamanioPantalla()
   const inicializado = useRef(false)
 
@@ -88,6 +89,22 @@ export default function FiltrosProductos({ categorias, materiales }: Props) {
       )
     } catch {}
   }, [nombre, categoriaId, soloActivos, material, orden, fechaDesde, fechaHasta])
+
+  useEffect(() => {
+    const controller = new AbortController()
+    const url = categoriaId
+      ? `/api/materiales?source=productos&categoriaId=${categoriaId}`
+      : `/api/materiales?source=productos`
+    fetch(url, { signal: controller.signal })
+      .then((r) => r.json())
+      .then((data) => {
+        const lista: string[] = data.datos ?? []
+        setMaterialesFiltrados(lista)
+        setMaterial((prev) => (lista.includes(prev) ? prev : ""))
+      })
+      .catch((err) => { if (err.name !== "AbortError") console.error(err) })
+    return () => controller.abort()
+  }, [categoriaId]) // eslint-disable-line react-hooks/exhaustive-deps
 
   function buildParams() {
     const params = new URLSearchParams()
@@ -199,14 +216,14 @@ export default function FiltrosProductos({ categorias, materiales }: Props) {
         ))}
       </select>
 
-      {materiales.length > 0 && (
+      {materialesFiltrados.length > 0 && (
         <select
           value={material}
           onChange={(e) => setMaterial(e.target.value)}
           style={{ ...estiloInput, minWidth: "150px", width: esMobile ? "100%" : "auto" }}
         >
           <option value="">Material</option>
-          {materiales.map((m) => (
+          {materialesFiltrados.map((m) => (
             <option key={m} value={m}>{m}</option>
           ))}
         </select>

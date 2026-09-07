@@ -3,6 +3,7 @@ import { notFound } from "next/navigation"
 import GaleriaProducto from "@/components/productos/GaleriaProducto"
 import BotonAgregarCarrito from "@/components/carrito/BotonAgregarCarrito"
 import TarjetaProducto from "@/components/productos/TarjetaProducto"
+import NavCategorias from "@/components/catalogo/NavCategorias"
 import Link from "next/link"
 
 export const revalidate = 1800
@@ -29,10 +30,10 @@ export default async function PaginaProducto({ params, searchParams }: Props) {
       imagenes: { orderBy: { orden: "asc" } },
       categoria: true,
       variantesComoA: {
-        include: { productoB: { select: { id: true, slug: true, color: true, stock: true } } },
+        include: { productoB: { select: { id: true, slug: true, color: true, stock: true, activo: true } } },
       },
       variantesComoB: {
-        include: { productoA: { select: { id: true, slug: true, color: true, stock: true } } },
+        include: { productoA: { select: { id: true, slug: true, color: true, stock: true, activo: true } } },
       },
       combinadoCon: {
         where: { activo: true },
@@ -61,7 +62,7 @@ export default async function PaginaProducto({ params, searchParams }: Props) {
   const variantesColor = [
     ...producto.variantesComoA.map((v) => v.productoB),
     ...producto.variantesComoB.map((v) => v.productoA),
-  ].filter((v) => v.color)
+  ].filter((v) => v.color && v.activo)
 
   const relacionados = await prisma.producto.findMany({
     where: {
@@ -121,6 +122,7 @@ export default async function PaginaProducto({ params, searchParams }: Props) {
 
   return (
     <div>
+      <NavCategorias />
       <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "48px 24px" }}>
 
         {/* BREADCRUMB */}

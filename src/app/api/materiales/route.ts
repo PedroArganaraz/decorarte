@@ -8,6 +8,25 @@ export async function GET(solicitud: NextRequest) {
   try {
     const { searchParams } = new URL(solicitud.url)
     const categoriaId = searchParams.get("categoriaId")
+    const source = searchParams.get("source")
+
+    if (source === "productos") {
+      const raw = await prisma.producto.findMany({
+        where: {
+          material: { not: null },
+          ...(categoriaId && { categoriaId }),
+        },
+        select: { material: true },
+        distinct: ["material"],
+      })
+      const nombres = [...new Set(
+        raw
+          .map((p) => p.material)
+          .filter((m): m is string => typeof m === "string" && m.trim() !== "")
+          .map((m) => m.charAt(0).toUpperCase() + m.slice(1).toLowerCase())
+      )].sort()
+      return NextResponse.json<RespuestaAPI<string[]>>({ datos: nombres })
+    }
 
     const materiales = await prisma.material.findMany({
       where: categoriaId ? { categorias: { some: { id: categoriaId } } } : undefined,
