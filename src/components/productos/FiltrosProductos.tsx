@@ -19,6 +19,7 @@ export default function FiltrosProductos({ categorias, materiales }: Props) {
   const [categoriaId, setCategoriaId] = useState(searchParams.get("categoriaId") ?? "")
   const [soloActivos, setSoloActivos] = useState(searchParams.get("soloActivos") ?? "")
   const [material, setMaterial] = useState(searchParams.get("material") ?? "")
+  const [color, setColor] = useState(searchParams.get("color") ?? "")
   const [orden, setOrden] = useState(searchParams.get("orden") ?? "")
   const [fechaDesde, setFechaDesde] = useState(searchParams.get("fechaDesde") ?? "")
   const [fechaHasta, setFechaHasta] = useState(searchParams.get("fechaHasta") ?? "")
@@ -33,6 +34,7 @@ export default function FiltrosProductos({ categorias, materiales }: Props) {
       searchParams.get("categoriaId") ||
       searchParams.get("soloActivos") ||
       searchParams.get("material") ||
+      searchParams.get("color") ||
       searchParams.get("orden") ||
       searchParams.get("fechaDesde") ||
       searchParams.get("fechaHasta")
@@ -45,6 +47,7 @@ export default function FiltrosProductos({ categorias, materiales }: Props) {
             categoriaId?: string
             soloActivos?: string
             material?: string
+            color?: string
             orden?: string
             fechaDesde?: string
             fechaHasta?: string
@@ -53,6 +56,7 @@ export default function FiltrosProductos({ categorias, materiales }: Props) {
           const c = parsed.categoriaId ?? ""
           const s = parsed.soloActivos ?? ""
           const m = parsed.material ?? ""
+          const col = parsed.color ?? ""
           const o = parsed.orden ?? ""
           const fd = parsed.fechaDesde ?? ""
           const fh = parsed.fechaHasta ?? ""
@@ -60,6 +64,7 @@ export default function FiltrosProductos({ categorias, materiales }: Props) {
           setCategoriaId(c)
           setSoloActivos(s)
           setMaterial(m)
+          setColor(col)
           setOrden(o)
           setFechaDesde(fd)
           setFechaHasta(fh)
@@ -68,6 +73,7 @@ export default function FiltrosProductos({ categorias, materiales }: Props) {
           if (c) params.set("categoriaId", c)
           if (s) params.set("soloActivos", s)
           if (m) params.set("material", m)
+          if (col) params.set("color", col)
           if (o) params.set("orden", o)
           if (fd) params.set("fechaDesde", fd)
           if (fh) params.set("fechaHasta", fh)
@@ -85,7 +91,7 @@ export default function FiltrosProductos({ categorias, materiales }: Props) {
     try {
       localStorage.setItem(
         STORAGE_KEY,
-        JSON.stringify({ nombre, categoriaId, soloActivos, material, orden, fechaDesde, fechaHasta })
+        JSON.stringify({ nombre, categoriaId, soloActivos, material, color, orden, fechaDesde, fechaHasta })
       )
     } catch {}
   }, [nombre, categoriaId, soloActivos, material, orden, fechaDesde, fechaHasta])
@@ -112,6 +118,7 @@ export default function FiltrosProductos({ categorias, materiales }: Props) {
     if (categoriaId) params.set("categoriaId", categoriaId)
     if (soloActivos) params.set("soloActivos", soloActivos)
     if (material) params.set("material", material)
+    if (color) params.set("color", color)
     if (orden) params.set("orden", orden)
     if (fechaDesde) params.set("fechaDesde", fechaDesde)
     if (fechaHasta) params.set("fechaHasta", fechaHasta)
@@ -127,6 +134,14 @@ export default function FiltrosProductos({ categorias, materiales }: Props) {
     return () => clearTimeout(timer)
   }, [nombre]) // eslint-disable-line react-hooks/exhaustive-deps
 
+  useEffect(() => {
+    if (!inicializado.current) return
+    const timer = setTimeout(() => {
+      router.push(`/panel/productos?${buildParams().toString()}`)
+    }, 300)
+    return () => clearTimeout(timer)
+  }, [color]) // eslint-disable-line react-hooks/exhaustive-deps
+
   // Auto-apply: selects de forma inmediata
   useEffect(() => {
     if (!inicializado.current) return
@@ -141,6 +156,7 @@ export default function FiltrosProductos({ categorias, materiales }: Props) {
     if (categoriaId) params.set("categoriaId", categoriaId)
     if (soloActivos) params.set("soloActivos", soloActivos)
     if (material) params.set("material", material)
+    if (color) params.set("color", color)
     if (orden) params.set("orden", orden)
     if (nuevoDesde) params.set("fechaDesde", nuevoDesde)
     if (nuevoHasta) params.set("fechaHasta", nuevoHasta)
@@ -153,6 +169,7 @@ export default function FiltrosProductos({ categorias, materiales }: Props) {
     setCategoriaId("")
     setSoloActivos("")
     setMaterial("")
+    setColor("")
     setOrden("")
     setFechaDesde("")
     setFechaHasta("")
@@ -228,6 +245,15 @@ export default function FiltrosProductos({ categorias, materiales }: Props) {
           ))}
         </select>
       )}
+
+      <input
+        type="text"
+        value={color}
+        onChange={(e) => setColor(e.target.value)}
+        onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault() } }}
+        placeholder="Color..."
+        style={{ ...estiloInput, minWidth: "140px", width: esMobile ? "100%" : "auto" }}
+      />
 
       <select
         value={orden}

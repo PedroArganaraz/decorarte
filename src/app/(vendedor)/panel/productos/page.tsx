@@ -10,6 +10,7 @@ interface Props {
     categoriaId?: string
     soloActivos?: string
     material?: string
+    color?: string
     orden?: string
     fechaDesde?: string
     fechaHasta?: string
@@ -18,7 +19,7 @@ interface Props {
 }
 
 export default async function PaginaProductos({ searchParams }: Props) {
-  const { nombre, categoriaId, soloActivos, material, orden, fechaDesde, fechaHasta, page } = await searchParams
+  const { nombre, categoriaId, soloActivos, material, color, orden, fechaDesde, fechaHasta, page } = await searchParams
 
   const pageNum = Math.max(1, parseInt(page ?? "1", 10) || 1)
 
@@ -28,6 +29,7 @@ export default async function PaginaProductos({ searchParams }: Props) {
     ...(soloActivos === "activo" && { activo: true }),
     ...(soloActivos === "inactivo" && { activo: false }),
     ...(material && { material: { contains: material, mode: "insensitive" as const } }),
+    ...(color && { color: { contains: color, mode: "insensitive" as const } }),
     ...((fechaDesde || fechaHasta) && {
       creadoEn: {
         ...(fechaDesde && { gte: new Date(fechaDesde + "T00:00:00.000Z") }),
@@ -85,6 +87,7 @@ export default async function PaginaProductos({ searchParams }: Props) {
     if (categoriaId) params.set("categoriaId", categoriaId)
     if (soloActivos) params.set("soloActivos", soloActivos)
     if (material) params.set("material", material)
+    if (color) params.set("color", color)
     if (orden) params.set("orden", orden)
     if (pag > 1) params.set("page", String(pag))
     const qs = params.toString()
@@ -187,7 +190,7 @@ export default async function PaginaProductos({ searchParams }: Props) {
           <table style={{ width: "100%", borderCollapse: "collapse" }}>
             <thead>
               <tr style={{ borderBottom: "0.5px solid var(--color-borde)" }}>
-                {["Imagen", "Nombre", "Categoría", "Material", "Precio", "Stock", "Estado", "Ingreso", ""].map((col: string) => (
+                {["Imagen", "Nombre", "Categoría", "Material", "Color", "Precio", "Stock", "Estado", "Ingreso", ""].map((col: string) => (
                   <th key={col} style={{
                     padding: "12px 16px",
                     textAlign: "left",
@@ -240,6 +243,9 @@ export default async function PaginaProductos({ searchParams }: Props) {
                   </td>
                   <td style={{ padding: "12px 16px", fontSize: "12px", color: "var(--color-acento)" }}>
                     {producto.materialRel?.nombre ?? producto.material ?? "—"}
+                  </td>
+                  <td style={{ padding: "12px 16px", fontSize: "12px", color: "var(--color-texto-muted)" }}>
+                    {producto.color ?? "—"}
                   </td>
                   <td style={{ padding: "12px 16px" }}>
                     <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
