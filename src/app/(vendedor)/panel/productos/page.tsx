@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma"
 import Link from "next/link"
 import FiltrosProductos from "@/components/productos/FiltrosProductos"
+import TablaProductos from "@/components/productos/TablaProductos"
 
 const LIMIT = 20
 
@@ -187,147 +188,25 @@ export default async function PaginaProductos({ searchParams }: Props) {
             )}
           </div>
         ) : (
-          <table style={{ width: "100%", borderCollapse: "collapse" }}>
-            <thead>
-              <tr style={{ borderBottom: "0.5px solid var(--color-borde)" }}>
-                {["Imagen", "Nombre", "Categoría", "Material", "Color", "Precio", "Stock", "Estado", "Ingreso", ""].map((col: string) => (
-                  <th key={col} style={{
-                    padding: "12px 16px",
-                    textAlign: "left",
-                    fontSize: "10px",
-                    fontWeight: 500,
-                    letterSpacing: "0.12em",
-                    textTransform: "uppercase",
-                    color: "var(--color-texto-muted)",
-                  }}>
-                    {col}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {productos.map((producto: typeof productos[number]) => (
-                <tr key={producto.id} style={{ borderBottom: "0.5px solid var(--color-superficie)" }}>
-                  <td style={{ padding: "12px 16px" }}>
-                    <div style={{
-                      width: "80px",
-                      height: "80px",
-                      backgroundColor: "var(--color-superficie)",
-                      backgroundImage: producto.imagenes[0] ? `url(${producto.imagenes[0].urlPublica})` : "none",
-                      backgroundSize: "cover",
-                      backgroundPosition: `center ${producto.imagenes[0]?.posicion ?? 50}%`,
-                    }} />
-                  </td>
-                  <td style={{ padding: "12px 16px" }}>
-                    <div style={{
-                      fontFamily: "'Cormorant Garamond', serif",
-                      fontSize: "15px",
-                      color: "var(--color-texto)",
-                      marginBottom: "2px",
-                    }}>
-                      {producto.nombre}
-                    </div>
-                    {producto.destacado && (
-                      <span style={{
-                        fontSize: "9px",
-                        letterSpacing: "0.1em",
-                        textTransform: "uppercase",
-                        color: "var(--color-acento)",
-                      }}>
-                        Destacado
-                      </span>
-                    )}
-                  </td>
-                  <td style={{ padding: "12px 16px", fontSize: "12px", color: "var(--color-texto-muted)" }}>
-                    {producto.categoria.nombre}
-                  </td>
-                  <td style={{ padding: "12px 16px", fontSize: "12px", color: "var(--color-acento)" }}>
-                    {producto.materialRel?.nombre ?? producto.material ?? "—"}
-                  </td>
-                  <td style={{ padding: "12px 16px", fontSize: "12px", color: "var(--color-texto-muted)" }}>
-                    {producto.color ?? "—"}
-                  </td>
-                  <td style={{ padding: "12px 16px" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                      <div>
-                        {producto.precioAnterior != null && Number(producto.precioAnterior) > 0 ? (
-                          <>
-                            <span style={{ display: "block", fontSize: "11px", color: "var(--color-texto-muted)", textDecoration: "line-through" }}>
-                              ${Number(producto.precio).toLocaleString("es-AR")}
-                            </span>
-                            <span style={{ fontSize: "13px", color: "var(--color-texto)" }}>
-                              ${Number(producto.precioAnterior).toLocaleString("es-AR")}
-                            </span>
-                          </>
-                        ) : (
-                          <span style={{ fontSize: "13px", color: "var(--color-texto)" }}>
-                            ${Number(producto.precio).toLocaleString("es-AR")}
-                          </span>
-                        )}
-                      </div>
-                      {producto.precioMinimo != null &&
-                        Number(producto.precio) < Number(producto.precioMinimo) && (
-                        <span
-                          title={`Precio mínimo: $${Number(producto.precioMinimo).toLocaleString("es-AR")}`}
-                          style={{
-                            fontSize: "9px",
-                            fontFamily: "'Jost', sans-serif",
-                            fontWeight: 500,
-                            letterSpacing: "0.06em",
-                            color: "var(--color-acento)",
-                            border: "0.5px solid var(--color-acento)",
-                            padding: "2px 5px",
-                            flexShrink: 0,
-                            cursor: "default",
-                          }}
-                        >
-                          ⚠ mín
-                        </span>
-                      )}
-                    </div>
-                  </td>
-                  <td style={{ padding: "12px 16px", fontSize: "13px", color: producto.stock === 0 ? "#A32D2D" : "var(--color-texto-muted)" }}>
-                    {producto.stock}
-                  </td>
-                  <td style={{ padding: "12px 16px" }}>
-                    <span style={{
-                      fontSize: "9px",
-                      fontWeight: 500,
-                      letterSpacing: "0.1em",
-                      textTransform: "uppercase",
-                      padding: "3px 8px",
-                      backgroundColor: producto.activo ? "var(--color-texto)" : "var(--color-superficie)",
-                      color: producto.activo ? "var(--color-fondo)" : "var(--color-texto-muted)",
-                    }}>
-                      {producto.activo ? "Activo" : "Inactivo"}
-                    </span>
-                  </td>
-                  <td style={{ padding: "12px 16px", fontSize: "12px", color: "var(--color-texto-muted)", whiteSpace: "nowrap" }}>
-                    {producto.creadoEn.toISOString().split("T")[0].split("-").reverse().join("/")}
-                  </td>
-                  <td style={{ padding: "12px 16px", textAlign: "right" }}>
-                    <Link
-                      href={`/panel/productos/${producto.id}`}
-                      style={{
-                        fontSize: "10px",
-                        fontFamily: "'Jost', sans-serif",
-                        letterSpacing: "0.08em",
-                        textTransform: "uppercase",
-                        padding: "4px 12px",
-                        backgroundColor: "transparent",
-                        color: "var(--color-texto)",
-                        border: "0.5px solid var(--color-texto)",
-                        textDecoration: "none",
-                        display: "inline-block",
-                      }}
-                    >
-                      Editar
-                    </Link>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <TablaProductos
+            productos={productos.map((p) => ({
+              id: p.id,
+              nombre: p.nombre,
+              destacado: p.destacado,
+              activo: p.activo,
+              stock: p.stock,
+              precio: Number(p.precio),
+              precioAnterior: p.precioAnterior != null ? Number(p.precioAnterior) : null,
+              precioMinimo: p.precioMinimo != null ? Number(p.precioMinimo) : null,
+              material: p.material ?? null,
+              color: p.color ?? null,
+              creadoEn: p.creadoEn.toISOString().split("T")[0].split("-").reverse().join("/"),
+              imagenUrl: p.imagenes[0]?.urlPublica ?? null,
+              imagenPosicion: p.imagenes[0]?.posicion ?? null,
+              categoriaNombre: p.categoria.nombre,
+              materialRelNombre: p.materialRel?.nombre ?? null,
+            }))}
+          />
         )}
       </div>
 
