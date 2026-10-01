@@ -3,6 +3,8 @@ import Link from "next/link"
 import FiltrosProductos from "@/components/productos/FiltrosProductos"
 import TablaProductos from "@/components/productos/TablaProductos"
 
+export const dynamic = "force-dynamic"
+
 const LIMIT = 20
 
 interface Props {
