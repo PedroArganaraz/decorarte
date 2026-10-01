@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useRef } from "react"
 import Link from "next/link"
 
 export interface ProductoFila {
@@ -25,26 +25,92 @@ export interface ProductoFila {
 const AZUL_PASTEL = "#dceeff"
 
 export default function TablaProductos({ productos }: { productos: ProductoFila[] }) {
-  const [marcados, setMarcados] = useState<Set<string>>(
-    () => new Set(productos.filter((p) => p.marcado).map((p) => p.id))
+  const inicial = useRef<Set<string>>(
+    new Set(productos.filter((p) => p.marcado).map((p) => p.id))
   )
+  const [marcados, setMarcados] = useState<Set<string>>(
+    () => new Set(inicial.current)
+  )
+  const [guardando, setGuardando] = useState(false)
+  const [mensajeOk, setMensajeOk] = useState(false)
 
-  const toggleSeleccion = async (id: string) => {
-    const nuevoValor = !marcados.has(id)
+  const hayDiferencias = (() => {
+    if (marcados.size !== inicial.current.size) return true
+    for (const id of marcados) if (!inicial.current.has(id)) return true
+    return false
+  })()
+
+  const toggleSeleccion = (id: string) => {
     setMarcados((prev) => {
       const next = new Set(prev)
-      if (nuevoValor) next.add(id)
-      else next.delete(id)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
       return next
-    })
-    await fetch(`/api/productos/${id}/marcado`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ marcado: nuevoValor }),
     })
   }
 
+  const guardar = async () => {
+    setGuardando(true)
+    try {
+      const payload = productos.map((p) => ({ id: p.id, marcado: marcados.has(p.id) }))
+      await fetch("/api/productos/marcados", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ productos: payload }),
+      })
+      inicial.current = new Set(marcados)
+      setMensajeOk(true)
+      setTimeout(() => setMensajeOk(false), 2500)
+    } finally {
+      setGuardando(false)
+    }
+  }
+
   return (
+    <>
+      {(hayDiferencias || mensajeOk) && (
+        <div style={{
+          display: "flex",
+          justifyContent: "flex-end",
+          alignItems: "center",
+          gap: "10px",
+          padding: "10px 16px",
+          borderBottom: "0.5px solid var(--color-borde)",
+        }}>
+          {mensajeOk && (
+            <span style={{
+              fontSize: "10px",
+              letterSpacing: "0.1em",
+              color: "var(--color-texto-muted)",
+              fontFamily: "'Jost', sans-serif",
+            }}>
+              Guardado
+            </span>
+          )}
+          {hayDiferencias && (
+            <button
+              type="button"
+              onClick={guardar}
+              disabled={guardando}
+              style={{
+                padding: "8px 16px",
+                fontSize: "10px",
+                fontFamily: "'Jost', sans-serif",
+                fontWeight: 500,
+                letterSpacing: "0.12em",
+                textTransform: "uppercase",
+                backgroundColor: "var(--color-texto)",
+                color: "var(--color-fondo)",
+                border: "none",
+                cursor: guardando ? "wait" : "pointer",
+                opacity: guardando ? 0.7 : 1,
+              }}
+            >
+              {guardando ? "Guardando..." : "Guardar marcados"}
+            </button>
+          )}
+        </div>
+      )}
     <table style={{ width: "100%", borderCollapse: "collapse" }}>
       <thead>
         <tr style={{ borderBottom: "0.5px solid var(--color-borde)" }}>
@@ -221,5 +287,6 @@ export default function TablaProductos({ productos }: { productos: ProductoFila[
         })}
       </tbody>
     </table>
+    </>
   )
 }
