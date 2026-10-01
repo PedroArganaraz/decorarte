@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from "next/server"
+import sharp from "sharp"
 import { prisma } from "@/lib/prisma"
 import { crearClienteServidor, crearClienteAdmin } from "@/lib/supabase/servidor"
 import type { RespuestaAPI } from "@/tipos"
+
+export const runtime = "nodejs"
 
 export async function POST(
   solicitud: NextRequest,
@@ -50,15 +53,22 @@ export async function POST(
       where: { productoId },
     })
 
-    const extension = archivo.name.split(".").pop()
-    const pathInterno = `${productoId}/${Date.now()}.${extension}`
+    const bufferOriginal = Buffer.from(await archivo.arrayBuffer())
+    const bufferComprimido = await sharp(bufferOriginal)
+      .rotate()
+      .resize({ width: 1600, withoutEnlargement: true })
+      .webp({ quality: 82 })
+      .toBuffer()
+
+    const pathInterno = `${productoId}/${Date.now()}.webp`
 
     const supabaseAdmin = crearClienteAdmin()
     const { error: errorSubida } = await supabaseAdmin.storage
       .from("productos")
-      .upload(pathInterno, archivo, {
-        contentType: archivo.type,
+      .upload(pathInterno, bufferComprimido, {
+        contentType: "image/webp",
         upsert: false,
+        cacheControl: "31536000",
       })
 
     if (errorSubida) {

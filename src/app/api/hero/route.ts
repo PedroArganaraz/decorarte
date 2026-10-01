@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from "next/server"
+import sharp from "sharp"
 import { revalidatePath } from "next/cache"
 import { prisma } from "@/lib/prisma"
 import { crearClienteServidor, crearClienteAdmin } from "@/lib/supabase/servidor"
 import type { RespuestaAPI } from "@/tipos"
+
+export const runtime = "nodejs"
 
 export async function GET(solicitud: NextRequest) {
   try {
@@ -66,15 +69,22 @@ export async function POST(solicitud: NextRequest) {
 
     const cantidadImagenes = await prisma.imagenHero.count({ where: { activa: true, vista } })
 
-    const extension = archivo.name.split(".").pop()
-    const pathInterno = `hero/${Date.now()}.${extension}`
+    const bufferOriginal = Buffer.from(await archivo.arrayBuffer())
+    const bufferComprimido = await sharp(bufferOriginal)
+      .rotate()
+      .resize({ width: 2000, withoutEnlargement: true })
+      .webp({ quality: 82 })
+      .toBuffer()
+
+    const pathInterno = `hero/${Date.now()}.webp`
 
     const supabaseAdmin = crearClienteAdmin()
     const { error: errorSubida } = await supabaseAdmin.storage
       .from("productos")
-      .upload(pathInterno, archivo, {
-        contentType: archivo.type,
+      .upload(pathInterno, bufferComprimido, {
+        contentType: "image/webp",
         upsert: false,
+        cacheControl: "31536000",
       })
 
     if (errorSubida) {

@@ -3,6 +3,7 @@
 import { useState, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
+import imageCompression from "browser-image-compression"
 import type { ImagenProducto } from "@prisma/client"
 
 interface Props {
@@ -23,8 +24,21 @@ export default function SubidorImagenes({ productoId, imagenesActuales }: Props)
   const router = useRouter()
 
   const subirArchivo = async (archivo: File) => {
+    let archivoFinal: File
+    try {
+      archivoFinal = await imageCompression(archivo, {
+        maxWidthOrHeight: 1600,
+        useWebWorker: true,
+        initialQuality: 0.85,
+        fileType: "image/webp",
+      })
+    } catch {
+      toast.error("No se pudo comprimir la imagen. Intentá con otro archivo.")
+      return
+    }
+
     const formData = new FormData()
-    formData.append("archivo", archivo)
+    formData.append("archivo", archivoFinal)
     formData.append("esPrincipal", imagenes.length === 0 ? "true" : "false")
 
     const res = await fetch(`/api/productos/${productoId}/imagenes`, {
@@ -439,14 +453,14 @@ export default function SubidorImagenes({ productoId, imagenesActuales }: Props)
           letterSpacing: "0.05em",
           marginBottom: "4px",
         }}>
-          {subiendo ? "Subiendo..." : "Arrastrá imágenes o hacé clic para seleccionar"}
+          {subiendo ? "Comprimiendo y subiendo..." : "Arrastrá imágenes o hacé clic para seleccionar"}
         </p>
         <p style={{
           fontSize: "10px",
           color: "var(--color-texto-sutil)",
           letterSpacing: "0.05em",
         }}>
-          JPG, PNG, WebP o AVIF — máx. 5MB por imagen
+          JPG, PNG, WebP o AVIF — se convierten a WebP automáticamente
         </p>
       </div>
     </div>

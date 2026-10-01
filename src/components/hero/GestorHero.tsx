@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
+import imageCompression from "browser-image-compression"
 
 interface ImagenHero {
   id: string
@@ -98,8 +99,21 @@ export default function GestorHero({
     setSlideActual((prev) => (prev + 1) % imagenes.length)
 
   const subirArchivo = async (archivo: File) => {
+    let archivoFinal: File
+    try {
+      archivoFinal = await imageCompression(archivo, {
+        maxWidthOrHeight: 2000,
+        useWebWorker: true,
+        initialQuality: 0.85,
+        fileType: "image/webp",
+      })
+    } catch {
+      toast.error("No se pudo comprimir la imagen. Intentá con otro archivo.")
+      return
+    }
+
     const formData = new FormData()
-    formData.append("archivo", archivo)
+    formData.append("archivo", archivoFinal)
     formData.append("vista", vistaActual)
     const res = await fetch("/api/hero", { method: "POST", body: formData })
     const data = await res.json()
@@ -352,7 +366,7 @@ export default function GestorHero({
             color: "var(--color-texto-sutil)",
             letterSpacing: "0.05em",
           }}>
-            {esDesktop ? "Imágenes landscape recomendadas" : "Imágenes portrait recomendadas"} — JPG, PNG, WebP o AVIF — máx. 5MB
+            {esDesktop ? "Imágenes landscape recomendadas" : "Imágenes portrait recomendadas"} — se convierten a WebP automáticamente
           </p>
         </div>
       </div>
