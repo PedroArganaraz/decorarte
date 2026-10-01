@@ -28,7 +28,7 @@ export default function FiltrosCatalogo({ materiales, materialActivo, ordenActiv
       } else {
         params.delete("busqueda")
       }
-      params.delete("page")
+      params.delete("pagina")
       router.replace(`/catalogo?${params.toString()}`)
     }, 300)
     return () => clearTimeout(timer)
@@ -41,7 +41,7 @@ export default function FiltrosCatalogo({ materiales, materialActivo, ordenActiv
     } else {
       params.delete(clave)
     }
-    params.delete("page")
+    params.delete("pagina")
     router.push(`/catalogo?${params.toString()}`)
   }
 
@@ -51,7 +51,7 @@ export default function FiltrosCatalogo({ materiales, materialActivo, ordenActiv
     params.delete("material")
     params.delete("orden")
     params.delete("busqueda")
-    params.delete("page")
+    params.delete("pagina")
     router.push(`/catalogo?${params.toString()}`)
   }
 

@@ -8,23 +8,40 @@ import { Suspense } from "react"
 
 export const revalidate = 60
 
+const LIMIT = 15
+
 interface Props {
   searchParams: Promise<{
     categoria?: string
     material?: string
     busqueda?: string
     orden?: string
+    pagina?: string
   }>
 }
 
 export default async function PaginaCatalogo({ searchParams }: Props) {
-  const { categoria, material, busqueda, orden } = await searchParams
+  const { categoria, material, busqueda, orden, pagina } = await searchParams
+
+  const paginaNum = Math.max(1, parseInt(pagina ?? "1", 10) || 1)
 
   const filtroMaterial: Prisma.ProductoWhereInput = material
     ? { material: { contains: material, mode: Prisma.QueryMode.insensitive } }
     : {}
 
-  const [categorias, materialesRaw] = await Promise.all([
+  const where: Prisma.ProductoWhereInput = {
+    activo: true,
+    ...(categoria && { categoria: { slug: categoria } }),
+    ...filtroMaterial,
+    ...(busqueda && { nombre: { contains: busqueda, mode: Prisma.QueryMode.insensitive } }),
+  }
+
+  const orderBy: Prisma.ProductoOrderByWithRelationInput =
+    orden === "precio_asc" ? { precio: "asc" } :
+    orden === "precio_desc" ? { precio: "desc" } :
+    { creadoEn: "desc" }
+
+  const [categorias, materialesRaw, total, productos] = await Promise.all([
     prisma.categoria.findMany({
       where: { activa: true },
       orderBy: { orden: "asc" },
@@ -38,7 +55,32 @@ export default async function PaginaCatalogo({ searchParams }: Props) {
       select: { material: true },
       distinct: ["material"],
     }),
+    prisma.producto.count({ where }),
+    prisma.producto.findMany({
+      where,
+      orderBy,
+      skip: (paginaNum - 1) * LIMIT,
+      take: LIMIT,
+      select: {
+        id: true,
+        nombre: true,
+        slug: true,
+        precio: true,
+        precioAnterior: true,
+        stock: true,
+        activo: true,
+        destacado: true,
+        material: true,
+        imagenes: {
+          select: { urlPublica: true, altText: true, esPrincipal: true, posicion: true },
+          orderBy: { orden: "asc" },
+        },
+        categoria: { select: { nombre: true, slug: true } },
+      },
+    }),
   ])
+
+  const totalPaginas = Math.max(1, Math.ceil(total / LIMIT))
 
   const materialesDisponibles = [...new Set(
     materialesRaw
@@ -47,34 +89,16 @@ export default async function PaginaCatalogo({ searchParams }: Props) {
       .map((m) => m.charAt(0).toUpperCase() + m.slice(1).toLowerCase())
   )].sort()
 
-  const productos = await prisma.producto.findMany({
-    where: {
-      activo: true,
-      ...(categoria && { categoria: { slug: categoria } }),
-      ...filtroMaterial,
-      ...(busqueda && { nombre: { contains: busqueda, mode: Prisma.QueryMode.insensitive } }),
-    },
-    orderBy:
-      orden === "precio_asc" ? { precio: "asc" } :
-      orden === "precio_desc" ? { precio: "desc" } :
-      { creadoEn: "desc" },
-    select: {
-      id: true,
-      nombre: true,
-      slug: true,
-      precio: true,
-      precioAnterior: true,
-      stock: true,
-      activo: true,
-      destacado: true,
-      material: true,
-      imagenes: {
-        select: { urlPublica: true, altText: true, esPrincipal: true, posicion: true },
-        orderBy: { orden: "asc" },
-      },
-      categoria: { select: { nombre: true, slug: true } },
-    },
-  })
+  function urlPagina(pag: number) {
+    const params = new URLSearchParams()
+    if (categoria) params.set("categoria", categoria)
+    if (material) params.set("material", material)
+    if (busqueda) params.set("busqueda", busqueda)
+    if (orden) params.set("orden", orden)
+    if (pag > 1) params.set("pagina", String(pag))
+    const qs = params.toString()
+    return `/catalogo${qs ? `?${qs}` : ""}`
+  }
 
   const fromParams = new URLSearchParams()
   if (categoria) fromParams.set("categoria", categoria)
@@ -90,6 +114,26 @@ export default async function PaginaCatalogo({ searchParams }: Props) {
   }))
 
   const categoriaActiva = categorias.find((c: typeof categorias[number]) => c.slug === categoria)
+
+  const estiloBtn = (activo: boolean): React.CSSProperties => ({
+    padding: "8px 20px",
+    fontSize: "11px",
+    fontFamily: "'Jost', sans-serif",
+    fontWeight: 400,
+    letterSpacing: "0.1em",
+    textTransform: "uppercase",
+    backgroundColor: "transparent",
+    color: activo ? "var(--color-texto)" : "var(--color-texto-sutil)",
+    border: `0.5px solid ${activo ? "var(--color-texto)" : "var(--color-borde)"}`,
+    borderRadius: 0,
+    textDecoration: "none",
+    display: "inline-block",
+    cursor: activo ? "pointer" : "default",
+    opacity: activo ? 1 : 0.4,
+  })
+
+  const inicioItem = (paginaNum - 1) * LIMIT + 1
+  const finItem = Math.min(paginaNum * LIMIT, total)
 
   return (
     <div>
@@ -130,7 +174,9 @@ export default async function PaginaCatalogo({ searchParams }: Props) {
             color: "var(--color-texto-muted)",
             letterSpacing: "0.05em",
           }}>
-            {productosSerializados.length} {productosSerializados.length === 1 ? "pieza" : "piezas"}
+            {total === 0
+              ? "0 piezas"
+              : `Mostrando ${inicioItem}–${finItem} de ${total} ${total === 1 ? "pieza" : "piezas"}`}
           </p>
         </div>
 
@@ -176,6 +222,46 @@ export default async function PaginaCatalogo({ searchParams }: Props) {
             {productosSerializados.map((producto: typeof productosSerializados[number]) => (
               <TarjetaProducto key={producto.id} producto={producto} from={fromUrl} />
             ))}
+          </div>
+        )}
+
+        {/* PAGINACIÓN */}
+        {total > LIMIT && (
+          <div style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            marginTop: "48px",
+            flexWrap: "wrap",
+            gap: "12px",
+          }}>
+            {paginaNum <= 1 ? (
+              <span style={estiloBtn(false)}>← Anterior</span>
+            ) : (
+              <Link href={urlPagina(paginaNum - 1)} style={estiloBtn(true)}>
+                ← Anterior
+              </Link>
+            )}
+
+            <span style={{
+              fontSize: "11px",
+              fontFamily: "'Jost', sans-serif",
+              color: "var(--color-texto-muted)",
+              letterSpacing: "0.06em",
+            }}>
+              Página {paginaNum} de {totalPaginas}
+              <span style={{ color: "var(--color-texto-sutil)", marginLeft: "8px" }}>
+                ({total} {total === 1 ? "pieza" : "piezas"})
+              </span>
+            </span>
+
+            {paginaNum >= totalPaginas ? (
+              <span style={estiloBtn(false)}>Siguiente →</span>
+            ) : (
+              <Link href={urlPagina(paginaNum + 1)} style={estiloBtn(true)}>
+                Siguiente →
+              </Link>
+            )}
           </div>
         )}
       </div>
