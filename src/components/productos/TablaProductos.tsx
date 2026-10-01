@@ -168,14 +168,19 @@ export default function TablaProductos({ productos }: { productos: ProductoFila[
                 </button>
               </td>
               <td style={{ padding: "12px 16px" }}>
-                <div style={{
-                  width: "80px",
-                  height: "80px",
-                  backgroundColor: "var(--color-superficie)",
-                  backgroundImage: producto.imagenUrl ? `url(${producto.imagenUrl})` : "none",
-                  backgroundSize: "cover",
-                  backgroundPosition: `center ${producto.imagenPosicion ?? 50}%`,
-                }} />
+                <div style={{ width: "80px", height: "80px", backgroundColor: "var(--color-superficie)", flexShrink: 0 }}>
+                  {producto.imagenUrl && (
+                    <img
+                      src={producto.imagenUrl}
+                      alt={producto.nombre}
+                      loading="lazy"
+                      decoding="async"
+                      width={80}
+                      height={80}
+                      style={{ width: "80px", height: "80px", objectFit: "cover", objectPosition: `center ${producto.imagenPosicion ?? 50}%`, display: "block" }}
+                    />
+                  )}
+                </div>
               </td>
               <td style={{ padding: "12px 16px" }}>
                 <div style={{

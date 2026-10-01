@@ -81,8 +81,9 @@ export default async function PaginaProducto({ params, searchParams }: Props) {
       activo: true,
       destacado: true,
       imagenes: {
+        where: { esPrincipal: true },
         select: { urlPublica: true, altText: true, esPrincipal: true },
-        orderBy: { orden: "asc" },
+        take: 1,
       },
       categoria: { select: { nombre: true, slug: true } },
     },

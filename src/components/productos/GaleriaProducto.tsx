@@ -40,6 +40,8 @@ export default function GaleriaProducto({ imagenes }: Props) {
         <img
           src={seleccionada?.urlPublica ?? ""}
           alt={seleccionada?.altText || ""}
+          loading="eager"
+          decoding="async"
           style={{
             width: "100%",
             height: "100%",
@@ -75,6 +77,8 @@ export default function GaleriaProducto({ imagenes }: Props) {
               <img
                 src={img.urlPublica}
                 alt={img.altText || ""}
+                loading="lazy"
+                decoding="async"
                 style={{
                   width: "100%",
                   height: "100%",

@@ -40,6 +40,8 @@ export default function TarjetaProducto({ producto, from }: Props) {
             <img
               src={imagenPrincipal.urlPublica}
               alt={imagenPrincipal.altText || producto.nombre}
+              loading="lazy"
+              decoding="async"
               style={{
                 width: "100%",
                 height: "100%",

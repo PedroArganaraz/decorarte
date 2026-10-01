@@ -1,7 +1,6 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import Image from "next/image"
 import Link from "next/link"
 
 interface ImagenHero {
@@ -13,6 +12,7 @@ interface ImagenHero {
 interface Props {
   imagenes: ImagenHero[]
   intervalo?: number
+  prioridad?: boolean
 }
 
 const heroEstatico = (
@@ -90,7 +90,7 @@ const heroEstatico = (
   </section>
 )
 
-export default function HeroCarrusel({ imagenes, intervalo = 3 }: Props) {
+export default function HeroCarrusel({ imagenes, intervalo = 3, prioridad = false }: Props) {
   const [slideActual, setSlideActual] = useState(0)
   const [montado, setMontado] = useState(false)
 
@@ -128,23 +128,22 @@ export default function HeroCarrusel({ imagenes, intervalo = 3 }: Props) {
       justifyContent: "center",
     }}>
 
-      {/* Imagen de fondo con Next.js Image */}
-      <div style={{ position: "absolute", inset: 0 }}>
-        <Image
-          key={imagen.id}
-          src={imagen.urlPublica}
-          alt=""
-          fill
-          priority={slideActual === 0}
-          unoptimized
-          sizes="100vw"
-          aria-hidden="true"
-          style={{
-            objectFit: "cover",
-            objectPosition: `center ${imagen.posicion ?? 50}%`,
-          }}
-        />
-      </div>
+      <img
+        key={imagen.id}
+        src={imagen.urlPublica}
+        alt=""
+        aria-hidden="true"
+        loading={prioridad && slideActual === 0 ? "eager" : "lazy"}
+        fetchPriority={prioridad && slideActual === 0 ? "high" : "auto"}
+        style={{
+          position: "absolute",
+          inset: 0,
+          width: "100%",
+          height: "100%",
+          objectFit: "cover",
+          objectPosition: `center ${imagen.posicion ?? 50}%`,
+        }}
+      />
 
       {/* Overlay oscuro */}
       <div style={{
