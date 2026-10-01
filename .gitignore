@@ -43,3 +43,5 @@ next-env.d.ts
 
 # scripts de seed con datos sensibles
 prisma/seed-productos.ts
+
+respaldo-imagenes/
