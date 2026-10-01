@@ -194,6 +194,7 @@ export default async function PaginaProductos({ searchParams }: Props) {
               nombre: p.nombre,
               destacado: p.destacado,
               activo: p.activo,
+              marcado: p.marcado,
               stock: p.stock,
               precio: Number(p.precio),
               precioAnterior: p.precioAnterior != null ? Number(p.precioAnterior) : null,

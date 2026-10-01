@@ -8,6 +8,7 @@ export interface ProductoFila {
   nombre: string
   destacado: boolean
   activo: boolean
+  marcado: boolean
   stock: number
   precio: number
   precioAnterior: number | null
@@ -24,14 +25,22 @@ export interface ProductoFila {
 const AZUL_PASTEL = "#dceeff"
 
 export default function TablaProductos({ productos }: { productos: ProductoFila[] }) {
-  const [seleccionados, setSeleccionados] = useState<Set<string>>(new Set())
+  const [marcados, setMarcados] = useState<Set<string>>(
+    () => new Set(productos.filter((p) => p.marcado).map((p) => p.id))
+  )
 
-  const toggleSeleccion = (id: string) => {
-    setSeleccionados((prev) => {
+  const toggleSeleccion = async (id: string) => {
+    const nuevoValor = !marcados.has(id)
+    setMarcados((prev) => {
       const next = new Set(prev)
-      if (next.has(id)) next.delete(id)
-      else next.add(id)
+      if (nuevoValor) next.add(id)
+      else next.delete(id)
       return next
+    })
+    await fetch(`/api/productos/${id}/marcado`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ marcado: nuevoValor }),
     })
   }
 
@@ -56,7 +65,7 @@ export default function TablaProductos({ productos }: { productos: ProductoFila[
       </thead>
       <tbody>
         {productos.map((producto) => {
-          const marcado = seleccionados.has(producto.id)
+          const marcado = marcados.has(producto.id)
           return (
             <tr
               key={producto.id}
