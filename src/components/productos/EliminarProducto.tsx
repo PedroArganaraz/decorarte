@@ -87,7 +87,7 @@ export default function EliminarProducto({ id, nombre }: Props) {
     <button
       onClick={() => setConfirmando(true)}
       style={{
-        padding: "8px 16px",
+        padding: "12px 24px",
         fontSize: "11px",
         fontFamily: "'Jost', sans-serif",
         fontWeight: 400,
@@ -98,6 +98,7 @@ export default function EliminarProducto({ id, nombre }: Props) {
         border: "0.5px solid #A32D2D",
         borderRadius: 0,
         cursor: "pointer",
+        width: "100%",
       }}
     >
       Eliminar producto

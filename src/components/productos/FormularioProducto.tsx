@@ -636,6 +636,7 @@ export default function FormularioProducto({ categorias, accionesExtra, producto
                 {label}
               </label>
             ))}
+
           </div>
         </div>
       </div>

@@ -55,7 +55,7 @@ export async function PUT(
 
     const { id } = await params
     const cuerpo = await solicitud.json()
-    const { nombre, descripcion, precio, precioAnterior, costo, precioMinimo, stock, activo, destacado, categoriaId, material, talle, color, creadoEn } = cuerpo
+    const { nombre, descripcion, precio, precioAnterior, costo, precioMinimo, stock, activo, destacado, marcado, categoriaId, material, talle, color, creadoEn } = cuerpo
     const insumosData: { insumoId: number; cantidadUsada: number }[] = cuerpo.insumos ?? []
 
     let slug: string | undefined
@@ -105,6 +105,7 @@ export async function PUT(
           ...(stock !== undefined && { stock }),
           ...(activo !== undefined && { activo }),
           ...(destacado !== undefined && { destacado }),
+          ...(marcado !== undefined && { marcado }),
           ...(categoriaId && { categoria: { connect: { id: categoriaId } } }),
           ...(material !== undefined && { material: material || null }),
           ...(talle !== undefined && { talle: talle || null }),

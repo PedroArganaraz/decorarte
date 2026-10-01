@@ -4,6 +4,7 @@ import Link from "next/link"
 import FormularioProducto from "@/components/productos/FormularioProducto"
 import SubidorImagenes from "@/components/productos/SubidorImagenes"
 import EliminarProducto from "@/components/productos/EliminarProducto"
+import BotonMarcado from "@/components/productos/BotonMarcado"
 import SelectorCombinados from "@/components/productos/SelectorCombinados"
 import SelectorVariantesColor from "@/components/productos/SelectorVariantesColor"
 
@@ -82,7 +83,10 @@ export default async function PaginaEditarProducto({
             Editando producto
           </p>
         </div>
-        <EliminarProducto id={producto.id} nombre={producto.nombre} />
+        <div style={{ display: "flex", flexDirection: "column", gap: "8px", width: "200px" }}>
+          <EliminarProducto id={producto.id} nombre={producto.nombre} />
+          <BotonMarcado id={producto.id} marcadoInicial={producto.marcado} />
+        </div>
       </div>
 
       <FormularioProducto
