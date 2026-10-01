@@ -14,6 +14,7 @@ interface Props {
   searchParams: Promise<{
     categoria?: string
     material?: string
+    color?: string
     busqueda?: string
     orden?: string
     pagina?: string
@@ -21,7 +22,7 @@ interface Props {
 }
 
 export default async function PaginaCatalogo({ searchParams }: Props) {
-  const { categoria, material, busqueda, orden, pagina } = await searchParams
+  const { categoria, material, color, busqueda, orden, pagina } = await searchParams
 
   const paginaNum = Math.max(1, parseInt(pagina ?? "1", 10) || 1)
 
@@ -33,6 +34,7 @@ export default async function PaginaCatalogo({ searchParams }: Props) {
     activo: true,
     ...(categoria && { categoria: { slug: categoria } }),
     ...filtroMaterial,
+    ...(color && { color: { contains: color, mode: Prisma.QueryMode.insensitive } }),
     ...(busqueda && { nombre: { contains: busqueda, mode: Prisma.QueryMode.insensitive } }),
   }
 
@@ -71,11 +73,14 @@ export default async function PaginaCatalogo({ searchParams }: Props) {
         activo: true,
         destacado: true,
         material: true,
+        color: true,
         imagenes: {
           select: { urlPublica: true, altText: true, esPrincipal: true, posicion: true },
           orderBy: { orden: "asc" },
         },
         categoria: { select: { nombre: true, slug: true } },
+        variantesComoA: { include: { productoB: { select: { color: true } } } },
+        variantesComoB: { include: { productoA: { select: { color: true } } } },
       },
     }),
   ])
@@ -93,6 +98,7 @@ export default async function PaginaCatalogo({ searchParams }: Props) {
     const params = new URLSearchParams()
     if (categoria) params.set("categoria", categoria)
     if (material) params.set("material", material)
+    if (color) params.set("color", color)
     if (busqueda) params.set("busqueda", busqueda)
     if (orden) params.set("orden", orden)
     if (pag > 1) params.set("pagina", String(pag))
@@ -107,11 +113,21 @@ export default async function PaginaCatalogo({ searchParams }: Props) {
   if (orden) fromParams.set("orden", orden)
   const fromUrl = `/catalogo${fromParams.size > 0 ? `?${fromParams.toString()}` : ""}`
 
-  const productosSerializados = productos.map((p: typeof productos[number]) => ({
-    ...p,
-    precio: Number(p.precio),
-    precioAnterior: p.precioAnterior ? Number(p.precioAnterior) : null,
-  }))
+  const productosSerializados = productos.map((p: typeof productos[number]) => {
+    const variantColors = [
+      ...p.variantesComoA.map((v) => v.productoB.color),
+      ...p.variantesComoB.map((v) => v.productoA.color),
+    ]
+    const colores = [...new Set(
+      [p.color, ...variantColors].filter((c): c is string => typeof c === "string" && c.trim() !== "")
+    )]
+    return {
+      ...p,
+      precio: Number(p.precio),
+      precioAnterior: p.precioAnterior ? Number(p.precioAnterior) : null,
+      colores,
+    }
+  })
 
   const categoriaActiva = categorias.find((c: typeof categorias[number]) => c.slug === categoria)
 
@@ -184,6 +200,7 @@ export default async function PaginaCatalogo({ searchParams }: Props) {
           <FiltrosCatalogo
             materiales={materialesDisponibles}
             materialActivo={material}
+            colorActivo={color}
             ordenActivo={orden}
             busquedaActiva={busqueda}
           />

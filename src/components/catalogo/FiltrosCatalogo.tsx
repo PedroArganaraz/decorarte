@@ -6,14 +6,16 @@ import { useRouter, useSearchParams } from "next/navigation"
 interface Props {
   materiales: string[]
   materialActivo?: string
+  colorActivo?: string
   ordenActivo?: string
   busquedaActiva?: string
 }
 
-export default function FiltrosCatalogo({ materiales, materialActivo, ordenActivo, busquedaActiva }: Props) {
+export default function FiltrosCatalogo({ materiales, materialActivo, colorActivo, ordenActivo, busquedaActiva }: Props) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [busqueda, setBusqueda] = useState(busquedaActiva ?? "")
+  const [colorTexto, setColorTexto] = useState(colorActivo ?? "")
   const montado = useRef(false)
 
   useEffect(() => {
@@ -23,16 +25,25 @@ export default function FiltrosCatalogo({ materiales, materialActivo, ordenActiv
     }
     const timer = setTimeout(() => {
       const params = new URLSearchParams(searchParams.toString())
-      if (busqueda) {
-        params.set("busqueda", busqueda)
-      } else {
-        params.delete("busqueda")
-      }
+      if (busqueda) params.set("busqueda", busqueda)
+      else params.delete("busqueda")
       params.delete("pagina")
       router.replace(`/catalogo?${params.toString()}`)
     }, 300)
     return () => clearTimeout(timer)
-  }, [busqueda])
+  }, [busqueda]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    if (!montado.current) return
+    const timer = setTimeout(() => {
+      const params = new URLSearchParams(searchParams.toString())
+      if (colorTexto) params.set("color", colorTexto)
+      else params.delete("color")
+      params.delete("pagina")
+      router.replace(`/catalogo?${params.toString()}`)
+    }, 600)
+    return () => clearTimeout(timer)
+  }, [colorTexto]) // eslint-disable-line react-hooks/exhaustive-deps
 
   function navegar(clave: string, valor: string) {
     const params = new URLSearchParams(searchParams.toString())
@@ -47,8 +58,10 @@ export default function FiltrosCatalogo({ materiales, materialActivo, ordenActiv
 
   function limpiar() {
     setBusqueda("")
+    setColorTexto("")
     const params = new URLSearchParams(searchParams.toString())
     params.delete("material")
+    params.delete("color")
     params.delete("orden")
     params.delete("busqueda")
     params.delete("pagina")
@@ -59,7 +72,7 @@ export default function FiltrosCatalogo({ materiales, materialActivo, ordenActiv
     ? materialActivo.charAt(0).toUpperCase() + materialActivo.slice(1).toLowerCase()
     : ""
 
-  const hayFiltros = !!(materialActivo || ordenActivo || busqueda)
+  const hayFiltros = !!(materialActivo || colorActivo || ordenActivo || busqueda)
 
   const estiloSelect = {
     padding: "8px 12px",
@@ -94,12 +107,12 @@ export default function FiltrosCatalogo({ materiales, materialActivo, ordenActiv
         />
       </div>
 
-      <div style={{ display: "flex", width: "100%", gap: "10px" }}>
+      <div style={{ display: "flex", width: "100%", gap: "10px", flexWrap: "wrap" }}>
         {materiales.length > 0 && (
           <select
             value={materialActivoNorm}
             onChange={(e) => navegar("material", e.target.value)}
-            style={{ ...estiloSelect, flex: 1, minWidth: 0 }}
+            style={{ ...estiloSelect, flex: 1, minWidth: "120px" }}
           >
             <option value="">Material</option>
             {materiales.map((m) => (
@@ -110,10 +123,18 @@ export default function FiltrosCatalogo({ materiales, materialActivo, ordenActiv
           </select>
         )}
 
+        <input
+          type="text"
+          value={colorTexto}
+          onChange={(e) => setColorTexto(e.target.value)}
+          placeholder="Color..."
+          style={{ ...estiloSelect, cursor: "text", flex: 1, minWidth: "120px" }}
+        />
+
         <select
           value={ordenActivo ?? ""}
           onChange={(e) => navegar("orden", e.target.value)}
-          style={{ ...estiloSelect, flex: 1, minWidth: 0 }}
+          style={{ ...estiloSelect, flex: 1, minWidth: "120px" }}
         >
           <option value="">Precio</option>
           <option value="precio_asc">De menor a mayor</option>

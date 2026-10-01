@@ -14,6 +14,7 @@ interface Props {
     destacado: boolean
     imagenes: { urlPublica: string; altText: string | null; esPrincipal: boolean; posicion?: number | null }[]
     categoria: { nombre: string; slug: string }
+    colores?: string[]
   }
   from?: string
 }
@@ -100,6 +101,32 @@ export default function TarjetaProducto({ producto, from }: Props) {
             }}>
               Oferta
             </span>
+          )}
+
+          {producto.colores && producto.colores.length > 0 && (
+            <div style={{
+              position: "absolute",
+              bottom: "10px",
+              left: "10px",
+              display: "flex",
+              gap: "4px",
+              flexWrap: "wrap",
+            }}>
+              {producto.colores.map((c) => (
+                <span key={c} style={{
+                  fontSize: "8px",
+                  fontWeight: 400,
+                  letterSpacing: "0.1em",
+                  textTransform: "uppercase",
+                  backgroundColor: "rgba(255,255,255,0.82)",
+                  color: "var(--color-texto)",
+                  padding: "3px 7px",
+                  backdropFilter: "blur(4px)",
+                }}>
+                  {c}
+                </span>
+              ))}
+            </div>
           )}
         </div>
 
