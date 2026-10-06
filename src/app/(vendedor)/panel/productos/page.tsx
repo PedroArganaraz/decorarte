@@ -1,4 +1,6 @@
+import { Prisma } from "@prisma/client"
 import { prisma } from "@/lib/prisma"
+import { ordenarPorPrecioEfectivo } from "@/lib/precios"
 import Link from "next/link"
 import FiltrosProductos from "@/components/productos/FiltrosProductos"
 import TablaProductos from "@/components/productos/TablaProductos"
@@ -41,29 +43,60 @@ export default async function PaginaProductos({ searchParams }: Props) {
     }),
   }
 
-  const orderBy =
-    orden === "precio_asc" ? { precio: "asc" as const } :
-    orden === "precio_desc" ? { precio: "desc" as const } :
-    { stock: "asc" as const }
+  const incluirProducto = {
+    categoria: true,
+    imagenes: {
+      where: { esPrincipal: true },
+      take: 1,
+    },
+    materialRel: {
+      select: { nombre: true },
+    },
+  } satisfies Prisma.ProductoInclude
 
-  const [productos, total, categorias, materialesRaw] = await Promise.all([
-    prisma.producto.findMany({
+  const omitir = (pageNum - 1) * LIMIT
+
+  // Por precio se ordena por el precio efectivo (con descuento si lo hay), que Prisma no
+  // puede expresar: se ordenan en memoria todos los que cumplen los filtros y recién
+  // después se pagina.
+  async function obtenerProductos() {
+    if (orden !== "precio_asc" && orden !== "precio_desc") {
+      const [cantidad, filas] = await Promise.all([
+        prisma.producto.count({ where: filtro }),
+        prisma.producto.findMany({
+          where: filtro,
+          orderBy: { stock: "asc" },
+          skip: omitir,
+          take: LIMIT,
+          include: incluirProducto,
+        }),
+      ])
+      return { total: cantidad, productos: filas }
+    }
+
+    const candidatos = await prisma.producto.findMany({
       where: filtro,
-      orderBy,
-      skip: (pageNum - 1) * LIMIT,
-      take: LIMIT,
-      include: {
-        categoria: true,
-        imagenes: {
-          where: { esPrincipal: true },
-          take: 1,
-        },
-        materialRel: {
-          select: { nombre: true },
-        },
-      },
-    }),
-    prisma.producto.count({ where: filtro }),
+      select: { id: true, precio: true, precioAnterior: true, creadoEn: true },
+    })
+    const ordenados = ordenarPorPrecioEfectivo(
+      candidatos,
+      orden === "precio_desc" ? "desc" : "asc"
+    )
+    const idsPagina = ordenados.slice(omitir, omitir + LIMIT).map((c) => c.id)
+    const filas = await prisma.producto.findMany({
+      where: { id: { in: idsPagina } },
+      include: incluirProducto,
+    })
+    const filaPorId = new Map(filas.map((f) => [f.id, f]))
+    const productosPagina = idsPagina.flatMap((id) => {
+      const fila = filaPorId.get(id)
+      return fila ? [fila] : []
+    })
+    return { total: ordenados.length, productos: productosPagina }
+  }
+
+  const [{ total, productos }, categorias, materialesRaw] = await Promise.all([
+    obtenerProductos(),
     prisma.categoria.findMany({
       where: { activa: true },
       orderBy: { orden: "asc" },

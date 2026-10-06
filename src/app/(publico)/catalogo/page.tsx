@@ -1,5 +1,6 @@
 import { Prisma } from "@prisma/client"
 import { prisma } from "@/lib/prisma"
+import { ordenarPorPrecioEfectivo } from "@/lib/precios"
 import TarjetaProducto from "@/components/productos/TarjetaProducto"
 import NavCategorias from "@/components/catalogo/NavCategorias"
 import FiltrosCatalogo from "@/components/catalogo/FiltrosCatalogo"
@@ -38,12 +39,70 @@ export default async function PaginaCatalogo({ searchParams }: Props) {
     ...(busqueda && { nombre: { contains: busqueda, mode: Prisma.QueryMode.insensitive } }),
   }
 
-  const orderBy: Prisma.ProductoOrderByWithRelationInput =
-    orden === "precio_asc" ? { precio: "asc" } :
-    orden === "precio_desc" ? { precio: "desc" } :
-    { creadoEn: "desc" }
+  const seleccionProducto = {
+    id: true,
+    nombre: true,
+    slug: true,
+    precio: true,
+    precioAnterior: true,
+    stock: true,
+    activo: true,
+    destacado: true,
+    material: true,
+    color: true,
+    imagenes: {
+      select: { urlPublica: true, altText: true, esPrincipal: true, posicion: true },
+      orderBy: { orden: "asc" },
+    },
+    categoria: { select: { nombre: true, slug: true } },
+    variantesComoA: { include: { productoB: { select: { color: true } } } },
+    variantesComoB: { include: { productoA: { select: { color: true } } } },
+  } satisfies Prisma.ProductoSelect
 
-  const [categorias, materialesRaw, total, productos] = await Promise.all([
+  const omitir = (paginaNum - 1) * LIMIT
+
+  // Por precio se ordena por el precio efectivo (con descuento si lo hay), que Prisma no
+  // puede expresar: se ordenan en memoria todos los que cumplen los filtros y recién
+  // después se pagina.
+  const ordenPorPrecio = orden === "precio_asc" || orden === "precio_desc"
+
+  async function obtenerProductos() {
+    if (!ordenPorPrecio) {
+      const [cantidad, filas] = await Promise.all([
+        prisma.producto.count({ where }),
+        prisma.producto.findMany({
+          where,
+          orderBy: { creadoEn: "desc" },
+          skip: omitir,
+          take: LIMIT,
+          select: seleccionProducto,
+        }),
+      ])
+      return { total: cantidad, productos: filas }
+    }
+
+    const candidatos = await prisma.producto.findMany({
+      where,
+      select: { id: true, precio: true, precioAnterior: true, creadoEn: true },
+    })
+    const ordenados = ordenarPorPrecioEfectivo(
+      candidatos,
+      orden === "precio_desc" ? "desc" : "asc"
+    )
+    const idsPagina = ordenados.slice(omitir, omitir + LIMIT).map((c) => c.id)
+    const filas = await prisma.producto.findMany({
+      where: { id: { in: idsPagina } },
+      select: seleccionProducto,
+    })
+    const filaPorId = new Map(filas.map((f) => [f.id, f]))
+    const productosPagina = idsPagina.flatMap((id) => {
+      const fila = filaPorId.get(id)
+      return fila ? [fila] : []
+    })
+    return { total: ordenados.length, productos: productosPagina }
+  }
+
+  const [categorias, materialesRaw, { total, productos }] = await Promise.all([
     prisma.categoria.findMany({
       where: { activa: true },
       orderBy: { orden: "asc" },
@@ -57,32 +116,7 @@ export default async function PaginaCatalogo({ searchParams }: Props) {
       select: { material: true },
       distinct: ["material"],
     }),
-    prisma.producto.count({ where }),
-    prisma.producto.findMany({
-      where,
-      orderBy,
-      skip: (paginaNum - 1) * LIMIT,
-      take: LIMIT,
-      select: {
-        id: true,
-        nombre: true,
-        slug: true,
-        precio: true,
-        precioAnterior: true,
-        stock: true,
-        activo: true,
-        destacado: true,
-        material: true,
-        color: true,
-        imagenes: {
-          select: { urlPublica: true, altText: true, esPrincipal: true, posicion: true },
-          orderBy: { orden: "asc" },
-        },
-        categoria: { select: { nombre: true, slug: true } },
-        variantesComoA: { include: { productoB: { select: { color: true } } } },
-        variantesComoB: { include: { productoA: { select: { color: true } } } },
-      },
-    }),
+    obtenerProductos(),
   ])
 
   const totalPaginas = Math.max(1, Math.ceil(total / LIMIT))
