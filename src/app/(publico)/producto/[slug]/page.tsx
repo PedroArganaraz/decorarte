@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma"
+import { precioEfectivo } from "@/lib/precios"
 import { notFound } from "next/navigation"
 import GaleriaProducto from "@/components/productos/GaleriaProducto"
 import BotonAgregarCarrito from "@/components/carrito/BotonAgregarCarrito"
@@ -113,7 +114,7 @@ export default async function PaginaProducto({ params, searchParams }: Props) {
     id: producto.id,
     nombre: producto.nombre,
     slug: producto.slug,
-    precio: Number(producto.precio),
+    precio: precioEfectivo(producto),
     imagenes: producto.imagenes.map((img) => ({
       urlPublica: img.urlPublica,
       esPrincipal: img.esPrincipal,
