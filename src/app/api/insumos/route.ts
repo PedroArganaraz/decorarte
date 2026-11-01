@@ -3,13 +3,17 @@ import { prisma } from "@/lib/prisma"
 import { crearClienteServidor } from "@/lib/supabase/servidor"
 import type { RespuestaAPI } from "@/tipos"
 
-export async function GET() {
+export async function GET(solicitud: NextRequest) {
   try {
     const supabase = await crearClienteServidor()
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return NextResponse.json<RespuestaAPI<null>>({ error: "No autorizado" }, { status: 401 })
 
+    // ?disponibles=true: solo los que se pueden ofrecer para productos (abiertos y con stock)
+    const soloDisponibles = new URL(solicitud.url).searchParams.get("disponibles") === "true"
+
     const insumos = await prisma.insumo.findMany({
+      ...(soloDisponibles && { where: { cerrado: false, cantidadDisponible: { gt: 0 } } }),
       orderBy: { nombre: "asc" },
       include: {
         gasto: { select: { id: true, descripcion: true } },

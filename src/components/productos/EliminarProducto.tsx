@@ -34,19 +34,22 @@ export default function EliminarProducto({ id, nombre }: Props) {
 
   if (confirmando) {
     return (
-      <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: "10px", width: "100%" }}>
         <span style={{
           fontSize: "12px",
           color: "var(--color-texto-muted)",
           letterSpacing: "0.03em",
+          lineHeight: 1.4,
         }}>
           ¿Eliminás &quot;{nombre}&quot; y todas sus imágenes?
         </span>
+        <div style={{ display: "flex", gap: "8px" }}>
         <button
           onClick={eliminar}
           disabled={cargando}
           style={{
-            padding: "8px 16px",
+            flex: 1,
+            padding: "8px 8px",
             fontSize: "11px",
             fontFamily: "'Jost', sans-serif",
             fontWeight: 400,
@@ -64,7 +67,8 @@ export default function EliminarProducto({ id, nombre }: Props) {
         <button
           onClick={() => setConfirmando(false)}
           style={{
-            padding: "8px 16px",
+            flex: 1,
+            padding: "8px 8px",
             fontSize: "11px",
             fontFamily: "'Jost', sans-serif",
             fontWeight: 400,
@@ -79,6 +83,7 @@ export default function EliminarProducto({ id, nombre }: Props) {
         >
           Cancelar
         </button>
+        </div>
       </div>
     )
   }

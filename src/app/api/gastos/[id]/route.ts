@@ -73,6 +73,8 @@ export async function PATCH(
               cantidadTotal: insumo.cantidadTotal,
               cantidadDisponible: nuevoCantidadDisponible,
               unidad: insumo.unidad,
+              // Si se agota se cierra; si ya estaba cerrado no se reabre automáticamente.
+              ...(nuevoCantidadDisponible <= 0 && { cerrado: true }),
             },
           });
         } else {

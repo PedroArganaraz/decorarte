@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
+import { descontarInsumo, restaurarInsumo } from "@/lib/insumos"
 import { revalidatePath } from "next/cache"
 import { prisma } from "@/lib/prisma"
 import { crearClienteServidor, crearClienteAdmin } from "@/lib/supabase/servidor"
@@ -71,27 +72,35 @@ export async function PUT(
     }
 
     const productoActualizado = await prisma.$transaction(async (tx) => {
-      // Restaurar cantidadDisponible de insumos anteriores
+      // Restaurar cantidadDisponible de insumos anteriores (los cerrados no reciben stock)
       const insumosAnteriores = await tx.insumoProducto.findMany({ where: { productoId: id } })
       for (const anterior of insumosAnteriores) {
-        await tx.insumo.update({
-          where: { id: anterior.insumoId },
-          data: { cantidadDisponible: { increment: Number(anterior.cantidadUsada) } },
-        })
+        await restaurarInsumo(tx, anterior.insumoId, Number(anterior.cantidadUsada))
       }
       await tx.insumoProducto.deleteMany({ where: { productoId: id } })
 
       // Crear nuevos registros de insumos
       for (const ins of insumosData) {
         const insumo = await tx.insumo.findUnique({ where: { id: ins.insumoId } })
-        if (!insumo || Number(insumo.cantidadDisponible) < ins.cantidadUsada) continue
+        if (!insumo) continue
+
+        if (insumo.cerrado) {
+          // Un insumo cerrado no se puede sumar ni descontar de nuevo: si el producto ya lo
+          // usaba, se conserva la cantidad usada que tenía; si no, se ignora.
+          const previo = insumosAnteriores.find((a) => a.insumoId === ins.insumoId)
+          if (previo) {
+            await tx.insumoProducto.create({
+              data: { insumoId: ins.insumoId, productoId: id, cantidadUsada: Number(previo.cantidadUsada) },
+            })
+          }
+          continue
+        }
+
+        if (Number(insumo.cantidadDisponible) < ins.cantidadUsada) continue
         await tx.insumoProducto.create({
           data: { insumoId: ins.insumoId, productoId: id, cantidadUsada: ins.cantidadUsada },
         })
-        await tx.insumo.update({
-          where: { id: ins.insumoId },
-          data: { cantidadDisponible: { decrement: Number(ins.cantidadUsada) } },
-        })
+        await descontarInsumo(tx, ins.insumoId, ins.cantidadUsada)
       }
 
       return tx.producto.update({
@@ -176,10 +185,7 @@ export async function DELETE(
     await prisma.$transaction(async (tx) => {
       const insumosAsociados = await tx.insumoProducto.findMany({ where: { productoId: id } })
       for (const ip of insumosAsociados) {
-        await tx.insumo.update({
-          where: { id: ip.insumoId },
-          data: { cantidadDisponible: { increment: Number(ip.cantidadUsada) } },
-        })
+        await restaurarInsumo(tx, ip.insumoId, Number(ip.cantidadUsada))
       }
       await tx.insumoProducto.deleteMany({ where: { productoId: id } })
       await tx.producto.delete({ where: { id } })

@@ -272,6 +272,7 @@ model Insumo {
   precioUnitario     Float            @map("precio_unitario")
   cantidadTotal      Float            @map("cantidad_total")
   cantidadDisponible Float            @map("cantidad_disponible")
+  cerrado            Boolean          @default(false)
   unidad             String           @default("unidad")
   gastoId            String?          @map("gasto_id")
   creadoEn           DateTime         @default(now()) @map("creado_en")

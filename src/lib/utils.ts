@@ -15,12 +15,13 @@ export function formatearPrecio(precio: number): string {
 }
 
 export function generarMensajeWhatsapp(
-  items: { nombre: string; cantidad: number; precio: number }[]
+  items: { nombre: string; cantidad: number; precio: number; color?: string | null }[]
 ): string {
-  const lineas = items.map(
-    (item) =>
-      `• ${item.cantidad}x ${item.nombre} - ${formatearPrecio(item.precio * item.cantidad)}`
-  )
+  const lineas = items.map((item) => {
+    const color = item.color?.trim()
+    const sufijoColor = color ? ` (Color: ${color})` : ""
+    return `• ${item.cantidad}x ${item.nombre}${sufijoColor} - ${formatearPrecio(item.precio * item.cantidad)}`
+  })
   const total = items.reduce((acc, item) => acc + item.precio * item.cantidad, 0)
   return encodeURIComponent(
     `Hola! Me gustaría hacer el siguiente pedido:\n\n${lineas.join("\n")}\n\n*Total: ${formatearPrecio(total)}*\n\n¿Está disponible?`

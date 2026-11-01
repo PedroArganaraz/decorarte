@@ -20,6 +20,7 @@ export interface ItemCarritoUI {
   cantidad: number
   imagenUrl: string
   slug: string
+  color?: string | null
 }
 
 export interface EstadoCarrito {

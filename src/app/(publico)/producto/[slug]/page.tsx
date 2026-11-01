@@ -115,6 +115,7 @@ export default async function PaginaProducto({ params, searchParams }: Props) {
     nombre: producto.nombre,
     slug: producto.slug,
     precio: precioEfectivo(producto),
+    color: producto.color,
     imagenes: producto.imagenes.map((img) => ({
       urlPublica: img.urlPublica,
       esPrincipal: img.esPrincipal,

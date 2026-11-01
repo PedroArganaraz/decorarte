@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
+import { descontarInsumo } from "@/lib/insumos"
 import { revalidatePath } from "next/cache"
 import { prisma } from "@/lib/prisma"
 import { crearClienteServidor } from "@/lib/supabase/servidor"
@@ -127,14 +128,11 @@ export async function POST(solicitud: NextRequest) {
 
       for (const ins of insumosData) {
         const insumo = await tx.insumo.findUnique({ where: { id: ins.insumoId } })
-        if (!insumo || Number(insumo.cantidadDisponible) < ins.cantidadUsada) continue
+        if (!insumo || insumo.cerrado || Number(insumo.cantidadDisponible) < ins.cantidadUsada) continue
         await tx.insumoProducto.create({
           data: { insumoId: ins.insumoId, productoId: creado.id, cantidadUsada: ins.cantidadUsada },
         })
-        await tx.insumo.update({
-          where: { id: ins.insumoId },
-          data: { cantidadDisponible: { decrement: Number(ins.cantidadUsada) } },
-        })
+        await descontarInsumo(tx, ins.insumoId, ins.cantidadUsada)
       }
 
       return creado

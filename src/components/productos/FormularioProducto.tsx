@@ -86,7 +86,7 @@ export default function FormularioProducto({ categorias, accionesExtra, producto
   }, [form.categoriaId])
 
   useEffect(() => {
-    fetch("/api/insumos")
+    fetch("/api/insumos?disponibles=true")
       .then((r) => r.json())
       .then((d) => {
         setInsumosDisponibles((d.datos ?? []).map((i: { id: number; nombre: string; precioUnitario: number; cantidadDisponible: number; unidad: string }) => ({
@@ -528,7 +528,7 @@ export default function FormularioProducto({ categorias, accionesExtra, producto
                             : `${ins.cantidadUsada} ${ins.unidad} · $${costoParcial.toLocaleString("es-AR")}`}
                         </span>
                       </div>
-                      <button type="button" onClick={() => quitarInsumo(ins.insumoId)} style={{ padding: "3px 8px", fontSize: "10px", fontFamily: "'Jost', sans-serif", letterSpacing: "0.08em", border: "0.5px solid var(--color-borde)", backgroundColor: "transparent", color: "var(--color-texto-muted)", cursor: "pointer", borderRadius: 0, flexShrink: 0 }}>
+                      <button type="button" onClick={() => quitarInsumo(ins.insumoId)} style={{ padding: "3px 8px", fontSize: "10px", fontFamily: "'Jost', sans-serif", letterSpacing: "0.08em", border: "1px solid #000", backgroundColor: "transparent", color: "#000", cursor: "pointer", borderRadius: 0, flexShrink: 0 }}>
                         ✕
                       </button>
                     </div>

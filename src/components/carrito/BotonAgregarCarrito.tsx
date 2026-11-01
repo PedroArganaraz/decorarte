@@ -10,6 +10,7 @@ interface Props {
     nombre: string
     precio: number
     slug: string
+    color?: string | null
     imagenes: { urlPublica: string; esPrincipal: boolean }[]
   }
 }
@@ -29,6 +30,7 @@ export default function BotonAgregarCarrito({ producto }: Props) {
       cantidad: 1,
       imagenUrl: imagenPrincipal?.urlPublica ?? "",
       slug: producto.slug,
+      color: producto.color ?? null,
     })
 
     setAgregado(true)
