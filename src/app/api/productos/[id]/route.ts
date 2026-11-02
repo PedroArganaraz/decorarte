@@ -5,6 +5,10 @@ import { prisma } from "@/lib/prisma"
 import { crearClienteServidor, crearClienteAdmin } from "@/lib/supabase/servidor"
 import slugify from "slugify"
 import type { RespuestaAPI } from "@/tipos"
+import { Prisma } from "@prisma/client"
+
+const MENSAJE_PRODUCTO_CON_VENTAS =
+  "No se puede eliminar este producto porque tiene ventas registradas. Dejalo inactivo para ocultarlo del catálogo."
 
 export async function GET(
   _solicitud: NextRequest,
@@ -176,10 +180,12 @@ export async function DELETE(
       )
     }
 
-    if (producto.imagenes.length > 0) {
-      const supabaseAdmin = crearClienteAdmin()
-      const paths = producto.imagenes.map((img) => img.pathInterno)
-      await supabaseAdmin.storage.from("productos").remove(paths)
+    const ventasDelProducto = await prisma.itemVenta.count({ where: { productoId: id } })
+    if (ventasDelProducto > 0) {
+      return NextResponse.json<RespuestaAPI<null>>(
+        { error: MENSAJE_PRODUCTO_CON_VENTAS },
+        { status: 400 }
+      )
     }
 
     await prisma.$transaction(async (tx) => {
@@ -191,6 +197,14 @@ export async function DELETE(
       await tx.producto.delete({ where: { id } })
     })
 
+    // Las imágenes se borran recién cuando el producto ya se eliminó de la base,
+    // así un error de la transacción no deja al producto sin fotos.
+    if (producto.imagenes.length > 0) {
+      const supabaseAdmin = crearClienteAdmin()
+      const paths = producto.imagenes.map((img) => img.pathInterno)
+      await supabaseAdmin.storage.from("productos").remove(paths)
+    }
+
     revalidatePath("/")
     revalidatePath("/catalogo")
 
@@ -199,6 +213,12 @@ export async function DELETE(
     })
   } catch (error) {
     console.error("Error al eliminar producto:", error)
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2003") {
+      return NextResponse.json<RespuestaAPI<null>>(
+        { error: MENSAJE_PRODUCTO_CON_VENTAS },
+        { status: 400 }
+      )
+    }
     return NextResponse.json<RespuestaAPI<null>>(
       { error: "Error al eliminar el producto" },
       { status: 500 }

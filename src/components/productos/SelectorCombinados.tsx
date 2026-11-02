@@ -59,7 +59,7 @@ export default function SelectorCombinados({ productoId, combinadosIniciales }: 
     const res = await fetch(`/api/productos?${params.toString()}`)
     const data = await res.json()
     const todosMenosEste = (data.datos ?? []).filter(
-      (p: ProductoOpcion) => p.id !== productoId
+      (p: ProductoOpcion & { activo?: boolean }) => p.id !== productoId && p.activo !== false
     )
     const prods = todosMenosEste.map((p: ProductoOpcion & { precioAnterior?: number }) => ({
       ...p,

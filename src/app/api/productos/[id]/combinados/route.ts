@@ -64,15 +64,25 @@ export async function PUT(
     const { id } = await params
     const { productoIds } = await solicitud.json()
 
+    // El panel solo muestra combinados activos: los vínculos con productos
+    // inactivos no se ven en pantalla, así que se conservan tal cual.
+    const actual = await prisma.producto.findUnique({
+      where: { id },
+      select: { combinadoCon: { where: { activo: false }, select: { id: true } } },
+    })
+    const idsInactivos = actual?.combinadoCon.map((p) => p.id) ?? []
+    const idsFinales = [...new Set<string>([...(productoIds as string[]), ...idsInactivos])]
+
     const producto = await prisma.producto.update({
       where: { id },
       data: {
         combinadoCon: {
-          set: productoIds.map((pid: string) => ({ id: pid })),
+          set: idsFinales.map((pid) => ({ id: pid })),
         },
       },
       select: {
         combinadoCon: {
+          where: { activo: true },
           select: {
             id: true,
             nombre: true,

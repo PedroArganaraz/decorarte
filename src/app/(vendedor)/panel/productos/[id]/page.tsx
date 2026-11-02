@@ -21,6 +21,7 @@ export default async function PaginaEditarProducto({
       imagenes: { orderBy: { orden: "asc" } },
       categoria: true,
       combinadoCon: {
+        where: { activo: true },
         select: { id: true, nombre: true, slug: true },
       },
       insumos: {
