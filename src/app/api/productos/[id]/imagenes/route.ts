@@ -74,7 +74,7 @@ export async function POST(
     if (errorSubida) {
       console.error("Error al subir imagen a Storage:", JSON.stringify(errorSubida), errorSubida)
       return NextResponse.json<RespuestaAPI<null>>(
-        { error: `Error al subir la imagen (Storage): ${errorSubida.message}` },
+        { error: "Error al subir la imagen" },
         { status: 500 }
       )
     }
@@ -108,9 +108,8 @@ export async function POST(
   } catch (error) {
     const detalle = error instanceof Error ? `${error.name}: ${error.message}` : String(error)
     console.error("Error al procesar imagen:", detalle, error)
-    // Detalle temporal para diagnosticar en producción; quitar cuando se resuelva.
     return NextResponse.json<RespuestaAPI<null>>(
-      { error: `Error al procesar la imagen: ${detalle}` },
+      { error: "Error al procesar la imagen" },
       { status: 500 }
     )
   }
